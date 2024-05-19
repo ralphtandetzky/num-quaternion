@@ -1,0 +1,30 @@
+[package]
+authors = ["Ralph Tandetzky"]
+description = "Quaternion numbers implementation for Rust"
+documentation = "https://docs.rs/num-quaternion"
+homepage = "https://github.com/ralphtandetzky/num-quaternion"
+keywords = ["mathematics", "numerics", "quaternions"]
+categories = ["algorithms", "data-structures", "science", "no-std"]
+license = "MIT OR Apache-2.0"
+name = "num-quaternion"
+repository = "https://github.com/ralphtandetzky/num-quaternion"
+version = "0.1.0"
+readme = "README.md"
+exclude = ["/.github/*"]
+edition = "2021"
+rust-version = "1.60.0"
+
+[package.metadata.docs.rs]
+features = ["std", "libm"]
+
+[dependencies.num-traits]
+version = "0.2"
+default-features = false
+
+[dependencies.num-integer]
+version = "0.1.46"
+
+[features]
+default = ["std"]
+std = ["num-traits/std"]
+libm = ["num-traits/libm"]
