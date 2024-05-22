@@ -11,7 +11,10 @@
     <img src="https://img.shields.io/crates/d/num-quaternion" />
   </a>
   <a href="https://choosealicense.com/licenses/mit/">
-    <img src="https://img.shields.io/crates/l/num-quaternion" />
+    <img src="https://img.shields.io/badge/license-MIT-blue" />
+  </a>
+  <a href="https://choosealicense.com/licenses/apache-2.0/">
+    <img src="https://img.shields.io/badge/license-Apache_2.0-blue" />
   </a>
   <a href="https://crates.io/crates/num-quaternion">
     <img src="https://img.shields.io/crates/v/num-quaternion" />
