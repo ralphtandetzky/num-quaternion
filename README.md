@@ -82,3 +82,12 @@ Licensed under either of
  * [MIT license](http://opensource.org/licenses/MIT)
 
 at your option.
+
+
+## Acknowledgements
+
+Thanks to [@cuviper](https://github.com/cuviper) for the 
+[`num-complex` crate](https://crates.io/crates/num-complex) which served
+as a model for this crate. It borrows a lot from it. This is by design, 
+so this crate can be used consistently with the other crates from the 
+[`rust-num` family](https://github.com/rust-num) of crates.
