@@ -449,7 +449,9 @@ where
 
 #[cfg(test)]
 mod tests {
+    use num_traits::ConstOne;
     use num_traits::ConstZero;
+    use num_traits::One;
     use num_traits::Zero;
 
     use crate::Quaternion;
@@ -492,6 +494,59 @@ mod tests {
         let mut q = Quaternion::new(1.0, 2.0, 3.0, 4.0);
         q.set_zero();
         assert!(q.is_zero());
+    }
+
+    #[test]
+    fn test_one_constant() {
+        assert_eq!(Q32::ONE, Q32::new(1.0, 0.0, 0.0, 0.0))
+    }
+
+    #[test]
+    fn test_i_constant() {
+        assert_eq!(Q64::I, Q64::new(0.0, 1.0, 0.0, 0.0))
+    }
+
+    #[test]
+    fn test_j_constant() {
+        assert_eq!(Q32::J, Q32::new(0.0, 0.0, 1.0, 0.0))
+    }
+
+    #[test]
+    fn test_k_constant() {
+        assert_eq!(Q64::K, Q64::new(0.0, 0.0, 0.0, 1.0))
+    }
+
+    #[test]
+    fn test_const_one_trait() {
+        assert_eq!(<Q32 as ConstOne>::ONE, Q32::new(1.0, 0.0, 0.0, 0.0))
+    }
+
+    #[test]
+    fn test_one_trait_one() {
+        assert_eq!(<Q64 as One>::one(), Q64::ONE);
+        assert!(Q64::ONE.is_one());
+    }
+
+    #[test]
+    fn test_one_trait_set_one() {
+        let mut q = Q32::new(2.0, 3.0, 4.0, 5.0);
+        q.set_one();
+        assert!(q.is_one());
+    }
+
+    #[test]
+    fn test_i_func() {
+        assert_eq!(Q64::i(), Q64::new(0.0, 1.0, 0.0, 0.0));
+    }
+
+    #[test]
+    fn test_j_func() {
+        assert_eq!(Q64::j(), Q64::new(0.0, 0.0, 1.0, 0.0));
+    }
+
+    #[test]
+    fn test_k_func() {
+        assert_eq!(Q64::k(), Q64::new(0.0, 0.0, 0.0, 1.0));
     }
 
     #[test]
