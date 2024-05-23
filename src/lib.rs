@@ -625,6 +625,7 @@ mod tests {
         );
     }
 
+    #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_norm() {
         assert_eq!(Q64::ONE.norm(), 1.0);
