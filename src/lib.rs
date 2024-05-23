@@ -451,6 +451,7 @@ where
 mod tests {
     use num_traits::ConstOne;
     use num_traits::ConstZero;
+    use num_traits::Inv;
     use num_traits::One;
     use num_traits::Zero;
 
@@ -547,6 +548,104 @@ mod tests {
     #[test]
     fn test_k_func() {
         assert_eq!(Q64::k(), Q64::new(0.0, 0.0, 0.0, 1.0));
+    }
+
+    #[test]
+    fn test_norm_sqr() {
+        assert_eq!(Q32::ZERO.norm_sqr(), 0.0);
+        assert_eq!(Q64::ONE.norm_sqr(), 1.0);
+        assert_eq!(Q32::I.norm_sqr(), 1.0);
+        assert_eq!(Q64::J.norm_sqr(), 1.0);
+        assert_eq!(Q32::K.norm_sqr(), 1.0);
+        assert_eq!(Q64::new(-8.0, 4.0, 2.0, -1.0).norm_sqr(), 85.0);
+        assert_eq!(Q32::new(1.0, -2.0, 3.0, -4.0).norm_sqr(), 30.0);
+    }
+
+    #[test]
+    fn test_conj() {
+        assert_eq!(Q64::ONE.conj(), Q64::ONE);
+        assert_eq!(Q32::I.conj(), -Q32::I);
+        assert_eq!(Q64::J.conj(), -Q64::J);
+        assert_eq!(Q32::K.conj(), -Q32::K);
+        assert_eq!(
+            Q64::new(-8.0, 4.0, 2.0, -1.0).conj(),
+            Q64::new(-8.0, -4.0, -2.0, 1.0)
+        );
+        assert_eq!(
+            Q32::new(1.0, -2.0, 3.0, -4.0).conj(),
+            Q32::new(1.0, 2.0, -3.0, 4.0)
+        );
+    }
+
+    #[test]
+    fn test_inv_func() {
+        assert_eq!(Q64::ONE.inv(), Q64::ONE);
+        assert_eq!(Q32::I.inv(), -Q32::I);
+        assert_eq!(Q64::J.inv(), -Q64::J);
+        assert_eq!(Q32::K.inv(), -Q32::K);
+        assert_eq!(
+            Q64::new(1.0, 1.0, -1.0, -1.0).inv(),
+            Q64::new(0.25, -0.25, 0.25, 0.25)
+        );
+        assert_eq!(
+            Q32::new(1.0, -2.0, 2.0, -4.0).inv(),
+            Q32::new(0.04, 0.08, -0.08, 0.16)
+        );
+    }
+
+    #[test]
+    fn test_inv_trait_for_ref() {
+        assert_eq!(Inv::inv(&Q64::ONE), Q64::ONE);
+        assert_eq!(Inv::inv(&Q32::I), -Q32::I);
+        assert_eq!(Inv::inv(&Q64::J), -Q64::J);
+        assert_eq!(Inv::inv(&Q32::K), -Q32::K);
+        assert_eq!(
+            Inv::inv(&Q64::new(1.0, 1.0, -1.0, -1.0)),
+            Q64::new(0.25, -0.25, 0.25, 0.25)
+        );
+        assert_eq!(
+            Inv::inv(&Q32::new(1.0, -2.0, 2.0, -4.0)),
+            Q32::new(0.04, 0.08, -0.08, 0.16)
+        );
+    }
+
+    #[test]
+    fn test_inv_trait_for_val() {
+        assert_eq!(Inv::inv(Q64::ONE), Q64::ONE);
+        assert_eq!(Inv::inv(Q32::I), -Q32::I);
+        assert_eq!(Inv::inv(Q64::J), -Q64::J);
+        assert_eq!(Inv::inv(Q32::K), -Q32::K);
+        assert_eq!(
+            Inv::inv(Q64::new(1.0, 1.0, -1.0, -1.0)),
+            Q64::new(0.25, -0.25, 0.25, 0.25)
+        );
+        assert_eq!(
+            Inv::inv(Q32::new(1.0, -2.0, 2.0, -4.0)),
+            Q32::new(0.04, 0.08, -0.08, 0.16)
+        );
+    }
+
+    #[test]
+    fn test_norm() {
+        assert_eq!(Q64::ONE.norm(), 1.0);
+        assert_eq!(Q32::I.norm(), 1.0);
+        assert_eq!(Q64::J.norm(), 1.0);
+        assert_eq!(Q32::K.norm(), 1.0);
+        assert_eq!(Q64::new(9.0, 12.0, -12.0, -16.0).norm(), 25.0);
+        assert_eq!(Q32::new(-1.0, -1.0, 1.0, -1.0).norm(), 2.0);
+    }
+
+    #[test]
+    fn test_from_underlying_type_val() {
+        assert_eq!(Q64::from(-5.0), Q64::new(-5.0, 0.0, 0.0, 0.0));
+        assert_eq!(Into::<Q32>::into(42.0), Q32::new(42.0, 0.0, 0.0, 0.0));
+    }
+
+    #[allow(clippy::needless_borrows_for_generic_args)]
+    #[test]
+    fn test_from_underlying_type_ref() {
+        assert_eq!(Q64::from(&-5.0), Q64::new(-5.0, 0.0, 0.0, 0.0));
+        assert_eq!(Into::<Q32>::into(&42.0), Q32::new(42.0, 0.0, 0.0, 0.0));
     }
 
     #[test]
