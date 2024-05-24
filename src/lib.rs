@@ -772,6 +772,13 @@ mod tests {
     }
 
     #[test]
+    fn test_div_assign() {
+        let mut q = Quaternion::new(1.0f32, 2.0f32, 3.0f32, 4.0f32);
+        q /= 4.0f32;
+        assert_eq!(q, Quaternion::new(0.25f32, 0.5f32, 0.75f32, 1.0f32));
+    }
+
+    #[test]
     fn test_neg() {
         assert_eq!(
             -Q64::new(1.0, -2.0, 3.0, -4.0),
@@ -780,9 +787,38 @@ mod tests {
     }
 
     #[test]
-    fn test_div_assign() {
-        let mut q = Quaternion::new(1.0f32, 2.0f32, 3.0f32, 4.0f32);
-        q /= 4.0f32;
-        assert_eq!(q, Quaternion::new(0.25f32, 0.5f32, 0.75f32, 1.0f32));
+    fn test_powu() {
+        for q in [
+            Q32::ONE,
+            Q32::ZERO,
+            Q32::I,
+            Q32::new(1.0, 1.0, 1.0, 1.0),
+            Q32::new(1.0, 2.0, -3.0, 4.0),
+        ] {
+            let mut expected = Q32::ONE;
+            for e in 0..16 {
+                assert_eq!(q.powu(e), expected);
+                expected *= q;
+            }
+        }
+    }
+
+    #[test]
+    fn test_powi() {
+        for q in [
+            Q32::ONE,
+            Q32::I,
+            Q32::new(1.0, 1.0, 1.0, 1.0),
+            Q32::new(1.0, 2.0, -3.0, 4.0),
+        ] {
+            let mut expected = Q32::ONE;
+            for e in 0..16 {
+                assert_eq!(q.powi(e), expected);
+                assert!(
+                    (q.powi(-e) - expected.inv()).norm_sqr() / expected.norm_sqr() < f32::EPSILON
+                );
+                expected *= q;
+            }
+        }
     }
 }
