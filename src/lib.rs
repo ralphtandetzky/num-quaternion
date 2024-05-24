@@ -650,6 +650,136 @@ mod tests {
     }
 
     #[test]
+    fn test_add_quaternion() {
+        assert_eq!(Q32::ONE + Q32::J, Q32::new(1.0, 0.0, 1.0, 0.0));
+        assert_eq!(
+            Q64::new(1.0, 2.0, 3.0, 4.0) + Q64::new(1.0, 3.0, 10.0, -5.0),
+            Q64::new(2.0, 5.0, 13.0, -1.0)
+        );
+    }
+
+    #[test]
+    fn test_add_real() {
+        assert_eq!(Q32::I + 1.0, Q32::new(1.0, 1.0, 0.0, 0.0));
+        assert_eq!(
+            Q32::new(1.0, 2.0, 3.0, 4.0) + 42.0,
+            Q32::new(43.0, 2.0, 3.0, 4.0)
+        );
+    }
+
+    #[test]
+    fn test_sub_quaternion() {
+        assert_eq!(Q32::ONE - Q32::J, Q32::new(1.0, 0.0, -1.0, 0.0));
+        assert_eq!(
+            Q64::new(1.0, 2.0, 3.0, 4.0) - Q64::new(1.0, 3.0, 10.0, -5.0),
+            Q64::new(0.0, -1.0, -7.0, 9.0)
+        );
+    }
+
+    #[test]
+    fn test_sub_real() {
+        assert_eq!(Q32::I - 1.0, Q32::new(-1.0, 1.0, 0.0, 0.0));
+        assert_eq!(
+            Q32::new(1.0, 2.0, 3.0, 4.0) - 42.0,
+            Q32::new(-41.0, 2.0, 3.0, 4.0)
+        );
+    }
+
+    #[test]
+    fn test_mul_quaternion() {
+        assert_eq!(Q32::ONE * Q32::ONE, Q32::ONE);
+        assert_eq!(Q32::ONE * Q32::I, Q32::I);
+        assert_eq!(Q32::ONE * Q32::J, Q32::J);
+        assert_eq!(Q32::ONE * Q32::K, Q32::K);
+        assert_eq!(Q32::I * Q32::ONE, Q32::I);
+        assert_eq!(Q32::J * Q32::ONE, Q32::J);
+        assert_eq!(Q32::K * Q32::ONE, Q32::K);
+        assert_eq!(Q32::I * Q32::I, -Q32::ONE);
+        assert_eq!(Q32::J * Q32::J, -Q32::ONE);
+        assert_eq!(Q32::K * Q32::K, -Q32::ONE);
+        assert_eq!(Q32::I * Q32::J, Q32::K);
+        assert_eq!(Q32::J * Q32::K, Q32::I);
+        assert_eq!(Q32::K * Q32::I, Q32::J);
+        assert_eq!(Q32::J * Q32::I, -Q32::K);
+        assert_eq!(Q32::K * Q32::J, -Q32::I);
+        assert_eq!(Q32::I * Q32::K, -Q32::J);
+        assert_eq!(
+            Q64::new(1.0, 2.0, 3.0, 4.0) * Q64::new(1.0, 3.0, 10.0, -5.0),
+            Q64::new(-15.0, -50.0, 35.0, 10.0)
+        );
+    }
+
+    #[test]
+    fn test_mul_real() {
+        assert_eq!(Q32::I * 1.0, Q32::I);
+        assert_eq!(
+            Q32::new(1.0, 2.0, 3.0, 4.0) * 42.0,
+            Q32::new(42.0, 84.0, 126.0, 168.0)
+        );
+    }
+
+    #[test]
+    fn test_div_quaternion() {
+        assert_eq!(Q32::ONE / Q32::ONE * Q32::ONE, Q32::ONE);
+        assert_eq!(Q32::ONE / Q32::I * Q32::I, Q32::ONE);
+        assert_eq!(Q32::ONE / Q32::J * Q32::J, Q32::ONE);
+        assert_eq!(Q32::ONE / Q32::K * Q32::K, Q32::ONE);
+        assert_eq!(Q32::I / Q32::ONE * Q32::ONE, Q32::I);
+        assert_eq!(Q32::J / Q32::ONE * Q32::ONE, Q32::J);
+        assert_eq!(Q32::K / Q32::ONE * Q32::ONE, Q32::K);
+        assert_eq!(Q32::I / Q32::I * Q32::I, Q32::I);
+        assert_eq!(Q32::J / Q32::J * Q32::J, Q32::J);
+        assert_eq!(Q32::K / Q32::K * Q32::K, Q32::K);
+        assert_eq!(Q32::I / Q32::J * Q32::J, Q32::I);
+        assert_eq!(Q32::J / Q32::K * Q32::K, Q32::J);
+        assert_eq!(Q32::K / Q32::I * Q32::I, Q32::K);
+        assert_eq!(Q32::J / Q32::I * Q32::I, Q32::J);
+        assert_eq!(Q32::K / Q32::J * Q32::J, Q32::K);
+        assert_eq!(Q32::I / Q32::K * Q32::K, Q32::I);
+        let q = Q64::new(1.0, 2.0, 3.0, 4.0);
+        let r = Q64::new(1.0, 3.0, 10.0, -5.0);
+        assert!((q / r * r - q).norm_sqr() < f64::EPSILON);
+    }
+
+    #[test]
+    fn test_div_real() {
+        assert_eq!(Q32::I * 1.0, Q32::I);
+        assert_eq!(
+            Q32::new(1.0, 2.0, 3.0, 4.0) / 4.0,
+            Q32::new(0.25, 0.5, 0.75, 1.0)
+        );
+    }
+
+    #[test]
+    fn test_add_assign() {
+        let mut q = Q32::new(1.0, 2.0, 3.0, 4.0);
+        q += 4.0;
+        assert_eq!(q, Quaternion::new(5.0, 2.0, 3.0, 4.0));
+    }
+
+    #[test]
+    fn test_sub_assign() {
+        let mut q = Q64::new(1.0, 2.0, 3.0, 4.0);
+        q -= Q64::new(4.0, 8.0, 6.0, 1.0);
+        assert_eq!(q, Quaternion::new(-3.0, -6.0, -3.0, 3.0));
+    }
+
+    #[test]
+    fn test_mul_assign() {
+        let mut q = Q32::new(1.0, 2.0, 3.0, 4.0);
+        q *= Q32::I;
+        assert_eq!(q, Quaternion::new(-2.0, 1.0, 4.0, -3.0));
+    }
+
+    #[test]
+    fn test_neg() {
+        assert_eq!(
+            -Q64::new(1.0, -2.0, 3.0, -4.0),
+            Q64::new(-1.0, 2.0, -3.0, 4.0)
+        );
+    }
+
+    #[test]
     fn test_div_assign() {
         let mut q = Quaternion::new(1.0f32, 2.0f32, 3.0f32, 4.0f32);
         q /= 4.0f32;
