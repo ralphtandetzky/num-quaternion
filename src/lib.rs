@@ -12,16 +12,19 @@ use num_traits::{ConstOne, ConstZero, Inv, Num, One, Zero};
 #[cfg(any(feature = "std", feature = "libm"))]
 use num_traits::float::Float;
 
-/// Quaternions.
+/// Quaternion type.
+///
+/// We follow the naming conventions from
+/// [Wikipedia](https://en.wikipedia.org/wiki/Quaternion) for quaternions.
 #[derive(Clone, Copy, Debug, Default, Eq, Hash, PartialEq)]
 pub struct Quaternion<T> {
     /// Real part of the quaternion.
     pub a: T,
-    /// The coefficient of i.
+    /// The coefficient of $i$.
     pub b: T,
-    /// The coefficient of j.
+    /// The coefficient of $j$.
     pub c: T,
-    /// The coefficient of k.
+    /// The coefficient of $k$.
     pub d: T,
 }
 
@@ -31,7 +34,7 @@ pub type Q32 = Quaternion<f32>;
 pub type Q64 = Quaternion<f64>;
 
 impl<T> Quaternion<T> {
-    /// Create a new quaternion.
+    /// Create a new quaternion $a + bi + cj + dk$.
     pub const fn new(a: T, b: T, c: T, d: T) -> Self {
         Self { a, b, c, d }
     }
@@ -76,16 +79,24 @@ impl<T> Quaternion<T>
 where
     T: ConstZero + ConstOne,
 {
-    /// A constant `Quaternion` of value `1`.
+    /// A constant `Quaternion` of value $1$.
+    ///
+    /// See also [`Quaternion::one()`].
     pub const ONE: Self = Self::new(T::ONE, T::ZERO, T::ZERO, T::ZERO);
 
-    /// A constant `Quaternion` of value `i`.
+    /// A constant `Quaternion` of value $i$.
+    ///
+    /// See also [`Quaternion::i()`].
     pub const I: Self = Self::new(T::ZERO, T::ONE, T::ZERO, T::ZERO);
 
-    /// A constant `Quaternion` of value `j`.
+    /// A constant `Quaternion` of value $j$.
+    ///
+    /// See also [`Quaternion::j()`].
     pub const J: Self = Self::new(T::ZERO, T::ZERO, T::ONE, T::ZERO);
 
-    /// A constant `Quaternion` of value `k`.
+    /// A constant `Quaternion` of value $k$.
+    ///
+    /// See also [`Quaternion::k()`].
     pub const K: Self = Self::new(T::ZERO, T::ZERO, T::ZERO, T::ONE);
 }
 
@@ -120,7 +131,7 @@ impl<T> Quaternion<T>
 where
     T: Zero + One,
 {
-    /// Returns the imaginary unit `i`.
+    /// Returns the imaginary unit $i$.
     ///
     /// See also [`Quaternion::I`].
     #[inline]
@@ -128,7 +139,7 @@ where
         Self::new(T::zero(), T::one(), T::zero(), T::zero())
     }
 
-    /// Returns the imaginary unit `j`.
+    /// Returns the imaginary unit $j$.
     ///
     /// See also [`Quaternion::J`].
     #[inline]
@@ -136,7 +147,7 @@ where
         Self::new(T::zero(), T::zero(), T::one(), T::zero())
     }
 
-    /// Returns the imaginary unit `k`.
+    /// Returns the imaginary unit $k$.
     ///
     /// See also [`Quaternion::K`].
     #[inline]
@@ -149,8 +160,16 @@ impl<T> Quaternion<T>
 where
     T: Clone + Mul<T, Output = T> + Add<T, Output = T>,
 {
-    /// Returns the square of the norm (since `T` doesn't necessarily
-    /// have a sqrt function), i.e. `a^2 + b^2 + c^2 + d^2`.
+    /// Returns the square of the norm.
+    ///
+    /// The result is $a^2 + b^2 + c^2 + d^2$ with some rounding errors.
+    /// The rounding error is at most 2
+    /// [ulps](https://en.wikipedia.org/wiki/Unit_in_the_last_place).
+    ///
+    /// This is guaranteed to be more efficient than [`norm()`](Quaternion::norm()).
+    /// Furthermore, `T` only needs to support addition and multiplication
+    /// and therefore, this function works for more types than
+    /// [`norm()`](Quaternion::norm()).
     #[inline]
     pub fn norm_sqr(&self) -> T {
         (self.a.clone() * self.a.clone() + self.c.clone() * self.c.clone())
@@ -178,7 +197,7 @@ impl<T> Quaternion<T>
 where
     for<'a> &'a Self: Inv<Output = Quaternion<T>>,
 {
-    /// Returns `1/self`
+    /// Returns the multiplicative inverse `1/self`.
     #[inline]
     pub fn inv(&self) -> Self {
         Inv::inv(self)
@@ -220,7 +239,11 @@ impl<T> Quaternion<T>
 where
     T: Float,
 {
-    /// Calculate |self|
+    /// Calculates |self|.
+    ///
+    /// The result is $\sqrt{a^2+b^2+c^2+d^2}$ with some possible rounding
+    /// errors. The rounding error is at most 1.5
+    /// [ulps](https://en.wikipedia.org/wiki/Unit_in_the_last_place).
     #[inline]
     pub fn norm(self) -> T {
         // TODO: Optimize this function.
@@ -403,27 +426,27 @@ impl<T> Quaternion<T>
 where
     T: Num + Clone,
 {
-    /// Raises `self` to an unsigned integer power.
+    /// Raises `self` to an unsigned integer power `n`, i. e. $q^n$.
     #[inline]
-    pub fn powu(&self, mut exp: u32) -> Self {
-        if exp == 0 {
+    pub fn powu(&self, mut n: u32) -> Self {
+        if n == 0 {
             Self::one()
         } else {
             let mut base = self.clone();
-            while exp & 1 == 0 {
-                exp /= 2;
+            while n & 1 == 0 {
+                n /= 2;
                 base = base.clone() * base;
             }
 
-            if exp == 1 {
+            if n == 1 {
                 return base;
             }
 
             let mut acc = base.clone();
-            while exp > 1 {
-                exp /= 2;
+            while n > 1 {
+                n /= 2;
                 base = base.clone() * base;
-                if exp & 1 == 1 {
+                if n & 1 == 1 {
                     acc *= base.clone();
                 }
             }
@@ -436,13 +459,15 @@ impl<T> Quaternion<T>
 where
     T: Clone + Num + Neg<Output = T>,
 {
-    /// Raises `self` to a signed integer power.
+    /// Raises `self` to a signed integer power `n`, i. e. $q^n$
+    ///
+    /// For $n=0$ the result is exactly $1$.
     #[inline]
-    pub fn powi(&self, exp: i32) -> Self {
-        if exp >= 0 {
-            self.powu(exp as u32)
+    pub fn powi(&self, n: i32) -> Self {
+        if n >= 0 {
+            self.powu(n as u32)
         } else {
-            self.inv().powu(exp.wrapping_neg() as u32)
+            self.inv().powu(n.wrapping_neg() as u32)
         }
     }
 }
