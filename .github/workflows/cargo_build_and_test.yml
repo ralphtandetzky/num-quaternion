@@ -57,8 +57,8 @@ jobs:
       run: rustup component add clippy
     - name: Check style violations
       run: cargo clippy
-    # - name: Check SemVer violations
-    #   uses: obi1kenobi/cargo-semver-checks-action@v2
+    - name: Check SemVer violations
+      uses: obi1kenobi/cargo-semver-checks-action@v2
 
   # One job that "summarizes" the success state of this pipeline. This can then be added to branch
   # protection, rather than having to add each job separately.
