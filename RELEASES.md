@@ -1,3 +1,10 @@
+# Release 0.1.2 (2024-05-26)
+
+- Fixed issue with Rust Doc. 
+
+**Contributors**: @ralphtandetzky
+
+
 # Release 0.1.1 (2024-05-26)
 
 - Improved documentation including math formulas.

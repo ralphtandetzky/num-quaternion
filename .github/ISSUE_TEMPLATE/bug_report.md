@@ -14,7 +14,7 @@ Steps to reproduce the behavior:
 A clear and concise description of what you expected to happen.
 
 **Platform (please complete the following information):**
- - crate version [e.g. 0.1.1]
+ - crate version [e.g. 0.1.2]
  - `rustc` version: [e.g. 1.71.0]
  - OS: [e.g. Ubuntu]
  - Other details: [e.g. x86-64, etc.]
