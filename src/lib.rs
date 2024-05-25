@@ -411,6 +411,58 @@ impl_bin_op_assign!(impl SubAssign, sub_assign, Sub, sub);
 impl_bin_op_assign!(impl MulAssign, mul_assign, Mul, mul);
 impl_bin_op_assign!(impl DivAssign, div_assign, Div, div);
 
+macro_rules! impl_ops_lhs_real {
+    ($($real:ty),*) => {
+        $(
+        impl Add<Quaternion<$real>> for $real {
+            type Output = Quaternion<$real>;
+
+            fn add(self, mut rhs: Quaternion<$real>) -> Self::Output {
+                rhs.a += self;
+                rhs
+            }
+        }
+
+        impl Sub<Quaternion<$real>> for $real {
+            type Output = Quaternion<$real>;
+
+            fn sub(self, rhs: Quaternion<$real>) -> Self::Output {
+                let zero = <$real>::zero();
+                Self::Output::new(self - rhs.a, zero - rhs.b, zero - rhs.c, zero - rhs.d)
+            }
+        }
+
+        impl Mul<Quaternion<$real>> for $real {
+            type Output = Quaternion<$real>;
+
+            fn mul(self, rhs: Quaternion<$real>) -> Self::Output {
+                Self::Output::new(self * rhs.a, self * rhs.b, self * rhs.c, self * rhs.d)
+            }
+        }
+    )*
+    };
+}
+
+impl_ops_lhs_real!(usize, u8, u16, u32, u64, u128, isize, i8, i16, i32, i64, i128, f32, f64);
+
+impl Div<Q32> for f32 {
+    type Output = Q32;
+
+    fn div(mut self, rhs: Q32) -> Self::Output {
+        self /= rhs.norm_sqr();
+        Self::Output::new(self * rhs.a, self * -rhs.b, self * -rhs.c, self * -rhs.d)
+    }
+}
+
+impl Div<Q64> for f64 {
+    type Output = Q64;
+
+    fn div(mut self, rhs: Q64) -> Self::Output {
+        self /= rhs.norm_sqr();
+        Self::Output::new(self * rhs.a, self * -rhs.b, self * -rhs.c, self * -rhs.d)
+    }
+}
+
 impl<T> Neg for Quaternion<T>
 where
     T: Neg<Output = T>,
@@ -801,6 +853,39 @@ mod tests {
         let mut q = Quaternion::new(1.0f32, 2.0f32, 3.0f32, 4.0f32);
         q /= 4.0f32;
         assert_eq!(q, Quaternion::new(0.25f32, 0.5f32, 0.75f32, 1.0f32));
+    }
+
+    #[test]
+    fn test_add_lhs_real() {
+        assert_eq!(42.0 + Quaternion::I, Quaternion::new(42.0, 1.0, 0.0, 0.0));
+        assert_eq!(1 + Quaternion::new(2, 4, 6, 8), Quaternion::new(3, 4, 6, 8));
+    }
+
+    #[test]
+    fn test_sub_lhs_real() {
+        assert_eq!(42.0 - Quaternion::I, Quaternion::new(42.0, -1.0, 0.0, 0.0));
+        assert_eq!(
+            1 - Quaternion::new(2, 4, 6, 8),
+            Quaternion::new(-1, -4, -6, -8)
+        );
+    }
+
+    #[test]
+    fn test_mul_lhs_real() {
+        assert_eq!(42.0 * Quaternion::I, Quaternion::new(0.0, 42.0, 0.0, 0.0));
+        assert_eq!(2 * Quaternion::new(1, 2, 3, 4), Quaternion::new(2, 4, 6, 8));
+    }
+
+    #[test]
+    fn test_div_lhs_real() {
+        assert_eq!(
+            42.0f32 / Quaternion::I,
+            Quaternion::new(0.0, -42.0, 0.0, 0.0)
+        );
+        assert_eq!(
+            4.0f64 / Quaternion::new(1.0, 1.0, 1.0, 1.0),
+            Quaternion::new(1.0, -1.0, -1.0, -1.0)
+        );
     }
 
     #[test]
