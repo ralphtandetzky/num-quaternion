@@ -19,13 +19,13 @@ use num_traits::float::Float;
 #[derive(Clone, Copy, Debug, Default, Eq, Hash, PartialEq)]
 pub struct Quaternion<T> {
     /// Real part of the quaternion.
-    pub a: T,
+    pub w: T,
     /// The coefficient of $i$.
-    pub b: T,
+    pub x: T,
     /// The coefficient of $j$.
-    pub c: T,
+    pub y: T,
     /// The coefficient of $k$.
-    pub d: T,
+    pub z: T,
 }
 
 /// Alias for a [`Quaternion<f32>`].
@@ -35,8 +35,8 @@ pub type Q64 = Quaternion<f64>;
 
 impl<T> Quaternion<T> {
     /// Create a new quaternion $a + bi + cj + dk$.
-    pub const fn new(a: T, b: T, c: T, d: T) -> Self {
-        Self { a, b, c, d }
+    pub const fn new(w: T, x: T, y: T, z: T) -> Self {
+        Self { w, x, y, z }
     }
 }
 
@@ -64,14 +64,14 @@ where
     }
 
     fn is_zero(&self) -> bool {
-        self.a.is_zero() && self.b.is_zero() && self.c.is_zero() && self.d.is_zero()
+        self.w.is_zero() && self.x.is_zero() && self.y.is_zero() && self.z.is_zero()
     }
 
     fn set_zero(&mut self) {
-        self.a.set_zero();
-        self.b.set_zero();
-        self.c.set_zero();
-        self.d.set_zero();
+        self.w.set_zero();
+        self.x.set_zero();
+        self.y.set_zero();
+        self.z.set_zero();
     }
 }
 
@@ -116,14 +116,14 @@ where
     }
 
     fn is_one(&self) -> bool {
-        self.a.is_one() && self.b.is_zero() && self.c.is_zero() && self.d.is_zero()
+        self.w.is_one() && self.x.is_zero() && self.y.is_zero() && self.z.is_zero()
     }
 
     fn set_one(&mut self) {
-        self.a.set_one();
-        self.b.set_zero();
-        self.c.set_zero();
-        self.d.set_zero();
+        self.w.set_one();
+        self.x.set_zero();
+        self.y.set_zero();
+        self.z.set_zero();
     }
 }
 
@@ -158,11 +158,23 @@ where
 
 impl<T> Quaternion<T>
 where
+    T: Float,
+{
+    /// Returns a quaternion filled with `NAN` values.
+    #[inline]
+    pub fn nan() -> Self {
+        let nan = T::nan();
+        Self::new(nan, nan, nan, nan)
+    }
+}
+
+impl<T> Quaternion<T>
+where
     T: Clone + Mul<T, Output = T> + Add<T, Output = T>,
 {
     /// Returns the square of the norm.
     ///
-    /// The result is $a^2 + b^2 + c^2 + d^2$ with some rounding errors.
+    /// The result is $w^2 + x^2 + y^2 + z^2$ with some rounding errors.
     /// The rounding error is at most 2
     /// [ulps](https://en.wikipedia.org/wiki/Unit_in_the_last_place).
     ///
@@ -172,8 +184,8 @@ where
     /// [`norm()`](Quaternion::norm()).
     #[inline]
     pub fn norm_sqr(&self) -> T {
-        (self.a.clone() * self.a.clone() + self.c.clone() * self.c.clone())
-            + (self.b.clone() * self.b.clone() + self.d.clone() * self.d.clone())
+        (self.w.clone() * self.w.clone() + self.y.clone() * self.y.clone())
+            + (self.x.clone() * self.x.clone() + self.z.clone() * self.z.clone())
     }
 }
 
@@ -185,10 +197,10 @@ where
     #[inline]
     pub fn conj(&self) -> Self {
         Self::new(
-            self.a.clone(),
-            -self.b.clone(),
-            -self.c.clone(),
-            -self.d.clone(),
+            self.w.clone(),
+            -self.x.clone(),
+            -self.y.clone(),
+            -self.z.clone(),
         )
     }
 }
@@ -214,10 +226,10 @@ where
     fn inv(self) -> Self::Output {
         let norm_sqr = self.norm_sqr();
         Quaternion::new(
-            self.a.clone() / norm_sqr.clone(),
-            -self.b.clone() / norm_sqr.clone(),
-            -self.c.clone() / norm_sqr.clone(),
-            -self.d.clone() / norm_sqr,
+            self.w.clone() / norm_sqr.clone(),
+            -self.x.clone() / norm_sqr.clone(),
+            -self.y.clone() / norm_sqr.clone(),
+            -self.z.clone() / norm_sqr,
         )
     }
 }
@@ -241,13 +253,13 @@ where
 {
     /// Calculates |self|.
     ///
-    /// The result is $\sqrt{a^2+b^2+c^2+d^2}$ with some possible rounding
+    /// The result is $\sqrt{w^2+x^2+y^2+z^2}$ with some possible rounding
     /// errors. The rounding error is at most 1.5
     /// [ulps](https://en.wikipedia.org/wiki/Unit_in_the_last_place).
     #[inline]
     pub fn norm(self) -> T {
         // TODO: Optimize this function.
-        self.a.hypot(self.b).hypot(self.c.hypot(self.d))
+        self.w.hypot(self.x).hypot(self.y.hypot(self.z))
     }
 }
 
@@ -279,10 +291,10 @@ where
 
     fn add(self, rhs: Quaternion<T>) -> Self::Output {
         Self::new(
-            self.a + rhs.a,
-            self.b + rhs.b,
-            self.c + rhs.c,
-            self.d + rhs.d,
+            self.w + rhs.w,
+            self.x + rhs.x,
+            self.y + rhs.y,
+            self.z + rhs.z,
         )
     }
 }
@@ -294,7 +306,7 @@ where
     type Output = Quaternion<T>;
 
     fn add(self, rhs: T) -> Self::Output {
-        Self::new(self.a + rhs, self.b, self.c, self.d)
+        Self::new(self.w + rhs, self.x, self.y, self.z)
     }
 }
 
@@ -306,10 +318,10 @@ where
 
     fn sub(self, rhs: Quaternion<T>) -> Self::Output {
         Self::new(
-            self.a - rhs.a,
-            self.b - rhs.b,
-            self.c - rhs.c,
-            self.d - rhs.d,
+            self.w - rhs.w,
+            self.x - rhs.x,
+            self.y - rhs.y,
+            self.z - rhs.z,
         )
     }
 }
@@ -321,7 +333,7 @@ where
     type Output = Quaternion<T>;
 
     fn sub(self, rhs: T) -> Self::Output {
-        Self::new(self.a - rhs, self.b, self.c, self.d)
+        Self::new(self.w - rhs, self.x, self.y, self.z)
     }
 }
 
@@ -332,18 +344,18 @@ where
     type Output = Quaternion<T>;
 
     fn mul(self, rhs: Quaternion<T>) -> Self::Output {
-        let a = self.a.clone() * rhs.a.clone()
-            - self.b.clone() * rhs.b.clone()
-            - self.c.clone() * rhs.c.clone()
-            - self.d.clone() * rhs.d.clone();
-        let b = self.a.clone() * rhs.b.clone()
-            + self.b.clone() * rhs.a.clone()
-            + self.c.clone() * rhs.d.clone()
-            - self.d.clone() * rhs.c.clone();
-        let c = self.a.clone() * rhs.c.clone() - self.b.clone() * rhs.d.clone()
-            + self.c.clone() * rhs.a.clone()
-            + self.d.clone() * rhs.b.clone();
-        let d = self.a * rhs.d + self.b * rhs.c - self.c * rhs.b + self.d * rhs.a;
+        let a = self.w.clone() * rhs.w.clone()
+            - self.x.clone() * rhs.x.clone()
+            - self.y.clone() * rhs.y.clone()
+            - self.z.clone() * rhs.z.clone();
+        let b = self.w.clone() * rhs.x.clone()
+            + self.x.clone() * rhs.w.clone()
+            + self.y.clone() * rhs.z.clone()
+            - self.z.clone() * rhs.y.clone();
+        let c = self.w.clone() * rhs.y.clone() - self.x.clone() * rhs.z.clone()
+            + self.y.clone() * rhs.w.clone()
+            + self.z.clone() * rhs.x.clone();
+        let d = self.w * rhs.z + self.x * rhs.y - self.y * rhs.x + self.z * rhs.w;
         Self::new(a, b, c, d)
     }
 }
@@ -356,10 +368,10 @@ where
 
     fn mul(self, rhs: T) -> Self::Output {
         Self::new(
-            self.a * rhs.clone(),
-            self.b * rhs.clone(),
-            self.c * rhs.clone(),
-            self.d * rhs,
+            self.w * rhs.clone(),
+            self.x * rhs.clone(),
+            self.y * rhs.clone(),
+            self.z * rhs,
         )
     }
 }
@@ -384,10 +396,10 @@ where
 
     fn div(self, rhs: T) -> Self::Output {
         Self::new(
-            self.a / rhs.clone(),
-            self.b / rhs.clone(),
-            self.c / rhs.clone(),
-            self.d / rhs,
+            self.w / rhs.clone(),
+            self.x / rhs.clone(),
+            self.y / rhs.clone(),
+            self.z / rhs,
         )
     }
 }
@@ -418,7 +430,7 @@ macro_rules! impl_ops_lhs_real {
             type Output = Quaternion<$real>;
 
             fn add(self, mut rhs: Quaternion<$real>) -> Self::Output {
-                rhs.a += self;
+                rhs.w += self;
                 rhs
             }
         }
@@ -428,7 +440,7 @@ macro_rules! impl_ops_lhs_real {
 
             fn sub(self, rhs: Quaternion<$real>) -> Self::Output {
                 let zero = <$real>::zero();
-                Self::Output::new(self - rhs.a, zero - rhs.b, zero - rhs.c, zero - rhs.d)
+                Self::Output::new(self - rhs.w, zero - rhs.x, zero - rhs.y, zero - rhs.z)
             }
         }
 
@@ -436,7 +448,7 @@ macro_rules! impl_ops_lhs_real {
             type Output = Quaternion<$real>;
 
             fn mul(self, rhs: Quaternion<$real>) -> Self::Output {
-                Self::Output::new(self * rhs.a, self * rhs.b, self * rhs.c, self * rhs.d)
+                Self::Output::new(self * rhs.w, self * rhs.x, self * rhs.y, self * rhs.z)
             }
         }
     )*
@@ -450,7 +462,7 @@ impl Div<Q32> for f32 {
 
     fn div(mut self, rhs: Q32) -> Self::Output {
         self /= rhs.norm_sqr();
-        Self::Output::new(self * rhs.a, self * -rhs.b, self * -rhs.c, self * -rhs.d)
+        Self::Output::new(self * rhs.w, self * -rhs.x, self * -rhs.y, self * -rhs.z)
     }
 }
 
@@ -459,7 +471,7 @@ impl Div<Q64> for f64 {
 
     fn div(mut self, rhs: Q64) -> Self::Output {
         self /= rhs.norm_sqr();
-        Self::Output::new(self * rhs.a, self * -rhs.b, self * -rhs.c, self * -rhs.d)
+        Self::Output::new(self * rhs.w, self * -rhs.x, self * -rhs.y, self * -rhs.z)
     }
 }
 
@@ -470,7 +482,7 @@ where
     type Output = Self;
 
     fn neg(self) -> Self::Output {
-        Self::new(-self.a, -self.b, -self.c, -self.d)
+        Self::new(-self.w, -self.x, -self.y, -self.z)
     }
 }
 
@@ -539,11 +551,14 @@ mod tests {
     #[test]
     fn test_new() {
         let q = Quaternion::new(1.0, 2.0, 3.0, 4.0);
-        assert_eq!(q.a, 1.0);
-        assert_eq!(q.b, 2.0);
-        assert_eq!(q.c, 3.0);
-        assert_eq!(q.d, 4.0);
+        assert_eq!(q.w, 1.0);
+        assert_eq!(q.x, 2.0);
+        assert_eq!(q.y, 3.0);
+        assert_eq!(q.z, 4.0);
     }
+
+    #[test]
+    fn test_from_euler_angles() {}
 
     #[test]
     fn test_zero_constant() {
