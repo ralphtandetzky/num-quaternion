@@ -1132,7 +1132,7 @@ mod tests {
     #[cfg(feature = "std")]
     use core::hash::Hasher;
     #[cfg(feature = "std")]
-    use std::hash::DefaultHasher;
+    use std::collections::hash_map::DefaultHasher;
 
     use num_traits::ConstOne;
     use num_traits::ConstZero;
