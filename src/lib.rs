@@ -6,7 +6,11 @@
 #[cfg(feature = "std")]
 extern crate std;
 
-use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
+use core::{
+    borrow::Borrow,
+    num,
+    ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign},
+};
 use num_traits::{ConstOne, ConstZero, Inv, Num, One, Zero};
 
 #[cfg(any(feature = "std", feature = "libm"))]
@@ -35,6 +39,7 @@ pub type Q64 = Quaternion<f64>;
 
 impl<T> Quaternion<T> {
     /// Create a new quaternion $a + bi + cj + dk$.
+    #[inline]
     pub const fn new(w: T, x: T, y: T, z: T) -> Self {
         Self { w, x, y, z }
     }
@@ -59,14 +64,17 @@ impl<T> Zero for Quaternion<T>
 where
     T: Zero,
 {
+    #[inline]
     fn zero() -> Self {
         Self::new(Zero::zero(), Zero::zero(), Zero::zero(), Zero::zero())
     }
 
+    #[inline]
     fn is_zero(&self) -> bool {
         self.w.is_zero() && self.x.is_zero() && self.y.is_zero() && self.z.is_zero()
     }
 
+    #[inline]
     fn set_zero(&mut self) {
         self.w.set_zero();
         self.x.set_zero();
@@ -111,14 +119,17 @@ impl<T> One for Quaternion<T>
 where
     T: Num + Clone,
 {
+    #[inline]
     fn one() -> Self {
         Self::new(One::one(), Zero::zero(), Zero::zero(), Zero::zero())
     }
 
+    #[inline]
     fn is_one(&self) -> bool {
         self.w.is_one() && self.x.is_zero() && self.y.is_zero() && self.z.is_zero()
     }
 
+    #[inline]
     fn set_one(&mut self) {
         self.w.set_one();
         self.x.set_zero();
@@ -261,6 +272,25 @@ where
         // TODO: Optimize this function.
         self.w.hypot(self.x).hypot(self.y.hypot(self.z))
     }
+
+    /// Normalizes the quaternion to length $1$.
+    ///
+    /// The sign of the real part will be the same as the sign of the input.
+    /// If the input quaternion
+    ///   * is zero, or
+    ///   * has infinite length, or
+    ///   * has a `NaN` value,
+    /// then `None` will be returned.
+    #[inline]
+    pub fn normalize(self) -> Option<UnitQuaternion<T>> {
+        let norm = self.norm();
+        match norm.classify() {
+            core::num::FpCategory::Normal | core::num::FpCategory::Subnormal => {
+                Some(UnitQuaternion(self / norm))
+            }
+            _ => None,
+        }
+    }
 }
 
 impl<T> From<T> for Quaternion<T>
@@ -283,12 +313,27 @@ where
     }
 }
 
+impl<T> From<UnitQuaternion<T>> for Quaternion<T> {
+    #[inline]
+    fn from(q: UnitQuaternion<T>) -> Self {
+        q.0
+    }
+}
+
+impl<'a, T> From<&'a UnitQuaternion<T>> for &'a Quaternion<T> {
+    #[inline]
+    fn from(q: &'a UnitQuaternion<T>) -> Self {
+        &q.0
+    }
+}
+
 impl<T> Add<Quaternion<T>> for Quaternion<T>
 where
     T: Add<T, Output = T>,
 {
     type Output = Quaternion<T>;
 
+    #[inline]
     fn add(self, rhs: Quaternion<T>) -> Self::Output {
         Self::new(
             self.w + rhs.w,
@@ -305,8 +350,21 @@ where
 {
     type Output = Quaternion<T>;
 
+    #[inline]
     fn add(self, rhs: T) -> Self::Output {
         Self::new(self.w + rhs, self.x, self.y, self.z)
+    }
+}
+
+impl<T> Add<UnitQuaternion<T>> for Quaternion<T>
+where
+    T: Add<T, Output = T>,
+{
+    type Output = Quaternion<T>;
+
+    #[inline]
+    fn add(self, rhs: UnitQuaternion<T>) -> Self::Output {
+        self + rhs.0
     }
 }
 
@@ -316,6 +374,7 @@ where
 {
     type Output = Quaternion<T>;
 
+    #[inline]
     fn sub(self, rhs: Quaternion<T>) -> Self::Output {
         Self::new(
             self.w - rhs.w,
@@ -332,8 +391,21 @@ where
 {
     type Output = Quaternion<T>;
 
+    #[inline]
     fn sub(self, rhs: T) -> Self::Output {
         Self::new(self.w - rhs, self.x, self.y, self.z)
+    }
+}
+
+impl<T> Sub<UnitQuaternion<T>> for Quaternion<T>
+where
+    T: Sub<T, Output = T>,
+{
+    type Output = Quaternion<T>;
+
+    #[inline]
+    fn sub(self, rhs: UnitQuaternion<T>) -> Self::Output {
+        self - rhs.0
     }
 }
 
@@ -343,6 +415,7 @@ where
 {
     type Output = Quaternion<T>;
 
+    #[inline]
     fn mul(self, rhs: Quaternion<T>) -> Self::Output {
         let a = self.w.clone() * rhs.w.clone()
             - self.x.clone() * rhs.x.clone()
@@ -366,6 +439,7 @@ where
 {
     type Output = Quaternion<T>;
 
+    #[inline]
     fn mul(self, rhs: T) -> Self::Output {
         Self::new(
             self.w * rhs.clone(),
@@ -376,6 +450,18 @@ where
     }
 }
 
+impl<T> Mul<UnitQuaternion<T>> for Quaternion<T>
+where
+    Quaternion<T>: Mul<Output = Quaternion<T>>,
+{
+    type Output = Quaternion<T>;
+
+    #[inline]
+    fn mul(self, rhs: UnitQuaternion<T>) -> Self::Output {
+        self * rhs.0
+    }
+}
+
 impl<T> Div<Quaternion<T>> for Quaternion<T>
 where
     T: Num + Clone + Neg<Output = T>,
@@ -383,6 +469,7 @@ where
     type Output = Quaternion<T>;
 
     #[allow(clippy::suspicious_arithmetic_impl)]
+    #[inline]
     fn div(self, rhs: Quaternion<T>) -> Self::Output {
         self * rhs.inv()
     }
@@ -394,6 +481,7 @@ where
 {
     type Output = Quaternion<T>;
 
+    #[inline]
     fn div(self, rhs: T) -> Self::Output {
         Self::new(
             self.w / rhs.clone(),
@@ -401,6 +489,20 @@ where
             self.y / rhs.clone(),
             self.z / rhs,
         )
+    }
+}
+
+impl<T> Div<UnitQuaternion<T>> for Quaternion<T>
+where
+    Quaternion<T>: Mul<Output = Quaternion<T>>,
+    T: Neg<Output = T> + Clone,
+{
+    type Output = Quaternion<T>;
+
+    #[allow(clippy::suspicious_arithmetic_impl)]
+    #[inline]
+    fn div(self, rhs: UnitQuaternion<T>) -> Self::Output {
+        self * rhs.0.conj()
     }
 }
 
@@ -429,6 +531,7 @@ macro_rules! impl_ops_lhs_real {
         impl Add<Quaternion<$real>> for $real {
             type Output = Quaternion<$real>;
 
+            #[inline]
             fn add(self, mut rhs: Quaternion<$real>) -> Self::Output {
                 rhs.w += self;
                 rhs
@@ -438,6 +541,7 @@ macro_rules! impl_ops_lhs_real {
         impl Sub<Quaternion<$real>> for $real {
             type Output = Quaternion<$real>;
 
+            #[inline]
             fn sub(self, rhs: Quaternion<$real>) -> Self::Output {
                 let zero = <$real>::zero();
                 Self::Output::new(self - rhs.w, zero - rhs.x, zero - rhs.y, zero - rhs.z)
@@ -447,6 +551,7 @@ macro_rules! impl_ops_lhs_real {
         impl Mul<Quaternion<$real>> for $real {
             type Output = Quaternion<$real>;
 
+            #[inline]
             fn mul(self, rhs: Quaternion<$real>) -> Self::Output {
                 Self::Output::new(self * rhs.w, self * rhs.x, self * rhs.y, self * rhs.z)
             }
@@ -460,6 +565,7 @@ impl_ops_lhs_real!(usize, u8, u16, u32, u64, u128, isize, i8, i16, i32, i64, i12
 impl Div<Q32> for f32 {
     type Output = Q32;
 
+    #[inline]
     fn div(mut self, rhs: Q32) -> Self::Output {
         self /= rhs.norm_sqr();
         Self::Output::new(self * rhs.w, self * -rhs.x, self * -rhs.y, self * -rhs.z)
@@ -469,6 +575,7 @@ impl Div<Q32> for f32 {
 impl Div<Q64> for f64 {
     type Output = Q64;
 
+    #[inline]
     fn div(mut self, rhs: Q64) -> Self::Output {
         self /= rhs.norm_sqr();
         Self::Output::new(self * rhs.w, self * -rhs.x, self * -rhs.y, self * -rhs.z)
@@ -481,6 +588,7 @@ where
 {
     type Output = Self;
 
+    #[inline]
     fn neg(self) -> Self::Output {
         Self::new(-self.w, -self.x, -self.y, -self.z)
     }
@@ -491,7 +599,6 @@ where
     T: Num + Clone,
 {
     /// Raises `self` to an unsigned integer power `n`, i. e. $q^n$.
-    #[inline]
     pub fn powu(&self, mut n: u32) -> Self {
         if n == 0 {
             Self::one()
@@ -536,8 +643,494 @@ where
     }
 }
 
+/// A quaternion with norm $1$.
+///
+/// Unit quaternions form a non-commutative group that can be conveniently used
+/// for rotating 3D vectors. A 3D vector can be interpreted as a pure
+/// quaternion (a quaternion with real part zero). Such a pure quaternion
+/// $v$ can be rotated in 3D space by computing $q^{-1}\cdot v\cdot q$ for a
+/// unit quaternion $q$. The resulting product is again a pure quaternion which
+/// is $v$ rotated around the axis given by the imaginary part of $q$. The angle
+/// of rotation is double the angle between $1$ and $q$ interpreted as 4D
+/// vectors.
+///
+/// Multiplying two unit quaternions yields again unit quaternion in theory.
+/// However, due to limited machine precision, rounding errors accumulate
+/// in practice and the resulting norm may deviate from $1$ more and more.
+/// Thus, when you multiply a unit quaternions many times, then you need to
+/// adjust the norm. This can be done by calling the function
+/// [`adjust_norm()`](UnitQuaternion::adjust_norm).
+///
+/// See also [`Quaternion`].
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+pub struct UnitQuaternion<T>(Quaternion<T>);
+
+/// Alias for a [`UnitQuaternion<f32>`].
+pub type UQ32 = UnitQuaternion<f32>;
+/// Alias for a [`UnitQuaternion<f64>`].
+pub type UQ64 = UnitQuaternion<f64>;
+
+impl<T> UnitQuaternion<T>
+where
+    T: Float,
+{
+    /// Creates a new Quaternion from roll, pitch and yaw angles.
+    pub fn from_euler_angles(roll: T, pitch: T, yaw: T) -> Self {
+        let half = T::one() / (T::one() + T::one());
+        let (sr, cr) = (roll * half).sin_cos();
+        let (sp, cp) = (pitch * half).sin_cos();
+        let (sy, cy) = (yaw * half).sin_cos();
+        Self(Quaternion::new(
+            cr * cp * cy + sr * sp * sy,
+            sr * cp * cy - cr * sp * sy,
+            cr * sp * cy + sr * cp * sy,
+            cr * cp * sy - sr * sp * cy,
+        ))
+    }
+
+    /// Returns a quaternion from a vector which is parallel to the rotation
+    /// axis and whose norm is the rotation angle.
+    pub fn from_rotation_vector(v: &[T; 3]) -> Self {
+        let sqr_norm = v[0] * v[0] + v[1] * v[1] + v[2] * v[2];
+        let two = T::one() + T::one();
+        match sqr_norm.classify() {
+            num::FpCategory::Normal => {
+                // TODO: Optimize this further for norms that are not above pi.
+                let norm = sqr_norm.sqrt();
+                let (sine, cosine) = (norm / two).sin_cos();
+                let f = sine / norm;
+                Self(Quaternion::new(cosine, v[0] * f, v[1] * f, v[2] * f))
+            }
+            num::FpCategory::Zero | num::FpCategory::Subnormal => Self(Quaternion::new(
+                // This formula could be used for norm <= epsilon generally,
+                // where epsilon is the floating point epsilon.
+                T::one(),
+                v[0] / two,
+                v[1] / two,
+                v[2] / two,
+            )),
+            num::FpCategory::Nan | num::FpCategory::Infinite => Self(Quaternion::nan()),
+        }
+    }
+}
+
+impl<T> Default for UnitQuaternion<T>
+where
+    T: Num + Clone,
+{
+    #[inline]
+    fn default() -> Self {
+        Self::one()
+    }
+}
+
+impl<T> UnitQuaternion<T>
+where
+    T: ConstZero + ConstOne,
+{
+    /// A constant `UnitQuaternion` of value $1$.
+    ///
+    /// See also [`UnitQuaternion::one()`], [`Quaternion::ONE`].
+    pub const ONE: Self = Self(Quaternion::ONE);
+
+    /// A constant `UnitQuaternion` of value $i$.
+    ///
+    /// See also [`UnitQuaternion::i()`], [`Quaternion::I`].
+    pub const I: Self = Self(Quaternion::I);
+
+    /// A constant `UnitQuaternion` of value $j$.
+    ///
+    /// See also [`UnitQuaternion::j()`], [`Quaternion::J`].
+    pub const J: Self = Self(Quaternion::J);
+
+    /// A constant `UnitQuaternion` of value $k$.
+    ///
+    /// See also [`UnitQuaternion::k()`], [`Quaternion::K`].
+    pub const K: Self = Self(Quaternion::K);
+}
+
+impl<T> ConstOne for UnitQuaternion<T>
+where
+    T: ConstZero + ConstOne + Num + Clone,
+{
+    const ONE: Self = Self::ONE;
+}
+
+impl<T> One for UnitQuaternion<T>
+where
+    T: Num + Clone,
+{
+    #[inline]
+    fn one() -> Self {
+        Self(Quaternion::one())
+    }
+
+    #[inline]
+    fn is_one(&self) -> bool {
+        self.0.is_one()
+    }
+
+    #[inline]
+    fn set_one(&mut self) {
+        self.0.set_one();
+    }
+}
+
+impl<T> UnitQuaternion<T>
+where
+    T: Zero + One,
+{
+    /// Returns the imaginary unit $i$.
+    ///
+    /// See also [`UnitQuaternion::I`], [`Quaternion::i()`].
+    #[inline]
+    pub fn i() -> Self {
+        Self(Quaternion::i())
+    }
+
+    /// Returns the imaginary unit $j$.
+    ///
+    /// See also [`UnitQuaternion::J`], [`Quaternion::j()`].
+    #[inline]
+    pub fn j() -> Self {
+        Self(Quaternion::j())
+    }
+
+    /// Returns the imaginary unit $k$.
+    ///
+    /// See also [`UnitQuaternion::K`], [`Quaternion::k()`].
+    #[inline]
+    pub fn k() -> Self {
+        Self(Quaternion::k())
+    }
+}
+
+impl<T> UnitQuaternion<T> {
+    /// Returns the inner quaternion.
+    #[inline]
+    pub fn into_quaternion(self) -> Quaternion<T> {
+        self.0
+    }
+
+    /// Returns a reference to the inner quaternion.
+    #[inline]
+    pub fn as_quaternion(&self) -> &Quaternion<T> {
+        &self.0
+    }
+}
+
+impl<T> Borrow<Quaternion<T>> for UnitQuaternion<T> {
+    fn borrow(&self) -> &Quaternion<T> {
+        self.as_quaternion()
+    }
+}
+
+impl<T> UnitQuaternion<T>
+where
+    T: Clone + Neg<Output = T>,
+{
+    /// Returns the conjugate quaternion. i.e. the imaginary part is negated.
+    #[inline]
+    pub fn conj(&self) -> Self {
+        Self(self.0.conj())
+    }
+}
+
+impl<T> UnitQuaternion<T>
+where
+    T: Clone + Neg<Output = T>,
+{
+    /// Returns the multiplicative inverse `1/self`.
+    ///
+    /// This is the same as the conjugate of `self`.
+    #[inline]
+    pub fn inv(&self) -> Self {
+        self.conj()
+    }
+}
+
+impl<T> Inv for &UnitQuaternion<T>
+where
+    T: Clone + Neg<Output = T>,
+{
+    type Output = UnitQuaternion<T>;
+
+    #[inline]
+    fn inv(self) -> Self::Output {
+        self.conj()
+    }
+}
+
+impl<T> Inv for UnitQuaternion<T>
+where
+    T: Clone + Neg<Output = T>,
+{
+    type Output = UnitQuaternion<T>;
+
+    #[inline]
+    fn inv(self) -> Self::Output {
+        self.conj()
+    }
+}
+
+impl<T> Add<UnitQuaternion<T>> for UnitQuaternion<T>
+where
+    Quaternion<T>: Add<Output = Quaternion<T>>,
+{
+    type Output = Quaternion<T>;
+
+    #[inline]
+    fn add(self, rhs: UnitQuaternion<T>) -> Self::Output {
+        self.0 + rhs.0
+    }
+}
+
+impl<T> Add<Quaternion<T>> for UnitQuaternion<T>
+where
+    Quaternion<T>: Add<Output = Quaternion<T>>,
+{
+    type Output = Quaternion<T>;
+
+    #[inline]
+    fn add(self, rhs: Quaternion<T>) -> Self::Output {
+        self.0 + rhs
+    }
+}
+
+impl<T> Add<T> for UnitQuaternion<T>
+where
+    Quaternion<T>: Add<T, Output = Quaternion<T>>,
+{
+    type Output = Quaternion<T>;
+
+    #[inline]
+    fn add(self, rhs: T) -> Self::Output {
+        self.0 + rhs
+    }
+}
+
+impl Add<UQ32> for f32 {
+    type Output = Q32;
+
+    #[inline]
+    fn add(self, rhs: UQ32) -> Self::Output {
+        self + rhs.0
+    }
+}
+
+impl Add<UQ64> for f64 {
+    type Output = Q64;
+
+    #[inline]
+    fn add(self, rhs: UQ64) -> Self::Output {
+        self + rhs.0
+    }
+}
+
+impl<T> Sub<UnitQuaternion<T>> for UnitQuaternion<T>
+where
+    Quaternion<T>: Sub<Output = Quaternion<T>>,
+{
+    type Output = Quaternion<T>;
+
+    #[inline]
+    fn sub(self, rhs: UnitQuaternion<T>) -> Self::Output {
+        self.0 - rhs.0
+    }
+}
+
+impl<T> Sub<Quaternion<T>> for UnitQuaternion<T>
+where
+    Quaternion<T>: Sub<Output = Quaternion<T>>,
+{
+    type Output = Quaternion<T>;
+
+    #[inline]
+    fn sub(self, rhs: Quaternion<T>) -> Self::Output {
+        self.0 - rhs
+    }
+}
+
+impl<T> Sub<T> for UnitQuaternion<T>
+where
+    Quaternion<T>: Sub<T, Output = Quaternion<T>>,
+{
+    type Output = Quaternion<T>;
+
+    #[inline]
+    fn sub(self, rhs: T) -> Self::Output {
+        self.0 - rhs
+    }
+}
+
+impl Sub<UQ32> for f32 {
+    type Output = Q32;
+
+    #[inline]
+    fn sub(self, rhs: UQ32) -> Self::Output {
+        self - rhs.0
+    }
+}
+
+impl Sub<UQ64> for f64 {
+    type Output = Q64;
+
+    #[inline]
+    fn sub(self, rhs: UQ64) -> Self::Output {
+        self - rhs.0
+    }
+}
+
+impl<T> Mul<UnitQuaternion<T>> for UnitQuaternion<T>
+where
+    Quaternion<T>: Mul<Output = Quaternion<T>>,
+{
+    type Output = UnitQuaternion<T>;
+
+    #[inline]
+    fn mul(self, rhs: UnitQuaternion<T>) -> Self::Output {
+        Self(self.0 * rhs.0)
+    }
+}
+
+impl<T> Mul<Quaternion<T>> for UnitQuaternion<T>
+where
+    Quaternion<T>: Mul<Output = Quaternion<T>>,
+{
+    type Output = Quaternion<T>;
+
+    #[inline]
+    fn mul(self, rhs: Quaternion<T>) -> Self::Output {
+        self.0 * rhs
+    }
+}
+
+impl<T> Mul<T> for UnitQuaternion<T>
+where
+    Quaternion<T>: Mul<T, Output = Quaternion<T>>,
+{
+    type Output = Quaternion<T>;
+
+    #[inline]
+    fn mul(self, rhs: T) -> Self::Output {
+        self.0 * rhs
+    }
+}
+
+impl Mul<UQ32> for f32 {
+    type Output = Q32;
+
+    #[inline]
+    fn mul(self, rhs: UQ32) -> Self::Output {
+        self * rhs.0
+    }
+}
+
+impl Mul<UQ64> for f64 {
+    type Output = Q64;
+
+    #[inline]
+    fn mul(self, rhs: UQ64) -> Self::Output {
+        self * rhs.0
+    }
+}
+
+impl<T> Div<UnitQuaternion<T>> for UnitQuaternion<T>
+where
+    Quaternion<T>: Mul<Output = Quaternion<T>>,
+    T: Clone + Neg<Output = T>,
+{
+    type Output = UnitQuaternion<T>;
+
+    #[allow(clippy::suspicious_arithmetic_impl)]
+    #[inline]
+    fn div(self, rhs: UnitQuaternion<T>) -> Self::Output {
+        self * rhs.conj()
+    }
+}
+
+impl<T> Div<Quaternion<T>> for UnitQuaternion<T>
+where
+    Quaternion<T>: Div<Output = Quaternion<T>>,
+{
+    type Output = Quaternion<T>;
+
+    #[inline]
+    fn div(self, rhs: Quaternion<T>) -> Self::Output {
+        self.0 / rhs
+    }
+}
+
+impl<T> Div<T> for UnitQuaternion<T>
+where
+    Quaternion<T>: Div<T, Output = Quaternion<T>>,
+{
+    type Output = Quaternion<T>;
+
+    #[inline]
+    fn div(self, rhs: T) -> Self::Output {
+        self.0 / rhs
+    }
+}
+
+impl Div<UQ32> for f32 {
+    type Output = Q32;
+
+    #[allow(clippy::suspicious_arithmetic_impl)]
+    #[inline]
+    fn div(self, rhs: UQ32) -> Self::Output {
+        self * rhs.inv().0
+    }
+}
+
+impl Div<UQ64> for f64 {
+    type Output = Q64;
+
+    #[allow(clippy::suspicious_arithmetic_impl)]
+    #[inline]
+    fn div(self, rhs: UQ64) -> Self::Output {
+        self * rhs.inv().0
+    }
+}
+
+impl<T> Neg for UnitQuaternion<T>
+where
+    T: Neg<Output = T>,
+{
+    type Output = UnitQuaternion<T>;
+
+    fn neg(self) -> Self::Output {
+        Self(-self.0)
+    }
+}
+
+impl<T> UnitQuaternion<T>
+where
+    T: Float,
+{
+    /// Renormalizes `self`.
+    ///
+    /// By many multiplications of unit quaternions, round off errors can lead
+    /// to norms which are deviating from $1$. This function fix that
+    /// inaccuracy.
+    #[inline]
+    pub fn adjust_norm(self) -> Self {
+        // TODO: Optimize for norms which are close to 1.
+        self.0
+            .normalize()
+            .expect("Unit quaternion value too inaccurate. Cannot renormalize.")
+    }
+}
+
 #[cfg(test)]
 mod tests {
+    #[cfg(feature = "std")]
+    use core::hash::Hash;
+    #[cfg(feature = "std")]
+    use core::hash::Hasher;
+    #[cfg(feature = "std")]
+    use std::hash::DefaultHasher;
+
     use num_traits::ConstOne;
     use num_traits::ConstZero;
     use num_traits::Inv;
@@ -545,8 +1138,11 @@ mod tests {
     use num_traits::Zero;
 
     use crate::Quaternion;
+    use crate::UnitQuaternion;
     use crate::Q32;
     use crate::Q64;
+    use crate::UQ32;
+    use crate::UQ64;
 
     #[test]
     fn test_new() {
@@ -556,9 +1152,6 @@ mod tests {
         assert_eq!(q.y, 3.0);
         assert_eq!(q.z, 4.0);
     }
-
-    #[test]
-    fn test_from_euler_angles() {}
 
     #[test]
     fn test_zero_constant() {
@@ -728,6 +1321,51 @@ mod tests {
         assert_eq!(Q32::new(-1.0, -1.0, 1.0, -1.0).norm(), 2.0);
     }
 
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_normalize() {
+        assert_eq!(Q64::ONE.normalize().unwrap(), UQ64::ONE);
+        assert_eq!(Q32::I.normalize().unwrap(), UQ32::I);
+        assert_eq!(Q64::J.normalize().unwrap(), UQ64::J);
+        assert_eq!(Q32::K.normalize().unwrap(), UQ32::K);
+        assert_eq!(
+            Q64::new(9.0, 12.0, -12.0, -16.0)
+                .normalize()
+                .unwrap()
+                .into_quaternion(),
+            Q64::new(0.36, 0.48, -0.48, -0.64)
+        );
+        assert_eq!(
+            Q32::new(-1.0, -1.0, 1.0, -1.0)
+                .normalize()
+                .unwrap()
+                .into_quaternion(),
+            Q32::new(-0.5, -0.5, 0.5, -0.5)
+        );
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_normalize_zero_infinity_nan() {
+        assert_eq!(Q64::ZERO.normalize(), None);
+        assert_eq!(Q64::new(f64::INFINITY, 0.0, 0.0, 0.0).normalize(), None);
+        assert_eq!(Q64::new(0.0, f64::NEG_INFINITY, 0.0, 0.0).normalize(), None);
+        assert_eq!(Q64::new(0.0, 0.0, f64::NEG_INFINITY, 0.0).normalize(), None);
+        assert_eq!(Q64::new(0.0, 0.0, 0.0, f64::INFINITY).normalize(), None);
+        assert_eq!(Q64::new(f64::NAN, 0.0, 0.0, 0.0).normalize(), None);
+        assert_eq!(Q64::new(0.0, f64::NAN, 0.0, 0.0).normalize(), None);
+        assert_eq!(Q64::new(0.0, 0.0, f64::NAN, 0.0).normalize(), None);
+        assert_eq!(Q64::new(0.0, 0.0, 0.0, f64::NAN).normalize(), None);
+        assert_eq!(
+            Q64::new(f64::INFINITY, f64::NAN, 1.0, 0.0).normalize(),
+            None
+        );
+        assert_eq!(
+            Q64::new(1.0, 0.0, f64::INFINITY, f64::NAN).normalize(),
+            None
+        );
+    }
+
     #[test]
     fn test_from_underlying_type_val() {
         assert_eq!(Q64::from(-5.0), Q64::new(-5.0, 0.0, 0.0, 0.0));
@@ -739,6 +1377,23 @@ mod tests {
     fn test_from_underlying_type_ref() {
         assert_eq!(Q64::from(&-5.0), Q64::new(-5.0, 0.0, 0.0, 0.0));
         assert_eq!(Into::<Q32>::into(&42.0), Q32::new(42.0, 0.0, 0.0, 0.0));
+    }
+
+    #[test]
+    fn test_from_unit_quaternion() {
+        assert_eq!(Q32::from(UQ32::ONE), Q32::ONE);
+        assert_eq!(Q64::from(UQ64::I), Q64::I);
+        assert_eq!(Q32::from(UQ32::J), Q32::J);
+        assert_eq!(Q64::from(UQ64::K), Q64::K);
+    }
+
+    #[allow(clippy::needless_borrows_for_generic_args)]
+    #[test]
+    fn test_from_unit_quaternion_ref() {
+        assert_eq!(<&Q32 as From<&UQ32>>::from(&UQ32::ONE), &Q32::ONE);
+        assert_eq!(<&Q64 as From<&UQ64>>::from(&UQ64::I), &Q64::I);
+        assert_eq!(<&Q32 as From<&UQ32>>::from(&UQ32::J), &Q32::J);
+        assert_eq!(<&Q64 as From<&UQ64>>::from(&UQ64::K), &Q64::K);
     }
 
     #[test]
@@ -811,6 +1466,16 @@ mod tests {
     }
 
     #[test]
+    fn test_mul_quaternion_by_unit_quaternion() {
+        assert_eq!(Q32::I * UQ32::J, Q32::K);
+        assert_eq!(Q64::J * UQ64::K, Q64::I);
+        assert_eq!(
+            Q32::new(1.0, 2.0, 3.0, 4.0) * UQ32::K,
+            Q32::new(-4.0, 3.0, -2.0, 1.0)
+        );
+    }
+
+    #[test]
     fn test_div_quaternion() {
         assert_eq!(Q32::ONE / Q32::ONE * Q32::ONE, Q32::ONE);
         assert_eq!(Q32::ONE / Q32::I * Q32::I, Q32::ONE);
@@ -839,6 +1504,16 @@ mod tests {
         assert_eq!(
             Q32::new(1.0, 2.0, 3.0, 4.0) / 4.0,
             Q32::new(0.25, 0.5, 0.75, 1.0)
+        );
+    }
+
+    #[test]
+    fn test_div_quaternion_by_unit_quaternion() {
+        assert_eq!(Q32::I / UQ32::J, -Q32::K);
+        assert_eq!(Q64::J / UQ64::K, -Q64::I);
+        assert_eq!(
+            Q32::new(1.0, 2.0, 3.0, 4.0) / UQ32::K,
+            Q32::new(4.0, -3.0, 2.0, -1.0)
         );
     }
 
@@ -945,5 +1620,65 @@ mod tests {
                 expected *= q;
             }
         }
+    }
+
+    /// Computes the hash value of `val` using the default hasher.
+    #[cfg(feature = "std")]
+    fn compute_hash(val: impl Hash) -> u64 {
+        let mut hasher = DefaultHasher::new();
+        val.hash(&mut hasher);
+        hasher.finish()
+    }
+
+    // We test if the hash value of a unit quaternion is equal to the hash
+    // value of the inner quaternion. This is required because `UnitQuaternion`
+    // implements both `Hash` and `Borrow<Quaternion>`.
+    #[cfg(feature = "std")]
+    #[test]
+    fn test_hash_of_unit_quaternion_equals_hash_of_inner_quaternion() {
+        assert_eq!(
+            compute_hash(UnitQuaternion::<u32>::ONE),
+            compute_hash(Quaternion::<u32>::ONE)
+        );
+        assert_eq!(
+            compute_hash(UnitQuaternion::<i32>::I),
+            compute_hash(Quaternion::<i32>::I)
+        );
+        assert_eq!(
+            compute_hash(UnitQuaternion::<isize>::J),
+            compute_hash(Quaternion::<isize>::J)
+        );
+        assert_eq!(
+            compute_hash(UnitQuaternion::<i128>::K),
+            compute_hash(Quaternion::<i128>::K)
+        );
+    }
+
+    #[test]
+    fn test_from_euler_angles() {
+        assert!(
+            (UQ32::from_euler_angles(core::f32::consts::PI, 0.0, 0.0).into_quaternion() - Q32::I)
+                .norm()
+                < f32::EPSILON
+        );
+        assert!(
+            (UQ64::from_euler_angles(0.0, core::f64::consts::PI, 0.0).into_quaternion() - Q64::J)
+                .norm()
+                < f64::EPSILON
+        );
+        assert!(
+            (UQ32::from_euler_angles(0.0, 0.0, core::f32::consts::PI).into_quaternion() - Q32::K)
+                .norm()
+                < f32::EPSILON
+        );
+        assert!(
+            (UQ64::from_euler_angles(1.0, 2.0, 3.0).into_quaternion()
+                - (UQ64::from_euler_angles(0.0, 0.0, 3.0)
+                    * UQ64::from_euler_angles(0.0, 2.0, 0.0)
+                    * UQ64::from_euler_angles(1.0, 0.0, 0.0))
+                .into_quaternion())
+            .norm()
+                < 4.0 * f64::EPSILON
+        );
     }
 }
