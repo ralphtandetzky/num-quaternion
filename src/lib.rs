@@ -167,6 +167,7 @@ where
     }
 }
 
+#[cfg(any(feature = "std", feature = "libm"))]
 impl<T> Quaternion<T>
 where
     T: Float,
@@ -670,6 +671,7 @@ pub type UQ32 = UnitQuaternion<f32>;
 /// Alias for a [`UnitQuaternion<f64>`].
 pub type UQ64 = UnitQuaternion<f64>;
 
+#[cfg(any(feature = "std", feature = "libm"))]
 impl<T> UnitQuaternion<T>
 where
     T: Float,
@@ -1104,6 +1106,7 @@ where
     }
 }
 
+#[cfg(any(feature = "std", feature = "libm"))]
 impl<T> UnitQuaternion<T>
 where
     T: Float,
