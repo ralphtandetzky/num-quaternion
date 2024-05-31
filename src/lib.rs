@@ -1657,6 +1657,7 @@ mod tests {
         );
     }
 
+    #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_from_euler_angles() {
         assert!(
