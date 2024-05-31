@@ -51,9 +51,7 @@ num-quaternion = { version = "0.1.2", default-features = false }
 ```
 
 Features based on `Float` types are only available when `std` or `libm` is
-enabled. Where possible, `FloatCore` is used instead.  Formatting complex
-numbers only supports format width when `std` is enabled.
-
+enabled. Where possible, `FloatCore` is used instead.
 
 ## Releases
 
@@ -62,18 +60,18 @@ Release notes are available in [RELEASES.md](RELEASES.md).
 
 ## Contributing
 
-Contributions are highly welcome. Unless you explicitly state otherwise, 
-any contribution intentionally submitted for inclusion in the work by you, 
-as defined in the Apache-2.0 license, shall be dual licensed as above, 
+Contributions are highly welcome. Unless you explicitly state otherwise,
+any contribution intentionally submitted for inclusion in the work by you,
+as defined in the Apache-2.0 license, shall be dual licensed as above,
 without any additional terms or conditions.
 
 
 ## Bug Reports and Feature Requests
 
-If you spot a bug, please report it 
-[here](https://github.com/ralphtandetzky/num-quaternion/issues). 
-If you would like a feature to be worked on with higher priority, 
-please don't hesitate to let me know 
+If you spot a bug, please report it
+[here](https://github.com/ralphtandetzky/num-quaternion/issues).
+If you would like a feature to be worked on with higher priority,
+please don't hesitate to let me know
 [here](https://github.com/ralphtandetzky/num-quaternion/issues).
 
 
@@ -89,8 +87,8 @@ at your option.
 
 ## Acknowledgements
 
-Thanks to [@cuviper](https://github.com/cuviper) for the 
+Thanks to [@cuviper](https://github.com/cuviper) for the
 [`num-complex` crate](https://crates.io/crates/num-complex) which served
-as a model for this crate. It borrows a lot from it. This is by design, 
-so this crate can be used consistently with the other crates from the 
+as a model for this crate. It borrows a lot from it. This is by design,
+so this crate can be used consistently with the other crates from the
 [`rust-num` family](https://github.com/rust-num) of crates.
