@@ -1685,4 +1685,244 @@ mod tests {
                 < 4.0 * f64::EPSILON
         );
     }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_from_rotation_vector() {
+        assert!(
+            (UQ32::from_rotation_vector(&[core::f32::consts::PI, 0.0, 0.0]) - Q32::I).norm()
+                < f32::EPSILON
+        );
+        assert!(
+            (UQ64::from_rotation_vector(&[0.0, core::f64::consts::PI, 0.0]) - Q64::J).norm()
+                < f64::EPSILON
+        );
+        assert!(
+            (UQ32::from_rotation_vector(&[0.0, 0.0, core::f32::consts::PI]) - Q32::K).norm()
+                < f32::EPSILON
+        );
+        let x = 2.0 * core::f64::consts::FRAC_PI_3 * (1.0f64 / 3.0).sqrt();
+        assert!(
+            (UQ64::from_rotation_vector(&[x, x, x]) - Q64::new(0.5, 0.5, 0.5, 0.5)).norm()
+                < 4.0 * f64::EPSILON
+        );
+        assert!(
+            (UQ64::from_rotation_vector(&[-x, x, -x]) - Q64::new(0.5, -0.5, 0.5, -0.5)).norm()
+                < 4.0 * f64::EPSILON
+        );
+    }
+
+    #[test]
+    fn test_default_unit_quaternion() {
+        assert_eq!(UQ32::default().into_quaternion(), Q32::ONE);
+    }
+
+    #[test]
+    fn test_constant_one() {
+        assert_eq!(UQ32::ONE.into_quaternion(), Q32::ONE);
+    }
+
+    #[test]
+    fn test_constant_i() {
+        assert_eq!(UQ32::I.into_quaternion(), Q32::I);
+    }
+
+    #[test]
+    fn test_constant_j() {
+        assert_eq!(UQ32::J.into_quaternion(), Q32::J);
+    }
+
+    #[test]
+    fn test_constant_k() {
+        assert_eq!(UQ32::K.into_quaternion(), Q32::K);
+    }
+
+    #[test]
+    fn test_const_one() {
+        assert_eq!(<UQ32 as ConstOne>::ONE.into_quaternion(), Q32::ONE);
+    }
+
+    #[test]
+    fn test_one_trait() {
+        assert_eq!(<UQ32 as One>::one().into_quaternion(), Q32::ONE);
+        assert!(UQ64::ONE.is_one());
+        assert!(!UQ64::I.is_one());
+        assert!(!UQ64::J.is_one());
+        assert!(!UQ64::K.is_one());
+        let mut uq = UQ32::I;
+        uq.set_one();
+        assert!(uq.is_one());
+    }
+
+    #[test]
+    fn test_unit_quaternion_i_func() {
+        assert_eq!(UQ32::i().into_quaternion(), Q32::i());
+    }
+
+    #[test]
+    fn test_unit_quaternion_j_func() {
+        assert_eq!(UQ32::j().into_quaternion(), Q32::j());
+    }
+
+    #[test]
+    fn test_unit_quaternion_k_func() {
+        assert_eq!(UQ32::k().into_quaternion(), Q32::k());
+    }
+
+    #[test]
+    fn test_unit_quaternion_conj() {
+        assert_eq!(UQ32::ONE.conj(), UQ32::ONE);
+        assert_eq!(UQ64::I.conj(), -UQ64::I);
+        assert_eq!(UQ32::J.conj(), -UQ32::J);
+        assert_eq!(UQ64::K.conj(), -UQ64::K);
+        assert_eq!(
+            Q32::new(1.0, 2.0, 3.0, 4.0).normalize().unwrap().conj(),
+            Q32::new(1.0, -2.0, -3.0, -4.0).normalize().unwrap()
+        )
+    }
+
+    #[test]
+    fn test_unit_quaternion_inv_func() {
+        assert_eq!(
+            Q32::new(1.0, 2.0, 3.0, 4.0).normalize().unwrap().inv(),
+            Q32::new(1.0, 2.0, 3.0, 4.0).normalize().unwrap().conj()
+        )
+    }
+
+    #[test]
+    fn test_unit_quaternion_inv_trait() {
+        assert_eq!(
+            <UQ32 as Inv>::inv(Q32::new(1.0, 2.0, 3.0, 4.0).normalize().unwrap()),
+            Q32::new(1.0, 2.0, 3.0, 4.0).normalize().unwrap().conj()
+        )
+    }
+
+    #[test]
+    fn test_unit_quaternion_ref_inv_trait() {
+        assert_eq!(
+            <&UQ32 as Inv>::inv(&Q32::new(1.0, 2.0, 3.0, 4.0).normalize().unwrap()),
+            Q32::new(1.0, 2.0, 3.0, 4.0).normalize().unwrap().conj()
+        )
+    }
+
+    #[test]
+    fn test_unit_quaternion_add() {
+        assert_eq!(UQ32::I + UQ32::J, Q32::new(0.0, 1.0, 1.0, 0.0));
+    }
+
+    #[test]
+    fn test_unit_quaternion_add_quaternion() {
+        assert_eq!(UQ32::J + Q32::K, Q32::new(0.0, 0.0, 1.0, 1.0));
+    }
+
+    #[test]
+    fn test_unit_quaternion_add_underlying() {
+        assert_eq!(UQ32::J + 2.0f32, Q32::new(2.0, 0.0, 1.0, 0.0));
+    }
+
+    #[test]
+    fn test_f32_add_unit_quaternion() {
+        assert_eq!(3.0f32 + UQ32::K, Q32::new(3.0, 0.0, 0.0, 1.0));
+    }
+
+    #[test]
+    fn test_f64_add_unit_quaternion() {
+        assert_eq!(4.0f64 + UQ64::I, Q64::new(4.0, 1.0, 0.0, 0.0));
+    }
+
+    #[test]
+    fn test_unit_quaternion_sub() {
+        assert_eq!(UQ32::I - UQ32::J, Q32::new(0.0, 1.0, -1.0, 0.0));
+    }
+
+    #[test]
+    fn test_unit_quaternion_sub_quaternion() {
+        assert_eq!(UQ32::J - Q32::K, Q32::new(0.0, 0.0, 1.0, -1.0));
+    }
+
+    #[test]
+    fn test_unit_quaternion_sub_underlying() {
+        assert_eq!(UQ32::J - 2.0f32, Q32::new(-2.0, 0.0, 1.0, 0.0));
+    }
+
+    #[test]
+    fn test_f32_sub_unit_quaternion() {
+        assert_eq!(3.0f32 - UQ32::K, Q32::new(3.0, 0.0, 0.0, -1.0));
+    }
+
+    #[test]
+    fn test_f64_sub_unit_quaternion() {
+        assert_eq!(4.0f64 - UQ64::I, Q64::new(4.0, -1.0, 0.0, 0.0));
+    }
+
+    #[test]
+    fn test_unit_quaternion_mul() {
+        assert_eq!(UQ32::I * UQ32::J, UQ32::K);
+    }
+
+    #[test]
+    fn test_unit_quaternion_mul_quaternion() {
+        assert_eq!(UQ32::J * Q32::K, Q32::new(0.0, 1.0, 0.0, 0.0));
+    }
+
+    #[test]
+    fn test_unit_quaternion_mul_underlying() {
+        assert_eq!(UQ32::J * 2.0f32, Q32::new(0.0, 0.0, 2.0, 0.0));
+    }
+
+    #[test]
+    fn test_f32_mul_unit_quaternion() {
+        assert_eq!(3.0f32 * UQ32::K, Q32::new(0.0, 0.0, 0.0, 3.0));
+    }
+
+    #[test]
+    fn test_f64_mul_unit_quaternion() {
+        assert_eq!(4.0f64 * UQ64::I, Q64::new(0.0, 4.0, 0.0, 0.0));
+    }
+
+    #[test]
+    fn test_unit_quaternion_div() {
+        assert_eq!(UQ32::I / UQ32::J, -UQ32::K);
+    }
+
+    #[test]
+    fn test_unit_quaternion_div_quaternion() {
+        assert_eq!(UQ32::J / Q32::K, Q32::new(0.0, -1.0, 0.0, 0.0));
+    }
+
+    #[test]
+    fn test_unit_quaternion_div_underlying() {
+        assert_eq!(UQ32::J / 2.0f32, Q32::new(0.0, 0.0, 0.5, 0.0));
+    }
+
+    #[test]
+    fn test_f32_div_unit_quaternion() {
+        assert_eq!(3.0f32 / UQ32::K, Q32::new(0.0, 0.0, 0.0, -3.0));
+    }
+
+    #[test]
+    fn test_f64_div_unit_quaternion() {
+        assert_eq!(4.0f64 / UQ64::I, Q64::new(0.0, -4.0, 0.0, 0.0));
+    }
+
+    #[test]
+    fn test_unit_quaternion_neg() {
+        assert_eq!(
+            (-UQ32::ONE).into_quaternion(),
+            Q32::new(-1.0, 0.0, 0.0, 0.0)
+        );
+        assert_eq!((-UQ32::I).into_quaternion(), Q32::new(0.0, -1.0, 0.0, 0.0));
+        assert_eq!((-UQ32::J).into_quaternion(), Q32::new(0.0, 0.0, -1.0, 0.0));
+        assert_eq!((-UQ32::K).into_quaternion(), Q32::new(0.0, 0.0, 0.0, -1.0));
+    }
+
+    #[test]
+    fn test_unit_quaternion_adjust_norm() {
+        let mut q = UQ32::from_euler_angles(1.0, 0.5, 1.5);
+        for _ in 0..25 {
+            q = q * q;
+        }
+        assert!((q.into_quaternion().norm() - 1.0).abs() > 0.5);
+        assert!((q.adjust_norm().into_quaternion().norm() - 1.0).abs() <= 2.0 * core::f32::EPSILON);
+    }
 }
