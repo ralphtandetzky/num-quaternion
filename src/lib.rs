@@ -8,13 +8,12 @@ extern crate std;
 
 use core::{
     borrow::Borrow,
-    num,
     ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign},
 };
 use num_traits::{ConstOne, ConstZero, Inv, Num, One, Zero};
 
 #[cfg(any(feature = "std", feature = "libm"))]
-use num_traits::float::Float;
+use {core::num, num_traits::float::Float};
 
 /// Quaternion type.
 ///
@@ -1720,6 +1719,10 @@ mod tests {
     #[test]
     fn test_constant_one() {
         assert_eq!(UQ32::ONE.into_quaternion(), Q32::ONE);
+        assert_eq!(
+            UnitQuaternion::<i32>::ONE.into_quaternion(),
+            Quaternion::<i32>::ONE
+        );
     }
 
     #[test]
@@ -1775,12 +1778,18 @@ mod tests {
         assert_eq!(UQ64::I.conj(), -UQ64::I);
         assert_eq!(UQ32::J.conj(), -UQ32::J);
         assert_eq!(UQ64::K.conj(), -UQ64::K);
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_unit_quaternion_conj_with_normalize() {
         assert_eq!(
             Q32::new(1.0, 2.0, 3.0, 4.0).normalize().unwrap().conj(),
             Q32::new(1.0, -2.0, -3.0, -4.0).normalize().unwrap()
         )
     }
 
+    #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_unit_quaternion_inv_func() {
         assert_eq!(
@@ -1789,6 +1798,7 @@ mod tests {
         )
     }
 
+    #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_unit_quaternion_inv_trait() {
         assert_eq!(
@@ -1797,6 +1807,7 @@ mod tests {
         )
     }
 
+    #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_unit_quaternion_ref_inv_trait() {
         assert_eq!(
@@ -1916,6 +1927,7 @@ mod tests {
         assert_eq!((-UQ32::K).into_quaternion(), Q32::new(0.0, 0.0, 0.0, -1.0));
     }
 
+    #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_unit_quaternion_adjust_norm() {
         let mut q = UQ32::from_euler_angles(1.0, 0.5, 1.5);
