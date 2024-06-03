@@ -47,7 +47,7 @@ the default `std` feature. Use this in `Cargo.toml`:
 
 ```toml
 [dependencies]
-num-quaternion = { version = "0.1.2", default-features = false }
+num-quaternion = { version = "0.2.0", default-features = false }
 ```
 
 Features based on `Float` types are only available when `std` or `libm` is
