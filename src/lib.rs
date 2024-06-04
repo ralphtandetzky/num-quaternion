@@ -1113,8 +1113,8 @@ where
     /// Renormalizes `self`.
     ///
     /// By many multiplications of unit quaternions, round off errors can lead
-    /// to norms which are deviating from $1$. This function fix that
-    /// inaccuracy.
+    /// to norms which are deviating from $1$ significantly. This function
+    /// fixes that inaccuracy.
     #[inline]
     pub fn adjust_norm(self) -> Self {
         // TODO: Optimize for norms which are close to 1.
