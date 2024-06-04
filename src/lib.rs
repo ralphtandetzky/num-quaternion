@@ -1124,6 +1124,30 @@ where
     }
 }
 
+impl<T> UnitQuaternion<T>
+where
+    T: Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Clone,
+{
+    /// Rotates a vector using a quaternion.
+    ///
+    /// Given a unit quaternion $q$ and a pure quaternion $v$ (i. e. a
+    /// quaternion with real part zero), the mapping $v \mapsto q^*vq$
+    /// is a 3D rotation in the space of pure quaternions. This function
+    /// performs this 3D rotation efficiently.
+    pub fn rotate_vector(self, vector: [T; 3]) -> [T; 3] {
+        let q = self.into_quaternion();
+        let [vx, vy, vz] = vector;
+        let q_inv_v = Quaternion::<T>::new(
+            q.x.clone() * vx.clone() + q.y.clone() * vy.clone() + q.z.clone() * vz.clone(),
+            q.w.clone() * vx.clone() - q.y.clone() * vz.clone() + q.z.clone() * vy.clone(),
+            q.w.clone() * vy.clone() + q.x.clone() * vz.clone() - q.z.clone() * vx.clone(),
+            q.w.clone() * vz - q.x.clone() * vy + q.y.clone() * vx,
+        );
+        let result = q_inv_v * q;
+        [result.x, result.y, result.z]
+    }
+}
+
 #[cfg(test)]
 mod tests {
     #[cfg(feature = "std")]
@@ -1936,5 +1960,22 @@ mod tests {
         }
         assert!((q.into_quaternion().norm() - 1.0).abs() > 0.5);
         assert!((q.adjust_norm().into_quaternion().norm() - 1.0).abs() <= 2.0 * core::f32::EPSILON);
+    }
+
+    #[test]
+    fn test_unit_quaternion_rotate_vector_units() {
+        let v = [1.0, 2.0, 3.0];
+        assert_eq!(UQ32::I.rotate_vector(v), [1.0, -2.0, -3.0]);
+        assert_eq!(UQ32::J.rotate_vector(v), [-1.0, 2.0, -3.0]);
+        assert_eq!(UQ32::K.rotate_vector(v), [-1.0, -2.0, 3.0]);
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_unit_quaternion_rotate_vector_normalized() {
+        let q = Q32::new(1.0, 1.0, 1.0, 1.0).normalize().unwrap();
+        let v = [1.0, 2.0, 3.0];
+        let result = q.rotate_vector(v);
+        assert_eq!(result, [2.0, 3.0, 1.0]);
     }
 }
