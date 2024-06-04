@@ -1,3 +1,10 @@
+# Release 0.2.1 (2024-06-04)
+
+- Added the function `UnitQuaternion::rotate_vector()`.
+
+**Contributors**: @ralphtandetzky
+
+
 # Release 0.2.0 (2024-06-03)
 
 - **Breaking change:** Renamed member fields of `Quaternion` from `a`, `b`, `c`,
