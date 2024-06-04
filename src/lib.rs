@@ -650,9 +650,10 @@ where
 /// quaternion (a quaternion with real part zero). Such a pure quaternion
 /// $v$ can be rotated in 3D space by computing $q^{-1}\cdot v\cdot q$ for a
 /// unit quaternion $q$. The resulting product is again a pure quaternion which
-/// is $v$ rotated around the axis given by the imaginary part of $q$. The angle
-/// of rotation is double the angle between $1$ and $q$ interpreted as 4D
-/// vectors.
+/// is $v$ rotated around the axis given by the imaginary part of $q$. The
+/// method [`rotate_vector()`](UnitQuaternion::rotate_vector) performs this
+/// operation efficiently. The angle of rotation is double the angle between
+/// $1$ and $q$ interpreted as 4D vectors.
 ///
 /// Multiplying two unit quaternions yields again unit quaternion in theory.
 /// However, due to limited machine precision, rounding errors accumulate
