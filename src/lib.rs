@@ -671,6 +671,17 @@ pub type UQ32 = UnitQuaternion<f32>;
 /// Alias for a [`UnitQuaternion<f64>`].
 pub type UQ64 = UnitQuaternion<f64>;
 
+/// Contains the roll, pitch and yaw angle of a rotation.
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+pub struct EulerAngles<T> {
+    /// The roll angle.
+    pub roll: T,
+    /// The pitch angle.
+    pub pitch: T,
+    /// The yaw angle.
+    pub yaw: T,
+}
+
 #[cfg(any(feature = "std", feature = "libm"))]
 impl<T> UnitQuaternion<T>
 where
@@ -688,6 +699,40 @@ where
             cr * sp * cy + sr * cp * sy,
             cr * cp * sy - sr * sp * cy,
         ))
+    }
+
+    /// Converts the UnitQuaternion to roll, pitch, and yaw angles.
+    pub fn to_euler_angles(&self) -> EulerAngles<T> {
+        let &Self(Quaternion { w, x, y, z }) = self;
+
+        let two = T::from(2.0).unwrap();
+        let one = T::from(1.0).unwrap();
+        let epsilon = T::epsilon();
+
+        // Compute the sin of the pitch angle
+        let sin_pitch = two * (w * y - z * x);
+
+        // Check for gimbal lock, which occurs when sin_pitch is close to 1 or -1
+        if sin_pitch.abs() >= one - epsilon {
+            // Gimbal lock case
+            let half_pi = T::from(std::f64::consts::FRAC_PI_2).unwrap();
+            let pitch = if sin_pitch >= one - epsilon {
+                half_pi // 90 degrees
+            } else {
+                -half_pi // -90 degrees
+            };
+
+            // In the gimbal lock case, roll and yaw are dependent
+            let roll = T::zero();
+            let yaw = T::atan2(two * (x * y + w * z), one - two * (y * y + z * z));
+            EulerAngles { roll, pitch, yaw }
+        } else {
+            // General case
+            let pitch = sin_pitch.asin();
+            let roll = T::atan2(two * (w * x + y * z), one - two * (x * x + y * y));
+            let yaw = T::atan2(two * (w * z + x * y), one - two * (y * y + z * z));
+            EulerAngles { roll, pitch, yaw }
+        }
     }
 
     /// Returns a quaternion from a vector which is parallel to the rotation
@@ -1164,6 +1209,7 @@ mod tests {
     use num_traits::One;
     use num_traits::Zero;
 
+    use crate::EulerAngles;
     use crate::Quaternion;
     use crate::UnitQuaternion;
     use crate::Q32;
@@ -1708,6 +1754,25 @@ mod tests {
             .norm()
                 < 4.0 * f64::EPSILON
         );
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_to_euler_angles() {
+        let test_data = [
+            Q32::new(1.0, 0.0, 0.0, 0.0),
+            Q32::new(0.0, 1.0, 0.0, 0.0),
+            Q32::new(0.0, 0.0, 1.0, 0.0),
+            Q32::new(0.0, 0.0, 0.0, 1.0),
+            Q32::new(1.0, 1.0, 1.0, 1.0),
+            Q32::new(1.0, -2.0, 3.0, -4.0),
+            Q32::new(4.0, 3.0, 2.0, 1.0),
+        ];
+        for q in test_data.into_iter().map(|q| q.normalize().unwrap()) {
+            let EulerAngles { roll, pitch, yaw } = q.to_euler_angles();
+            let p = UQ32::from_euler_angles(roll, pitch, yaw);
+            assert!((p - q).norm() < core::f32::EPSILON);
+        }
     }
 
     #[cfg(any(feature = "std", feature = "libm"))]
