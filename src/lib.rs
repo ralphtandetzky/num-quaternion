@@ -10,7 +10,7 @@ use core::{
     borrow::Borrow,
     ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign},
 };
-use num_traits::{ConstOne, ConstZero, Inv, Num, One, Zero};
+use num_traits::{ConstOne, ConstZero, FloatConst, Inv, Num, One, Zero};
 
 #[cfg(any(feature = "std", feature = "libm"))]
 use {core::num, num_traits::float::Float};
@@ -700,14 +700,21 @@ where
             cr * cp * sy - sr * sp * cy,
         ))
     }
+}
 
+#[cfg(any(feature = "std", feature = "libm"))]
+impl<T> UnitQuaternion<T>
+where
+    T: Float + FloatConst,
+{
     /// Converts the UnitQuaternion to roll, pitch, and yaw angles.
     pub fn to_euler_angles(&self) -> EulerAngles<T> {
         let &Self(Quaternion { w, x, y, z }) = self;
 
-        let two = T::from(2.0).unwrap();
-        let one = T::from(1.0).unwrap();
+        let one = T::one();
+        let two = one + one;
         let epsilon = T::epsilon();
+        let half_pi = T::FRAC_PI_2();
 
         // Compute the sin of the pitch angle
         let sin_pitch = two * (w * y - z * x);
@@ -715,7 +722,6 @@ where
         // Check for gimbal lock, which occurs when sin_pitch is close to 1 or -1
         if sin_pitch.abs() >= one - epsilon {
             // Gimbal lock case
-            let half_pi = T::from(std::f64::consts::FRAC_PI_2).unwrap();
             let pitch = if sin_pitch >= one - epsilon {
                 half_pi // 90 degrees
             } else {
@@ -734,7 +740,13 @@ where
             EulerAngles { roll, pitch, yaw }
         }
     }
+}
 
+#[cfg(any(feature = "std", feature = "libm"))]
+impl<T> UnitQuaternion<T>
+where
+    T: Float,
+{
     /// Returns a quaternion from a vector which is parallel to the rotation
     /// axis and whose norm is the rotation angle.
     pub fn from_rotation_vector(v: &[T; 3]) -> Self {
@@ -1760,18 +1772,18 @@ mod tests {
     #[test]
     fn test_to_euler_angles() {
         let test_data = [
-            Q32::new(1.0, 0.0, 0.0, 0.0),
-            Q32::new(0.0, 1.0, 0.0, 0.0),
-            Q32::new(0.0, 0.0, 1.0, 0.0),
-            Q32::new(0.0, 0.0, 0.0, 1.0),
-            Q32::new(1.0, 1.0, 1.0, 1.0),
-            Q32::new(1.0, -2.0, 3.0, -4.0),
-            Q32::new(4.0, 3.0, 2.0, 1.0),
+            Q64::new(1.0, 0.0, 0.0, 0.0),
+            Q64::new(0.0, 1.0, 0.0, 0.0),
+            Q64::new(0.0, 0.0, 1.0, 0.0),
+            Q64::new(0.0, 0.0, 0.0, 1.0),
+            Q64::new(1.0, 1.0, 1.0, 1.0),
+            Q64::new(1.0, -2.0, 3.0, -4.0),
+            Q64::new(4.0, 3.0, 2.0, 1.0),
         ];
         for q in test_data.into_iter().map(|q| q.normalize().unwrap()) {
             let EulerAngles { roll, pitch, yaw } = q.to_euler_angles();
-            let p = UQ32::from_euler_angles(roll, pitch, yaw);
-            assert!((p - q).norm() < core::f32::EPSILON);
+            let p = UQ64::from_euler_angles(roll, pitch, yaw);
+            assert!((p - q).norm() < core::f64::EPSILON);
         }
     }
 
