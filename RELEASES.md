@@ -1,3 +1,13 @@
+# Release 0.2.2 (2024-06-05)
+
+- Added the function `UnitQuaternion::to_euler_angles()`.
+- Added the struct `EulerAngles<T>`.
+- Small improvements in the docs.
+
+
+**Contributors**: @ralphtandetzky
+
+
 # Release 0.2.1 (2024-06-04)
 
 - Added the function `UnitQuaternion::rotate_vector()`.
