@@ -15,7 +15,7 @@ edition = "2021"
 rust-version = "1.60.0"
 
 [package.metadata.docs.rs]
-features = ["std", "libm"]
+features = ["std", "libm", "unstable"]
 rustdoc-args = ["--html-in-header", "katex.html"]
 
 [dependencies.num-traits]
@@ -29,3 +29,4 @@ version = "0.1.46"
 default = ["std"]
 std = ["num-traits/std"]
 libm = ["num-traits/libm"]
+unstable = []

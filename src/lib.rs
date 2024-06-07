@@ -700,6 +700,13 @@ where
             cr * cp * sy - sr * sp * cy,
         ))
     }
+
+    /// Creates a new Quaternion from Euler angles.
+    #[cfg(feature = "unstable")]
+    pub fn from_euler_angles_struct(angles: EulerAngles<T>) -> Self {
+        let EulerAngles { roll, pitch, yaw } = angles;
+        Self::from_euler_angles(roll, pitch, yaw)
+    }
 }
 
 #[cfg(any(feature = "std", feature = "libm"))]
