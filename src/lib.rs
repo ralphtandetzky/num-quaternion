@@ -702,6 +702,9 @@ where
     }
 
     /// Creates a new Quaternion from Euler angles.
+    ///
+    /// *Note.* The reason that this function is marked as `unstable` is that I'm not 100%
+    /// confident about the naming of the function.
     #[cfg(feature = "unstable")]
     pub fn from_euler_angles_struct(angles: EulerAngles<T>) -> Self {
         let EulerAngles { roll, pitch, yaw } = angles;
