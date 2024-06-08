@@ -1887,6 +1887,7 @@ mod tests {
         );
     }
 
+    #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_to_rotation_vector_zero_rotation() {
         // Quaternion representing no rotation (identity quaternion)
@@ -1894,6 +1895,7 @@ mod tests {
         assert_eq!(UQ64::ONE.to_rotation_vector(), [0.0, 0.0, 0.0]);
     }
 
+    #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_to_rotation_vector_90_degree_rotation_x_axis() {
         // Quaternion representing a 90-degree rotation around the x-axis
@@ -1904,6 +1906,7 @@ mod tests {
         assert!((rotation_vector[2]).abs() < f32::EPSILON);
     }
 
+    #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_to_rotation_vector_180_degree_rotation_y_axis() {
         // Quaternion representing a 180-degree rotation around the x-axis
@@ -1914,6 +1917,7 @@ mod tests {
         assert!((rotation_vector[2]).abs() < core::f64::EPSILON);
     }
 
+    #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_to_rotation_vector_180_degree_rotation_arbitrary_axis() {
         // Quaternion representing a 180-degree rotation around an arbitrary axis
@@ -1929,6 +1933,7 @@ mod tests {
         assert!((rotation_vector[2] - expected[2]).abs() < 4.0 * f32::EPSILON);
     }
 
+    #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_to_rotation_vector_small_rotation() {
         // Quaternion representing a small rotation
@@ -1942,6 +1947,7 @@ mod tests {
         assert!((rotation_vector[2]).abs() < f32::EPSILON);
     }
 
+    #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_to_rotation_vector_general_case() {
         // Quaternion representing a general rotation
