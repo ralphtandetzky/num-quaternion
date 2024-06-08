@@ -756,6 +756,9 @@ where
 {
     /// Returns a quaternion from a vector which is parallel to the rotation
     /// axis and whose norm is the rotation angle.
+    ///
+    /// This function is the inverse of
+    /// [`to_rotation_vector()`](UnitQuaternion::to_rotation_vector).
     pub fn from_rotation_vector(v: &[T; 3]) -> Self {
         let sqr_norm = v[0] * v[0] + v[1] * v[1] + v[2] * v[2];
         let two = T::one() + T::one();
@@ -777,6 +780,70 @@ where
             )),
             num::FpCategory::Nan | num::FpCategory::Infinite => Self(Quaternion::nan()),
         }
+    }
+}
+
+#[cfg(any(feature = "std", feature = "libm"))]
+impl<T> UnitQuaternion<T>
+where
+    T: Float + FloatConst,
+{
+    /// Returns a rotation vector which is parallel to the rotation
+    /// axis and whose norm is the rotation angle.
+    ///
+    /// This function is the inverse of
+    /// [`from_rotation_vector()`](UnitQuaternion::from_rotation_vector).
+    pub fn to_rotation_vector(&self) -> [T; 3] {
+        let q = self.as_quaternion();
+        let one = T::one();
+        let two = one + one;
+        let epsilon = T::epsilon();
+
+        // Check if the absolute value of the quaternion's real part is small
+        // enough, so the angle can be computed quickly via `2 * q.w.acos()`.
+        // If the value is too large, then the arccosine becomes numerically
+        // unstable and we need to compute the angle differently.
+        let small_abs_real_part = q.w.abs() < T::from(0.9).unwrap();
+
+        // Compute the sin of half the angle
+        let sin_half_angle = if small_abs_real_part {
+            (one - q.w * q.w).sqrt()
+        } else {
+            // This is more expensive, but numerically more accurate than
+            // the first branch, if small_abs_real_part is false.
+            (q.x * q.x + q.y * q.y + q.z * q.z).sqrt()
+        };
+
+        // Compute the angle
+        let angle = two
+            * if small_abs_real_part {
+                q.w.acos()
+            } else if q.w.is_sign_positive() {
+                // The angle is less than 180 degrees.
+                if sin_half_angle < epsilon.sqrt() {
+                    // The angle is very close to zero. In this case we can
+                    // avoid division by zero and make the computation cheap
+                    // at the same time by returning the following immediately.
+                    return [two * q.x, two * q.y, two * q.z];
+                }
+                sin_half_angle.asin()
+            } else {
+                // The angle is more than 180 degrees.
+                if sin_half_angle.is_zero() {
+                    // The angle is exactly 360 degrees. To avoid division by zero we
+                    // return the following immediately.
+                    return [two * T::PI(), T::zero(), T::zero()];
+                }
+                let pi_minus_half_angle = sin_half_angle.asin();
+                T::PI() - pi_minus_half_angle
+            };
+
+        // Compute the normalized rotation vector components
+        let x = q.x / sin_half_angle;
+        let y = q.y / sin_half_angle;
+        let z = q.z / sin_half_angle;
+
+        [x * angle, y * angle, z * angle]
     }
 }
 
@@ -1818,6 +1885,95 @@ mod tests {
             (UQ64::from_rotation_vector(&[-x, x, -x]) - Q64::new(0.5, -0.5, 0.5, -0.5)).norm()
                 < 4.0 * f64::EPSILON
         );
+    }
+
+    #[test]
+    fn test_to_rotation_vector_zero_rotation() {
+        // Quaternion representing no rotation (identity quaternion)
+        assert_eq!(UQ32::ONE.to_rotation_vector(), [0.0, 0.0, 0.0]);
+        assert_eq!(UQ64::ONE.to_rotation_vector(), [0.0, 0.0, 0.0]);
+    }
+
+    #[test]
+    fn test_to_rotation_vector_90_degree_rotation_x_axis() {
+        // Quaternion representing a 90-degree rotation around the x-axis
+        let q = Q32::new(1.0, 1.0, 0.0, 0.0).normalize().unwrap();
+        let rotation_vector = q.to_rotation_vector();
+        assert!((rotation_vector[0] - core::f32::consts::FRAC_PI_2).abs() < f32::EPSILON);
+        assert!((rotation_vector[1]).abs() < f32::EPSILON);
+        assert!((rotation_vector[2]).abs() < f32::EPSILON);
+    }
+
+    #[test]
+    fn test_to_rotation_vector_180_degree_rotation_y_axis() {
+        // Quaternion representing a 180-degree rotation around the x-axis
+        let q = UQ64::J;
+        let rotation_vector = q.to_rotation_vector();
+        assert!((rotation_vector[0]).abs() < core::f64::EPSILON);
+        assert!((rotation_vector[1] - core::f64::consts::PI).abs() < core::f64::EPSILON);
+        assert!((rotation_vector[2]).abs() < core::f64::EPSILON);
+    }
+
+    #[test]
+    fn test_to_rotation_vector_180_degree_rotation_arbitrary_axis() {
+        // Quaternion representing a 180-degree rotation around an arbitrary axis
+        let q = Q32::new(0.0, 1.0, 1.0, 1.0).normalize().unwrap();
+        let rotation_vector = q.to_rotation_vector();
+        let expected = [
+            core::f32::consts::PI / (1.0f32 + 1.0 + 1.0).sqrt(),
+            core::f32::consts::PI / (1.0f32 + 1.0 + 1.0).sqrt(),
+            core::f32::consts::PI / (1.0f32 + 1.0 + 1.0).sqrt(),
+        ];
+        assert!((rotation_vector[0] - expected[0]).abs() < 4.0 * f32::EPSILON);
+        assert!((rotation_vector[1] - expected[1]).abs() < 4.0 * f32::EPSILON);
+        assert!((rotation_vector[2] - expected[2]).abs() < 4.0 * f32::EPSILON);
+    }
+
+    #[test]
+    fn test_to_rotation_vector_small_rotation() {
+        // Quaternion representing a small rotation
+        let angle = 1e-6f32;
+        let q = Q32::new((angle / 2.0).cos(), (angle / 2.0).sin(), 0.0, 0.0)
+            .normalize()
+            .unwrap();
+        let rotation_vector = q.to_rotation_vector();
+        assert!((rotation_vector[0] - angle).abs() < f32::EPSILON);
+        assert!((rotation_vector[1]).abs() < f32::EPSILON);
+        assert!((rotation_vector[2]).abs() < f32::EPSILON);
+    }
+
+    #[test]
+    fn test_to_rotation_vector_general_case() {
+        // Quaternion representing a general rotation
+        // Here we first compute the rotation vector and then
+        // check if `from_rotation_vector()` restores the original
+        // quaternion appropriately.
+        for q in [
+            [1.0, 0.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0, 1.0],
+            [1.0, 1.0, 0.0, 0.0],
+            [1.0, 1.0, 1.0, 0.0],
+            [1.0, 1.0, 1.0, 1.0],
+            [0.0, 1.0, 1.0, -1.0],
+            [1.0, 0.0, 2.0, 5.0],
+            [1.0, 0.0, 1.0e-10, 2.0e-10],
+            [-1.0, 0.0, 0.0, 0.0],
+            [1.0, f64::EPSILON, 0.0, 0.0],
+            [1.0, 0.0, 0.0, f64::MIN_POSITIVE],
+            [
+                -1.0,
+                3.0 * f64::MIN_POSITIVE,
+                2.0 * f64::MIN_POSITIVE,
+                f64::MIN_POSITIVE,
+            ],
+        ]
+        .into_iter()
+        .map(|[w, x, y, z]| Q64::new(w, x, y, z).normalize().unwrap())
+        {
+            let rot = q.to_rotation_vector();
+            let p = UQ64::from_rotation_vector(&rot);
+            assert!((p - q).norm() <= 6.0 * f64::EPSILON);
+        }
     }
 
     #[test]
