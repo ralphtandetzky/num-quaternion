@@ -1343,6 +1343,7 @@ where
     }
 }
 
+#[cfg(any(feature = "std", feature = "libm"))]
 impl<T> UnitQuaternion<T>
 where
     T: Float,
