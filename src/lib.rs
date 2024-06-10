@@ -594,6 +594,42 @@ where
     }
 }
 
+/// Provides dot product of vectors.
+pub trait Dot<Rhs> {
+    /// The result type of the dot product.
+    type Output;
+
+    /// Computes the dot product of two vectors.
+    ///
+    /// Quaternions can be interpreted as 4 dimensional real vectors. 
+    /// This function computes the dot product between those. 
+    fn dot(self, other: Rhs) -> Self::Output;
+}
+
+impl<T> Dot<Quaternion<T>> for Quaternion<T>
+where
+    T: Add<T, Output = T> + Mul<T, Output = T>,
+{
+    type Output = T;
+
+    #[inline]
+    fn dot(self, other: Self) -> Self::Output {
+        self.w * other.w + self.y * other.y + (self.x * other.x + self.z * other.z)
+    }
+}
+
+impl<T> Dot<UnitQuaternion<T>> for Quaternion<T>
+where
+    T: Add<T, Output = T> + Mul<T, Output = T>,
+{
+    type Output = T;
+
+    #[inline]
+    fn dot(self, other: UnitQuaternion<T>) -> Self::Output {
+        self.dot(other.0)
+    }
+}
+
 impl<T> Quaternion<T>
 where
     T: Num + Clone,
@@ -1237,6 +1273,30 @@ where
 
     fn neg(self) -> Self::Output {
         Self(-self.0)
+    }
+}
+
+impl<T> Dot<Quaternion<T>> for UnitQuaternion<T>
+where
+    T: Add<T, Output = T> + Mul<T, Output = T>,
+{
+    type Output = T;
+
+    #[inline]
+    fn dot(self, other: Quaternion<T>) -> Self::Output {
+        self.0.dot(other)
+    }
+}
+
+impl<T> Dot<UnitQuaternion<T>> for UnitQuaternion<T>
+where
+    T: Add<T, Output = T> + Mul<T, Output = T>,
+{
+    type Output = T;
+
+    #[inline]
+    fn dot(self, other: Self) -> Self::Output {
+        self.0.dot(other.0)
     }
 }
 
