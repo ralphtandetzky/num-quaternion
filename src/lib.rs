@@ -594,39 +594,15 @@ where
     }
 }
 
-/// Provides dot product of vectors.
-pub trait Dot<Rhs> {
-    /// The result type of the dot product.
-    type Output;
-
-    /// Computes the dot product of two vectors.
-    ///
-    /// Quaternions can be interpreted as 4 dimensional real vectors.
-    /// This function computes the dot product between those.
-    fn dot(self, other: Rhs) -> Self::Output;
-}
-
-impl<T> Dot<Quaternion<T>> for Quaternion<T>
+impl<T> Quaternion<T>
 where
     T: Add<T, Output = T> + Mul<T, Output = T>,
 {
-    type Output = T;
-
+    /// Computes the dot product of two quaternions interpreted as
+    /// 4D real vectors.
     #[inline]
-    fn dot(self, other: Self) -> Self::Output {
+    pub fn dot(self, other: Self) -> T {
         self.w * other.w + self.y * other.y + (self.x * other.x + self.z * other.z)
-    }
-}
-
-impl<T> Dot<UnitQuaternion<T>> for Quaternion<T>
-where
-    T: Add<T, Output = T> + Mul<T, Output = T>,
-{
-    type Output = T;
-
-    #[inline]
-    fn dot(self, other: UnitQuaternion<T>) -> Self::Output {
-        self.dot(other.0)
     }
 }
 
@@ -1276,26 +1252,14 @@ where
     }
 }
 
-impl<T> Dot<Quaternion<T>> for UnitQuaternion<T>
+impl<T> UnitQuaternion<T>
 where
     T: Add<T, Output = T> + Mul<T, Output = T>,
 {
-    type Output = T;
-
+    /// Computes the dot product of two unit quaternions interpreted as
+    /// 4D real vectors.
     #[inline]
-    fn dot(self, other: Quaternion<T>) -> Self::Output {
-        self.0.dot(other)
-    }
-}
-
-impl<T> Dot<UnitQuaternion<T>> for UnitQuaternion<T>
-where
-    T: Add<T, Output = T> + Mul<T, Output = T>,
-{
-    type Output = T;
-
-    #[inline]
-    fn dot(self, other: Self) -> Self::Output {
+    pub fn dot(self, other: Self) -> T {
         self.0.dot(other.0)
     }
 }
@@ -1404,7 +1368,6 @@ mod tests {
     use num_traits::One;
     use num_traits::Zero;
 
-    use crate::Dot;
     use crate::EulerAngles;
     use crate::Quaternion;
     use crate::UnitQuaternion;
