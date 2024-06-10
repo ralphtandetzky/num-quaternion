@@ -601,8 +601,8 @@ pub trait Dot<Rhs> {
 
     /// Computes the dot product of two vectors.
     ///
-    /// Quaternions can be interpreted as 4 dimensional real vectors. 
-    /// This function computes the dot product between those. 
+    /// Quaternions can be interpreted as 4 dimensional real vectors.
+    /// This function computes the dot product between those.
     fn dot(self, other: Rhs) -> Self::Output;
 }
 
@@ -1340,6 +1340,51 @@ where
         );
         let result = q_inv_v * q;
         [result.x, result.y, result.z]
+    }
+}
+
+impl<T> UnitQuaternion<T>
+where
+    T: Float,
+{
+    /// Spherical linear interpolation between two unit quaternions.
+    ///
+    /// `t` should be in the range [0, 1], where 0 returns `self` and 1 returns
+    /// `other` or `-other`, whichever is closer to `self`.
+    pub fn slerp(&self, other: &Self, t: T) -> Self {
+        let one = T::one();
+        let dot = self.dot(*other);
+
+        // If the dot product is negative, slerp won't take the shorter path.
+        // We fix this by reversing one quaternion.
+        let (dot, other) = if dot.is_sign_positive() {
+            (dot, *other)
+        } else {
+            (-dot, -*other)
+        };
+
+        // Use a threshold to decide when to use linear interpolation to avoid
+        // precision issues
+        let threshold = one - T::epsilon().sqrt();
+        if dot > threshold {
+            // Perform linear interpolation and normalize the result
+            return Self(*self + (other - *self) * t);
+        }
+
+        // theta_0 = angle between input quaternions
+        let theta_0 = dot.acos();
+        // theta = angle between self and result
+        let theta = theta_0 * t;
+
+        // Compute the spherical interpolation coefficients
+        let sin_theta = theta.sin();
+        let sin_theta_0 = theta_0.sin();
+        let s0 = ((one - t) * theta_0).sin() / sin_theta_0;
+        let s1 = sin_theta / sin_theta_0;
+
+        // The following result is already normalized, if the inputs are
+        // normalized (which we assume).
+        Self(*self * s0 + other * s1)
     }
 }
 
