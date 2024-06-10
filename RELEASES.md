@@ -1,3 +1,11 @@
+# Release 0.2.4 (2024-06-10)
+
+- Added dot product.
+- Added spherical linear interpolation.
+
+**Contributors**: @ralphtandetzky
+
+
 # Release 0.2.3 (2024-06-08)
 
 - Added the function `UnitQuaternion::to_rotation_vector()`.
