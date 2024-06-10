@@ -596,6 +596,18 @@ where
 
 impl<T> Quaternion<T>
 where
+    T: Add<T, Output = T> + Mul<T, Output = T>,
+{
+    /// Computes the dot product of two quaternions interpreted as
+    /// 4D real vectors.
+    #[inline]
+    pub fn dot(self, other: Self) -> T {
+        self.w * other.w + self.y * other.y + (self.x * other.x + self.z * other.z)
+    }
+}
+
+impl<T> Quaternion<T>
+where
     T: Num + Clone,
 {
     /// Raises `self` to an unsigned integer power `n`, i. e. $q^n$.
@@ -1240,6 +1252,18 @@ where
     }
 }
 
+impl<T> UnitQuaternion<T>
+where
+    T: Add<T, Output = T> + Mul<T, Output = T>,
+{
+    /// Computes the dot product of two unit quaternions interpreted as
+    /// 4D real vectors.
+    #[inline]
+    pub fn dot(self, other: Self) -> T {
+        self.0.dot(other.0)
+    }
+}
+
 #[cfg(any(feature = "std", feature = "libm"))]
 impl<T> UnitQuaternion<T>
 where
@@ -1280,6 +1304,52 @@ where
         );
         let result = q_inv_v * q;
         [result.x, result.y, result.z]
+    }
+}
+
+#[cfg(any(feature = "std", feature = "libm"))]
+impl<T> UnitQuaternion<T>
+where
+    T: Float,
+{
+    /// Spherical linear interpolation between two unit quaternions.
+    ///
+    /// `t` should be in the range [0, 1], where 0 returns `self` and 1 returns
+    /// `other` or `-other`, whichever is closer to `self`.
+    pub fn slerp(&self, other: &Self, t: T) -> Self {
+        let one = T::one();
+        let dot = self.dot(*other);
+
+        // If the dot product is negative, slerp won't take the shorter path.
+        // We fix this by reversing one quaternion.
+        let (dot, other) = if dot.is_sign_positive() {
+            (dot, *other)
+        } else {
+            (-dot, -*other)
+        };
+
+        // Use a threshold to decide when to use linear interpolation to avoid
+        // precision issues
+        let threshold = one - T::epsilon().sqrt();
+        if dot > threshold {
+            // Perform linear interpolation and normalize the result
+            return Self(*self + (other - *self) * t);
+        }
+
+        // theta_0 = angle between input quaternions
+        let theta_0 = dot.acos();
+        // theta = angle between self and result
+        let theta = theta_0 * t;
+
+        // Compute the spherical interpolation coefficients
+        let sin_theta = theta.sin();
+        let sin_theta_0 = theta_0.sin();
+        let s0 = ((one - t) * theta_0).sin() / sin_theta_0;
+        let s1 = sin_theta / sin_theta_0;
+
+        // The following result is already normalized, if the inputs are
+        // normalized (which we assume).
+        Self(*self * s0 + other * s1)
     }
 }
 
@@ -2227,5 +2297,78 @@ mod tests {
         let v = [1.0, 2.0, 3.0];
         let result = q.rotate_vector(v);
         assert_eq!(result, [2.0, 3.0, 1.0]);
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    fn generate_unit_quaternion_data() -> impl Iterator<Item = UQ32> {
+        [
+            UQ32::ONE,
+            UQ32::I,
+            UQ32::J,
+            UQ32::K,
+            Q32::new(1.0, 1.0, 1.0, 1.0).normalize().unwrap(),
+            Q32::new(10.0, 1.0, 1.0, 1.0).normalize().unwrap(),
+            Q32::new(1.0, 10.0, 1.0, 1.0).normalize().unwrap(),
+            Q32::new(1.0, 1.0, 3.0, 4.0).normalize().unwrap(),
+            Q32::new(1.0, -1.0, 3.0, -4.0).normalize().unwrap(),
+        ]
+        .into_iter()
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_slerp_t_zero() {
+        for q1 in generate_unit_quaternion_data() {
+            for q2 in generate_unit_quaternion_data() {
+                let result = q1.slerp(&q2, 0.0);
+                assert!((result - q1).norm() <= f32::EPSILON);
+            }
+        }
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_slerp_t_one() {
+        use core::cmp::Ordering;
+
+        for q1 in generate_unit_quaternion_data() {
+            for q2 in generate_unit_quaternion_data() {
+                let result = q1.slerp(&q2, 1.0);
+                match q1.dot(q2).partial_cmp(&0.0) {
+                    Some(Ordering::Greater) => assert!((result - q2).norm() <= f32::EPSILON),
+                    Some(Ordering::Less) => assert!((result + q2).norm() <= f32::EPSILON),
+                    _ => {}
+                }
+            }
+        }
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_slerp_t_half() {
+        use core::cmp::Ordering;
+
+        for q1 in generate_unit_quaternion_data() {
+            for q2 in generate_unit_quaternion_data() {
+                let result = q1.slerp(&q2, 0.5);
+                let dot_sign = match q1.dot(q2).partial_cmp(&0.0) {
+                    Some(Ordering::Greater) => 1.0,
+                    Some(Ordering::Less) => -1.0,
+                    _ => continue, // uncertain due to rounding, better skip it
+                };
+                assert!((result - (q1 + dot_sign * q2).normalize().unwrap()).norm() <= f32::EPSILON)
+            }
+        }
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_slerp_small_angle() {
+        let q1 = UQ32::ONE;
+        let q2 = Q32::new(999_999.0, 1.0, 0.0, 0.0).normalize().unwrap();
+        let t = 0.5;
+        let result = q1.slerp(&q2, t);
+        let expected = Q32::new(999_999.75, 0.5, 0.0, 0.0).normalize().unwrap();
+        assert!((result - expected).norm() <= f32::EPSILON);
     }
 }
