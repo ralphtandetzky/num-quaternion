@@ -1404,6 +1404,7 @@ mod tests {
     use num_traits::One;
     use num_traits::Zero;
 
+    use crate::Dot;
     use crate::EulerAngles;
     use crate::Quaternion;
     use crate::UnitQuaternion;
@@ -2333,5 +2334,78 @@ mod tests {
         let v = [1.0, 2.0, 3.0];
         let result = q.rotate_vector(v);
         assert_eq!(result, [2.0, 3.0, 1.0]);
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    fn generate_unit_quaternion_data() -> impl Iterator<Item = UQ32> {
+        [
+            UQ32::ONE,
+            UQ32::I,
+            UQ32::J,
+            UQ32::K,
+            Q32::new(1.0, 1.0, 1.0, 1.0).normalize().unwrap(),
+            Q32::new(10.0, 1.0, 1.0, 1.0).normalize().unwrap(),
+            Q32::new(1.0, 10.0, 1.0, 1.0).normalize().unwrap(),
+            Q32::new(1.0, 1.0, 3.0, 4.0).normalize().unwrap(),
+            Q32::new(1.0, -1.0, 3.0, -4.0).normalize().unwrap(),
+        ]
+        .into_iter()
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_slerp_t_zero() {
+        for q1 in generate_unit_quaternion_data() {
+            for q2 in generate_unit_quaternion_data() {
+                let result = q1.slerp(&q2, 0.0);
+                assert!((result - q1).norm() <= f32::EPSILON);
+            }
+        }
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_slerp_t_one() {
+        use core::cmp::Ordering;
+
+        for q1 in generate_unit_quaternion_data() {
+            for q2 in generate_unit_quaternion_data() {
+                let result = q1.slerp(&q2, 1.0);
+                match q1.dot(q2).partial_cmp(&0.0) {
+                    Some(Ordering::Greater) => assert!((result - q2).norm() <= f32::EPSILON),
+                    Some(Ordering::Less) => assert!((result + q2).norm() <= f32::EPSILON),
+                    _ => {}
+                }
+            }
+        }
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_slerp_t_half() {
+        use core::cmp::Ordering;
+
+        for q1 in generate_unit_quaternion_data() {
+            for q2 in generate_unit_quaternion_data() {
+                let result = q1.slerp(&q2, 0.5);
+                let dot_sign = match q1.dot(q2).partial_cmp(&0.0) {
+                    Some(Ordering::Greater) => 1.0,
+                    Some(Ordering::Less) => -1.0,
+                    _ => continue, // uncertain due to rounding, better skip it
+                };
+                assert!((result - (q1 + dot_sign * q2).normalize().unwrap()).norm() <= f32::EPSILON)
+            }
+        }
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_slerp_small_angle() {
+        let q1 = UQ32::ONE;
+        let q2 = Q32::new(999_999.0, 1.0, 0.0, 0.0).normalize().unwrap();
+        let t = 0.5;
+        let result = q1.slerp(&q2, t);
+        let expected = Q32::new(999_999.75, 0.5, 0.0, 0.0).normalize().unwrap();
+        assert!((result - expected).norm() <= f32::EPSILON);
     }
 }
