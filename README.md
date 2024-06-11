@@ -1,28 +1,11 @@
 # num-quaternion
 
-<p align="center">
-  <a href="https://github.com/ralphtandetzky/num-quaternion/actions">
-    <img src="https://img.shields.io/github/actions/workflow/status/ralphtandetzky/num-quaternion/cargo_build_and_test.yml?branch=master" />
-  </a>
-  <a href="https://docs.rs/num-quaternion/latest/num-quaternion/">
-    <img src="https://img.shields.io/docsrs/num-quaternion" />
-  </a>
-  <a href="https://crates.io/crates/num-quaternion">
-    <img src="https://img.shields.io/crates/d/num-quaternion" />
-  </a>
-  <a href="https://choosealicense.com/licenses/mit/">
-    <img src="https://img.shields.io/badge/license-MIT-blue" />
-  </a>
-  <a href="https://choosealicense.com/licenses/apache-2.0/">
-    <img src="https://img.shields.io/badge/license-Apache_2.0-blue" />
-  </a>
-  <a href="https://crates.io/crates/num-quaternion">
-    <img src="https://img.shields.io/crates/v/num-quaternion" />
-  </a>
-  <a href="https://github.com/ralphtandetzky/num-quaternion/graphs/contributors">
-    <img src="https://img.shields.io/github/contributors/ralphtandetzky/num-quaternion" />
-  </a>
-</p>
+[![Build](https://img.shields.io/github/actions/workflow/status/ralphtandetzky/num-quaternion/cargo_build_and_test.yml?branch=master)](https://github.com/ralphtandetzky/num-quaternion/actions)
+[![Docs.rs](https://docs.rs/num-quaternion/badge.svg)](https://docs.rs/num-quaternion)
+[![Downloads](https://img.shields.io/crates/d/num-quaternion)](https://crates.io/crates/num-quaternion)
+[![Crates.io](https://img.shields.io/crates/v/num-quaternion.svg)](https://crates.io/crates/num-quaternion)
+[![MIT License](https://img.shields.io/badge/license-MIT-blue)](https://choosealicense.com/licenses/mit/)
+[![Apache License](https://img.shields.io/badge/license-Apache_2.0-blue)](https://choosealicense.com/licenses/apache-2.0/)
 
 Quaternions for Rust.
 
