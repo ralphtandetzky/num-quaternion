@@ -18,7 +18,6 @@ multiplication, normalization, and spherical linear interpolation (SLERP).
 - **Unit Quaternions**: Special support for unit quaternions with optimized operations.
 - **Conversion Functions**: Convert to/from Euler angles, rotation vectors, and more.
 - **Interpolation**: Spherical linear interpolation (SLERP) for smooth rotations.
-- **Normalization**: Ensure quaternions are properly normalized for accurate calculations.
 
 
 ## Installation
