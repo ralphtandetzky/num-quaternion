@@ -7,17 +7,24 @@
 [![MIT License](https://img.shields.io/badge/license-MIT-blue)](LICENSE-MIT.md)
 [![Apache License](https://img.shields.io/badge/license-Apache_2.0-blue)](LICENSE-APACHE.md)
 
-`num-quaternion` is a Rust library for quaternion arithmetic and operations.
-It provides a robust and efficient implementation of quaternions, including
-support for unit quaternions and various common operations like quaternion
-multiplication, normalization, and spherical linear interpolation (SLERP).
+`num-quaternion` is a Rust library designed for robust, efficient and easy to
+use quaternion arithmetic and operations.
+[Quaternions](https://en.wikipedia.org/wiki/Quaternion) are used extensively in
+computer graphics, robotics, and physics for representing rotations and
+orientations.
 
 ## Features
 
-- **Basic Quaternion Operations**: Addition, subtraction, multiplication, division, and conjugation.
-- **Unit Quaternions**: Special support for unit quaternions with optimized operations.
-- **Conversion Functions**: Convert to/from Euler angles, rotation vectors, and more.
-- **Interpolation**: Spherical linear interpolation (SLERP) for smooth rotations.
+- **Basic Quaternion Operations**: Addition, subtraction, multiplication,
+  division, and conjugation.
+- **Unit Quaternions**: Special support for unit quaternions with optimized
+  operations.
+- **Conversion Functions**: Convert to/from Euler angles, rotation vectors,
+  and more.
+- **Interpolation**: Spherical linear interpolation (SLERP) for smooth
+  rotations.
+- **Comprehensive Documentation**: Detailed documentation with examples to
+  help you get started quickly.
 
 
 ## Installation
@@ -29,8 +36,8 @@ Add `num-quaternion` to your `Cargo.toml`:
 num-quaternion = "0.2.4"
 ```
 
-This crate can be used without the standard library (`#![no_std]`) by disabling
-the default `std` feature. Use this in `Cargo.toml`:
+For `#![no_std]` environments, disable the default `std` feature and enable
+`libm` to benefit from the advanced mathematical functions of `num-quaternion`:
 
 ```toml
 [dependencies]
@@ -48,24 +55,26 @@ use num_quaternion::{Quaternion, UnitQuaternion, Q32, Q64, UQ32, UQ64};
 ### Creating Quaternions
 
 ```rust
-// The abbreviation `Q32` stands for `Quaternion<f32>`:
+// Create a quaternion with explicit components
 let q1 = Q32::new(1.0, 2.0, 3.0, 4.0);  // = 1 + 2i + 3j + 4k
+
+// Create a quaternion using shorthand notation
 let q2 = 1.0 + Q32::I;  // = 1 + i
 ```
 
 ### Basic Operations
 
 ```rust
-let q3 = q1 + q2;
-let q4 = q1 * q2;
-let q_conj = q1.conj();
+let q3 = q1 + q2;        // Quaternion addition
+let q4 = q1 * q2;        // Quaternion multiplication
+let q_conj = q1.conj();  // Quaternion conjugation
 ```
 
 ### Unit Quaternions
 
 ```rust
-let uq1 = q1.normalized().expect("Normalization failed");
-let uq2 = UQ32::I;
+let uq1 = q1.normalized().expect("Normalization failed"); // Normalize quaternion
+let uq2 = UQ32::I;  // Unit quaternion representing the imaginary unit
 ```
 
 ### Conversion Functions
@@ -79,7 +88,7 @@ let uq = UnitQuaternion::from_euler_angles(roll, pitch, yaw);
 let euler_angles = uq.to_euler_angles();
 
 // From rotation vector
-let rotation_vector = [1.0, 0.0, 0.0];
+let rotation_vector = [1.0, 0.0, 0.0]; // x axis rotation, 1 radian
 let uq = UnitQuaternion::from_rotation_vector(&rotation_vector);
 
 // To rotation vector
@@ -89,9 +98,9 @@ let rotation_vector = uq.to_rotation_vector();
 ### Spherical Linear Interpolation (SLERP)
 
 ```rust
-let uq1 = UnitQuaternion::new(1.0, 0.0, 0.0, 0.0);
-let uq2 = UnitQuaternion::new(0.0, 1.0, 0.0, 0.0);
-let interpolated = uq1.slerp(&uq2, 0.3);
+let uq1 = UQ32::ONE;  // Create a unit quaternion
+let uq2 = UQ32::I;    // Create another unit quaternion
+let interpolated = uq1.slerp(&uq2, 0.3);  // Perform SLERP with t=0.3
 ```
 
 ## Documentation
@@ -102,32 +111,32 @@ Comprehensive documentation with examples can be found on
 
 ## Releases
 
-Release notes are available in [RELEASES.md](RELEASES.md).
+Detailed release notes are provided in [RELEASES.md](RELEASES.md).
 
 
 ## Contributing
 
 Contributions are welcome! Please fork the repository and submit pull requests.
+By contributing, you agree that your contributions will be dual-licensed under
+the Apache-2.0 and MIT licenses.
 
-Unless you explicitly state otherwise, any contribution intentionally submitted
-for inclusion in the work by you, as defined in the Apache-2.0 license, shall
-be dual licensed as above, without any additional terms or conditions.
+If you have any questions or need help, feel free to open an
+[issue on GitHub](https://github.com/ralphtandetzky/num-quaternion/issues).
 
 
 ## License
 
 Licensed under either of
 
- * [Apache License, Version 2.0](LICENSE-APACHE.md)
- * [MIT license](LICENSE-MIT.md)
+- [Apache License, Version 2.0](LICENSE-APACHE.md)
+- [MIT license](LICENSE-MIT.md)
 
 at your option.
 
 
 ## Acknowledgements
 
-Thanks to [@cuviper](https://github.com/cuviper) for the
+Special thanks to [@cuviper](https://github.com/cuviper) for the
 [`num-complex` crate](https://crates.io/crates/num-complex) which served
-as a model for this crate. It borrows a lot from it. This is by design,
-so this crate can be used consistently with the other crates from the
-[`rust-num` family](https://github.com/rust-num) of crates.
+as a model for this crate. `num-quaternion` is designed to integrate seamlessly
+with the [`rust-num` family](https://github.com/rust-num) of crates.
