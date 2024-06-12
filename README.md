@@ -64,7 +64,7 @@ let q_conj = q1.conj();
 ### Unit Quaternions
 
 ```rust
-let uq1 = q1.normalized()?;
+let uq1 = q1.normalized().expect("Normalization failed");
 let uq2 = UQ32::I;
 ```
 
