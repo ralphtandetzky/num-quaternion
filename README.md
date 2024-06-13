@@ -7,6 +7,8 @@
 [![MIT License](https://img.shields.io/badge/license-MIT-blue)](LICENSE-MIT.md)
 [![Apache License](https://img.shields.io/badge/license-Apache_2.0-blue)](LICENSE-APACHE.md)
 
+Quaternions for Rust.
+
 `num-quaternion` is a Rust library designed for robust, efficient and easy to
 use quaternion arithmetic and operations.
 [Quaternions](https://en.wikipedia.org/wiki/Quaternion) are used extensively in
