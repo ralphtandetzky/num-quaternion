@@ -75,7 +75,7 @@ let q_conj = q1.conj();  // Quaternion conjugation
 ### Unit Quaternions
 
 ```rust
-let uq1 = q1.normalized().expect("Normalization failed"); // Normalize quaternion
+let uq1 = q1.normalize().expect("Normalization failed"); // Normalize quaternion
 let uq2 = UQ32::I;  // Unit quaternion representing the imaginary unit
 ```
 
