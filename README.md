@@ -116,9 +116,10 @@ Detailed release notes are provided in [RELEASES.md](RELEASES.md).
 
 ## Contributing
 
-Contributions are welcome! Please fork the repository and submit pull requests.
-By contributing, you agree that your contributions will be dual-licensed under
-the Apache-2.0 and MIT licenses.
+Contributions are welcome! Please fork
+[the repository](https://github.com/ralphtandetzky/num-quaternion) and submit
+pull requests. By contributing, you agree that your contributions will be
+dual-licensed under the Apache-2.0 and MIT licenses.
 
 If you have any questions or need help, feel free to open an
 [issue on GitHub](https://github.com/ralphtandetzky/num-quaternion/issues).
