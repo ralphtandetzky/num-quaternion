@@ -1,3 +1,10 @@
+# Release 0.2.5 (2024-06-13)
+
+- Added a lot of top level documentation.
+
+**Contributors**: @ralphtandetzky
+
+
 # Release 0.2.4 (2024-06-10)
 
 - Added dot product.
