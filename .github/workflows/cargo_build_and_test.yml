@@ -37,7 +37,7 @@ jobs:
     - name: Run tests with all features turned on
       run: cargo test --verbose --features="unstable"
     - name: Test with no_std
-      run: cargo test --verbose --no-default-features
+      run: cargo test --verbose --no-default-features --all-targets
     - name: Test with libm and no_std
       run: cargo test --verbose --no-default-features --features="libm"
 
