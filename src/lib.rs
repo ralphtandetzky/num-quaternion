@@ -130,7 +130,7 @@ use {core::num, num_traits::float::Float};
 ///
 /// We follow the naming conventions from
 /// [Wikipedia](https://en.wikipedia.org/wiki/Quaternion) for quaternions.
-/// You can generate quaternions using the [`new()`](Quaternion::new) function:
+/// You can generate quaternions using the [`new`](Quaternion::new) function:
 ///
 /// ```
 /// // 1 + 2i + 3j + 4k
@@ -154,10 +154,10 @@ use {core::num, num_traits::float::Float};
 ///
 /// `Quaternion`s support the usual arithmetic operations of addition,
 /// subtraction, multiplication, and division. You can compute the
-/// norm with [`norm()`](Quaternion::norm) and its square with
-/// [`norm_sqr()`](Quaternion::norm_sqr). Quaternion conjugation is done by the
-/// member function [`conj()`](Quaternion::conj). You can normalize a
-/// quaternion by calling [`normalize()`](Quaternion::normalize), which returns
+/// norm with [`norm`](Quaternion::norm) and its square with
+/// [`norm_sqr`](Quaternion::norm_sqr). Quaternion conjugation is done by the
+/// member function [`conj`](Quaternion::conj). You can normalize a
+/// quaternion by calling [`normalize`](Quaternion::normalize), which returns
 /// a [`UnitQuaternion`].
 ///
 /// To work with rotations, please use [`UnitQuaternion`]s.
@@ -249,22 +249,22 @@ where
 {
     /// A constant `Quaternion` of value $1$.
     ///
-    /// See also [`Quaternion::one()`].
+    /// See also [`Quaternion::one`].
     pub const ONE: Self = Self::new(T::ONE, T::ZERO, T::ZERO, T::ZERO);
 
     /// A constant `Quaternion` of value $i$.
     ///
-    /// See also [`Quaternion::i()`].
+    /// See also [`Quaternion::i`].
     pub const I: Self = Self::new(T::ZERO, T::ONE, T::ZERO, T::ZERO);
 
     /// A constant `Quaternion` of value $j$.
     ///
-    /// See also [`Quaternion::j()`].
+    /// See also [`Quaternion::j`].
     pub const J: Self = Self::new(T::ZERO, T::ZERO, T::ONE, T::ZERO);
 
     /// A constant `Quaternion` of value $k$.
     ///
-    /// See also [`Quaternion::k()`].
+    /// See also [`Quaternion::k`].
     pub const K: Self = Self::new(T::ZERO, T::ZERO, T::ZERO, T::ONE);
 }
 
@@ -350,10 +350,10 @@ where
     /// The rounding error is at most 2
     /// [ulps](https://en.wikipedia.org/wiki/Unit_in_the_last_place).
     ///
-    /// This is guaranteed to be more efficient than [`norm()`](Quaternion::norm()).
+    /// This is guaranteed to be more efficient than [`norm`](Quaternion::norm()).
     /// Furthermore, `T` only needs to support addition and multiplication
     /// and therefore, this function works for more types than
-    /// [`norm()`](Quaternion::norm()).
+    /// [`norm`](Quaternion::norm()).
     #[inline]
     pub fn norm_sqr(&self) -> T {
         (self.w.clone() * self.w.clone() + self.y.clone() * self.y.clone())
@@ -824,17 +824,17 @@ where
 /// $v$ can be rotated in 3D space by computing $q^{-1} \cdot v \cdot q$ for a
 /// unit quaternion $q$. The resulting product is again a pure quaternion,
 /// which is $v$ rotated around the axis given by the imaginary part of $q$.
-/// The method [`rotate_vector()`](UnitQuaternion::rotate_vector) performs this
+/// The method [`rotate_vector`](UnitQuaternion::rotate_vector) performs this
 /// operation efficiently. The angle of rotation is double the angle between
 /// $1$ and $q$ interpreted as 4D vectors.
 ///
 /// You can create a `UnitQuaternion` by normalizing a `Quaternion` using the
-/// [`Quaternion::normalize()`](Quaternion::normalize) method. Alternatively, you can use
-/// [`from_euler_angles()`](UnitQuaternion::from_euler_angles) or
-/// [`from_rotation_vector()`](UnitQuaternion::from_rotation_vector) to obtain
+/// [`Quaternion::normalize`](Quaternion::normalize) method. Alternatively, you can use
+/// [`from_euler_angles`](UnitQuaternion::from_euler_angles) or
+/// [`from_rotation_vector`](UnitQuaternion::from_rotation_vector) to obtain
 /// one. The inverse functions
-/// [`to_euler_angles()`](UnitQuaternion::to_euler_angles) and
-/// [`to_rotation_vector()`](UnitQuaternion::to_rotation_vector) are also
+/// [`to_euler_angles`](UnitQuaternion::to_euler_angles) and
+/// [`to_rotation_vector`](UnitQuaternion::to_rotation_vector) are also
 /// provided.
 ///
 /// [`UnitQuaternion`] offers the same arithmetic operations as [`Quaternion`].
@@ -843,10 +843,10 @@ where
 /// in practice and the resulting norm may deviate from $1$ over time.
 /// Thus, when you multiply unit quaternions many times, you may need
 /// to adjust the norm to maintain accuracy. This can be done by calling
-/// the function [`adjust_norm()`](UnitQuaternion::adjust_norm).
+/// the function [`adjust_norm`](UnitQuaternion::adjust_norm).
 ///
 /// Furthermore, you can interpolate uniformly between two quaternions using
-/// the [`slerp()`](UnitQuaternion::slerp) method, which stands for spherical
+/// the [`slerp`](UnitQuaternion::slerp) method, which stands for spherical
 /// linear interpolation. This can be used for smooth transitions between
 /// 3D rotations.
 ///
@@ -964,7 +964,7 @@ where
     /// axis and whose norm is the rotation angle.
     ///
     /// This function is the inverse of
-    /// [`to_rotation_vector()`](UnitQuaternion::to_rotation_vector).
+    /// [`to_rotation_vector`](UnitQuaternion::to_rotation_vector).
     pub fn from_rotation_vector(v: &[T; 3]) -> Self {
         let sqr_norm = v[0] * v[0] + v[1] * v[1] + v[2] * v[2];
         let two = T::one() + T::one();
@@ -998,7 +998,7 @@ where
     /// axis and whose norm is the rotation angle.
     ///
     /// This function is the inverse of
-    /// [`from_rotation_vector()`](UnitQuaternion::from_rotation_vector).
+    /// [`from_rotation_vector`](UnitQuaternion::from_rotation_vector).
     pub fn to_rotation_vector(&self) -> [T; 3] {
         let q = self.as_quaternion();
         let one = T::one();
@@ -1069,22 +1069,22 @@ where
 {
     /// A constant `UnitQuaternion` of value $1$.
     ///
-    /// See also [`UnitQuaternion::one()`], [`Quaternion::ONE`].
+    /// See also [`UnitQuaternion::one`], [`Quaternion::ONE`].
     pub const ONE: Self = Self(Quaternion::ONE);
 
     /// A constant `UnitQuaternion` of value $i$.
     ///
-    /// See also [`UnitQuaternion::i()`], [`Quaternion::I`].
+    /// See also [`UnitQuaternion::i`], [`Quaternion::I`].
     pub const I: Self = Self(Quaternion::I);
 
     /// A constant `UnitQuaternion` of value $j$.
     ///
-    /// See also [`UnitQuaternion::j()`], [`Quaternion::J`].
+    /// See also [`UnitQuaternion::j`], [`Quaternion::J`].
     pub const J: Self = Self(Quaternion::J);
 
     /// A constant `UnitQuaternion` of value $k$.
     ///
-    /// See also [`UnitQuaternion::k()`], [`Quaternion::K`].
+    /// See also [`UnitQuaternion::k`], [`Quaternion::K`].
     pub const K: Self = Self(Quaternion::K);
 }
 
@@ -1121,7 +1121,7 @@ where
 {
     /// Returns the imaginary unit $i$.
     ///
-    /// See also [`UnitQuaternion::I`], [`Quaternion::i()`].
+    /// See also [`UnitQuaternion::I`], [`Quaternion::i`].
     #[inline]
     pub fn i() -> Self {
         Self(Quaternion::i())
@@ -1129,7 +1129,7 @@ where
 
     /// Returns the imaginary unit $j$.
     ///
-    /// See also [`UnitQuaternion::J`], [`Quaternion::j()`].
+    /// See also [`UnitQuaternion::J`], [`Quaternion::j`].
     #[inline]
     pub fn j() -> Self {
         Self(Quaternion::j())
@@ -1137,7 +1137,7 @@ where
 
     /// Returns the imaginary unit $k$.
     ///
-    /// See also [`UnitQuaternion::K`], [`Quaternion::k()`].
+    /// See also [`UnitQuaternion::K`], [`Quaternion::k`].
     #[inline]
     pub fn k() -> Self {
         Self(Quaternion::k())
