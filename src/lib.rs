@@ -1474,6 +1474,11 @@ impl Div<UQ64> for f64 {
     }
 }
 
+impl_op_with_ref!(impl Add::add for UnitQuaternion);
+impl_op_with_ref!(impl Sub::sub for UnitQuaternion);
+impl_op_with_ref!(impl Mul::mul for UnitQuaternion);
+impl_op_with_ref!(impl Div::div for UnitQuaternion);
+
 impl<T> Neg for UnitQuaternion<T>
 where
     T: Neg<Output = T>,
@@ -2531,6 +2536,46 @@ mod tests {
     #[test]
     fn test_f64_div_unit_quaternion() {
         assert_eq!(4.0f64 / UQ64::I, Q64::new(0.0, -4.0, 0.0, 0.0));
+    }
+
+    #[test]
+    #[allow(clippy::op_ref)]
+    fn test_add_with_ref_unit_quaternion() {
+        let lhs = Quaternion::new(1.0, 2.0, 3.0, 4.0).normalize().unwrap();
+        let rhs = Quaternion::new(5.0, 6.0, 7.0, 8.0).normalize().unwrap();
+        assert_eq!(lhs + rhs, &lhs + rhs);
+        assert_eq!(lhs + rhs, lhs + &rhs);
+        assert_eq!(lhs + rhs, &lhs + &rhs);
+    }
+
+    #[test]
+    #[allow(clippy::op_ref)]
+    fn test_sub_with_ref_unit_quaternion() {
+        let lhs = Quaternion::new(1.0, 2.0, 3.0, 4.0).normalize().unwrap();
+        let rhs = Quaternion::new(5.0, 6.0, 7.0, 8.0).normalize().unwrap();
+        assert_eq!(lhs - rhs, &lhs - rhs);
+        assert_eq!(lhs - rhs, lhs - &rhs);
+        assert_eq!(lhs - rhs, &lhs - &rhs);
+    }
+
+    #[test]
+    #[allow(clippy::op_ref)]
+    fn test_mul_with_ref_unit_quaternion() {
+        let lhs = Quaternion::new(1.0, 2.0, 3.0, 4.0).normalize().unwrap();
+        let rhs = Quaternion::new(5.0, 6.0, 7.0, 8.0).normalize().unwrap();
+        assert_eq!(lhs * rhs, &lhs * rhs);
+        assert_eq!(lhs * rhs, lhs * &rhs);
+        assert_eq!(lhs * rhs, &lhs * &rhs);
+    }
+
+    #[test]
+    #[allow(clippy::op_ref)]
+    fn test_div_with_ref_unit_quaternion() {
+        let lhs = Quaternion::new(1.0, 2.0, 3.0, 4.0).normalize().unwrap();
+        let rhs = Quaternion::new(5.0, 6.0, 7.0, 8.0).normalize().unwrap();
+        assert_eq!(lhs / rhs, &lhs / rhs);
+        assert_eq!(lhs / rhs, lhs / &rhs);
+        assert_eq!(lhs / rhs, &lhs / &rhs);
     }
 
     #[test]
