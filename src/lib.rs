@@ -2539,6 +2539,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(any(feature = "std", feature = "libm"))]
     #[allow(clippy::op_ref)]
     fn test_add_with_ref_unit_quaternion() {
         let lhs = Quaternion::new(1.0, 2.0, 3.0, 4.0).normalize().unwrap();
@@ -2549,6 +2550,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(any(feature = "std", feature = "libm"))]
     #[allow(clippy::op_ref)]
     fn test_sub_with_ref_unit_quaternion() {
         let lhs = Quaternion::new(1.0, 2.0, 3.0, 4.0).normalize().unwrap();
@@ -2559,6 +2561,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(any(feature = "std", feature = "libm"))]
     #[allow(clippy::op_ref)]
     fn test_mul_with_ref_unit_quaternion() {
         let lhs = Quaternion::new(1.0, 2.0, 3.0, 4.0).normalize().unwrap();
@@ -2569,6 +2572,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(any(feature = "std", feature = "libm"))]
     #[allow(clippy::op_ref)]
     fn test_div_with_ref_unit_quaternion() {
         let lhs = Quaternion::new(1.0, 2.0, 3.0, 4.0).normalize().unwrap();
