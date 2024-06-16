@@ -687,46 +687,56 @@ impl_bin_op_assign!(impl MulAssign, mul_assign, Mul, mul);
 impl_bin_op_assign!(impl DivAssign, div_assign, Div, div);
 
 macro_rules! impl_op_with_ref {
-    (impl $bin_op_trait:ident::$bin_op:ident for $type:ident) => {
-        impl<T> $bin_op_trait<&$type<T>> for $type<T>
+    (impl<$T:ident> $bin_op_trait:ident::$bin_op:ident for $lhs_type:ty, $rhs_type:ty) => {
+        impl<$T> $bin_op_trait<&$rhs_type> for $lhs_type
         where
-            Self: $bin_op_trait<$type<T>> + Clone,
+            Self: $bin_op_trait<$rhs_type>,
+            $rhs_type: Clone,
         {
-            type Output = <Self as $bin_op_trait<$type<T>>>::Output;
+            type Output = <Self as $bin_op_trait<$rhs_type>>::Output;
 
-            fn $bin_op(self, rhs: &$type<T>) -> Self::Output {
+            fn $bin_op(self, rhs: &$rhs_type) -> Self::Output {
                 self.$bin_op(rhs.clone())
             }
         }
 
-        impl<T> $bin_op_trait<&$type<T>> for &$type<T>
+        impl<$T> $bin_op_trait<&$rhs_type> for &$lhs_type
         where
-            $type<T>: $bin_op_trait<$type<T>> + Clone,
+            $lhs_type: $bin_op_trait<$rhs_type> + Clone,
+            $rhs_type: Clone,
         {
-            type Output = <$type<T> as $bin_op_trait<$type<T>>>::Output;
+            type Output = <$lhs_type as $bin_op_trait<$rhs_type>>::Output;
 
-            fn $bin_op(self, rhs: &$type<T>) -> Self::Output {
+            fn $bin_op(self, rhs: &$rhs_type) -> Self::Output {
                 self.clone().$bin_op(rhs.clone())
             }
         }
 
-        impl<T> $bin_op_trait<$type<T>> for &$type<T>
+        impl<$T> $bin_op_trait<$rhs_type> for &$lhs_type
         where
-            $type<T>: $bin_op_trait<$type<T>> + Clone,
+            $lhs_type: $bin_op_trait<$rhs_type> + Clone,
         {
-            type Output = <$type<T> as $bin_op_trait<$type<T>>>::Output;
+            type Output = <$lhs_type as $bin_op_trait<$rhs_type>>::Output;
 
-            fn $bin_op(self, rhs: $type<T>) -> Self::Output {
+            fn $bin_op(self, rhs: $rhs_type) -> Self::Output {
                 self.clone().$bin_op(rhs)
             }
         }
     };
 }
 
-impl_op_with_ref!(impl Add::add for Quaternion);
-impl_op_with_ref!(impl Sub::sub for Quaternion);
-impl_op_with_ref!(impl Mul::mul for Quaternion);
-impl_op_with_ref!(impl Div::div for Quaternion);
+impl_op_with_ref!(impl<T> Add::add for Quaternion<T>, Quaternion<T>);
+impl_op_with_ref!(impl<T> Sub::sub for Quaternion<T>, Quaternion<T>);
+impl_op_with_ref!(impl<T> Mul::mul for Quaternion<T>, Quaternion<T>);
+impl_op_with_ref!(impl<T> Div::div for Quaternion<T>, Quaternion<T>);
+impl_op_with_ref!(impl<T> Add::add for Quaternion<T>, UnitQuaternion<T>);
+impl_op_with_ref!(impl<T> Sub::sub for Quaternion<T>, UnitQuaternion<T>);
+impl_op_with_ref!(impl<T> Mul::mul for Quaternion<T>, UnitQuaternion<T>);
+impl_op_with_ref!(impl<T> Div::div for Quaternion<T>, UnitQuaternion<T>);
+impl_op_with_ref!(impl<T> Add::add for Quaternion<T>, T);
+impl_op_with_ref!(impl<T> Sub::sub for Quaternion<T>, T);
+impl_op_with_ref!(impl<T> Mul::mul for Quaternion<T>, T);
+impl_op_with_ref!(impl<T> Div::div for Quaternion<T>, T);
 
 macro_rules! impl_ops_lhs_real {
     ($($real:ty),*) => {
@@ -1474,10 +1484,18 @@ impl Div<UQ64> for f64 {
     }
 }
 
-impl_op_with_ref!(impl Add::add for UnitQuaternion);
-impl_op_with_ref!(impl Sub::sub for UnitQuaternion);
-impl_op_with_ref!(impl Mul::mul for UnitQuaternion);
-impl_op_with_ref!(impl Div::div for UnitQuaternion);
+impl_op_with_ref!(impl<T> Add::add for UnitQuaternion<T>, UnitQuaternion<T>);
+impl_op_with_ref!(impl<T> Sub::sub for UnitQuaternion<T>, UnitQuaternion<T>);
+impl_op_with_ref!(impl<T> Mul::mul for UnitQuaternion<T>, UnitQuaternion<T>);
+impl_op_with_ref!(impl<T> Div::div for UnitQuaternion<T>, UnitQuaternion<T>);
+impl_op_with_ref!(impl<T> Add::add for UnitQuaternion<T>, Quaternion<T>);
+impl_op_with_ref!(impl<T> Sub::sub for UnitQuaternion<T>, Quaternion<T>);
+impl_op_with_ref!(impl<T> Mul::mul for UnitQuaternion<T>, Quaternion<T>);
+impl_op_with_ref!(impl<T> Div::div for UnitQuaternion<T>, Quaternion<T>);
+impl_op_with_ref!(impl<T> Add::add for UnitQuaternion<T>, T);
+impl_op_with_ref!(impl<T> Sub::sub for UnitQuaternion<T>, T);
+impl_op_with_ref!(impl<T> Mul::mul for UnitQuaternion<T>, T);
+impl_op_with_ref!(impl<T> Div::div for UnitQuaternion<T>, T);
 
 impl<T> Neg for UnitQuaternion<T>
 where
@@ -2056,6 +2074,90 @@ mod tests {
     }
 
     #[test]
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[allow(clippy::op_ref)]
+    fn test_add_unit_quaternion_with_ref() {
+        let lhs = Quaternion::new(1.0, 2.0, 3.0, 4.0);
+        let rhs = Quaternion::new(5.0, 6.0, 7.0, 8.0).normalize().unwrap();
+        assert_eq!(lhs + rhs, &lhs + rhs);
+        assert_eq!(lhs + rhs, lhs + &rhs);
+        assert_eq!(lhs + rhs, &lhs + &rhs);
+    }
+
+    #[test]
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[allow(clippy::op_ref)]
+    fn test_sub_unit_quaternion_with_ref() {
+        let lhs = Quaternion::new(1.0, 2.0, 3.0, 4.0);
+        let rhs = Quaternion::new(5.0, 6.0, 7.0, 8.0).normalize().unwrap();
+        assert_eq!(lhs - rhs, &lhs - rhs);
+        assert_eq!(lhs - rhs, lhs - &rhs);
+        assert_eq!(lhs - rhs, &lhs - &rhs);
+    }
+
+    #[test]
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[allow(clippy::op_ref)]
+    fn test_mul_unit_quaternion_with_ref() {
+        let lhs = Quaternion::new(1.0, 2.0, 3.0, 4.0);
+        let rhs = Quaternion::new(5.0, 6.0, 7.0, 8.0).normalize().unwrap();
+        assert_eq!(lhs * rhs, &lhs * rhs);
+        assert_eq!(lhs * rhs, lhs * &rhs);
+        assert_eq!(lhs * rhs, &lhs * &rhs);
+    }
+
+    #[test]
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[allow(clippy::op_ref)]
+    fn test_div_unit_quaternion_with_ref() {
+        let lhs = Quaternion::new(1.0, 2.0, 3.0, 4.0);
+        let rhs = Quaternion::new(5.0, 6.0, 7.0, 8.0).normalize().unwrap();
+        assert_eq!(lhs / rhs, &lhs / rhs);
+        assert_eq!(lhs / rhs, lhs / &rhs);
+        assert_eq!(lhs / rhs, &lhs / &rhs);
+    }
+
+    #[test]
+    #[allow(clippy::op_ref)]
+    fn test_add_real_with_ref() {
+        let lhs = Quaternion::new(1.0, 2.0, 3.0, 4.0);
+        let rhs = 5.0;
+        assert_eq!(lhs + rhs, &lhs + rhs);
+        assert_eq!(lhs + rhs, lhs + &rhs);
+        assert_eq!(lhs + rhs, &lhs + &rhs);
+    }
+
+    #[test]
+    #[allow(clippy::op_ref)]
+    fn test_sub_real_with_ref() {
+        let lhs = Quaternion::new(1.0, 2.0, 3.0, 4.0);
+        let rhs = 5.0;
+        assert_eq!(lhs - rhs, &lhs - rhs);
+        assert_eq!(lhs - rhs, lhs - &rhs);
+        assert_eq!(lhs - rhs, &lhs - &rhs);
+    }
+
+    #[test]
+    #[allow(clippy::op_ref)]
+    fn test_mul_real_with_ref() {
+        let lhs = Quaternion::new(1.0, 2.0, 3.0, 4.0);
+        let rhs = 5.0;
+        assert_eq!(lhs * rhs, &lhs * rhs);
+        assert_eq!(lhs * rhs, lhs * &rhs);
+        assert_eq!(lhs * rhs, &lhs * &rhs);
+    }
+
+    #[test]
+    #[allow(clippy::op_ref)]
+    fn test_div_real_with_ref() {
+        let lhs = Quaternion::new(1.0, 2.0, 3.0, 4.0);
+        let rhs = 5.0;
+        assert_eq!(lhs / rhs, &lhs / rhs);
+        assert_eq!(lhs / rhs, lhs / &rhs);
+        assert_eq!(lhs / rhs, &lhs / &rhs);
+    }
+
+    #[test]
     fn test_add_lhs_real() {
         assert_eq!(42.0 + Quaternion::I, Quaternion::new(42.0, 1.0, 0.0, 0.0));
         assert_eq!(1 + Quaternion::new(2, 4, 6, 8), Quaternion::new(3, 4, 6, 8));
@@ -2577,6 +2679,94 @@ mod tests {
     fn test_div_with_ref_unit_quaternion() {
         let lhs = Quaternion::new(1.0, 2.0, 3.0, 4.0).normalize().unwrap();
         let rhs = Quaternion::new(5.0, 6.0, 7.0, 8.0).normalize().unwrap();
+        assert_eq!(lhs / rhs, &lhs / rhs);
+        assert_eq!(lhs / rhs, lhs / &rhs);
+        assert_eq!(lhs / rhs, &lhs / &rhs);
+    }
+
+    #[test]
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[allow(clippy::op_ref)]
+    fn test_add_quaternion_with_ref_unit_quaternion() {
+        let lhs = Quaternion::new(1.0, 2.0, 3.0, 4.0).normalize().unwrap();
+        let rhs = Quaternion::new(5.0, 6.0, 7.0, 8.0);
+        assert_eq!(lhs + rhs, &lhs + rhs);
+        assert_eq!(lhs + rhs, lhs + &rhs);
+        assert_eq!(lhs + rhs, &lhs + &rhs);
+    }
+
+    #[test]
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[allow(clippy::op_ref)]
+    fn test_sub_quaternion_with_ref_unit_quaternion() {
+        let lhs = Quaternion::new(1.0, 2.0, 3.0, 4.0).normalize().unwrap();
+        let rhs = Quaternion::new(5.0, 6.0, 7.0, 8.0);
+        assert_eq!(lhs - rhs, &lhs - rhs);
+        assert_eq!(lhs - rhs, lhs - &rhs);
+        assert_eq!(lhs - rhs, &lhs - &rhs);
+    }
+
+    #[test]
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[allow(clippy::op_ref)]
+    fn test_mul_quaternion_with_ref_unit_quaternion() {
+        let lhs = Quaternion::new(1.0, 2.0, 3.0, 4.0).normalize().unwrap();
+        let rhs = Quaternion::new(5.0, 6.0, 7.0, 8.0);
+        assert_eq!(lhs * rhs, &lhs * rhs);
+        assert_eq!(lhs * rhs, lhs * &rhs);
+        assert_eq!(lhs * rhs, &lhs * &rhs);
+    }
+
+    #[test]
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[allow(clippy::op_ref)]
+    fn test_div_quaternion_with_ref_unit_quaternion() {
+        let lhs = Quaternion::new(1.0, 2.0, 3.0, 4.0).normalize().unwrap();
+        let rhs = Quaternion::new(5.0, 6.0, 7.0, 8.0);
+        assert_eq!(lhs / rhs, &lhs / rhs);
+        assert_eq!(lhs / rhs, lhs / &rhs);
+        assert_eq!(lhs / rhs, &lhs / &rhs);
+    }
+
+    #[test]
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[allow(clippy::op_ref)]
+    fn test_add_real_with_ref_unit_quaternion() {
+        let lhs = Quaternion::new(1.0, 2.0, 3.0, 4.0).normalize().unwrap();
+        let rhs = 5.0;
+        assert_eq!(lhs + rhs, &lhs + rhs);
+        assert_eq!(lhs + rhs, lhs + &rhs);
+        assert_eq!(lhs + rhs, &lhs + &rhs);
+    }
+
+    #[test]
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[allow(clippy::op_ref)]
+    fn test_sub_real_with_ref_unit_quaternion() {
+        let lhs = Quaternion::new(1.0, 2.0, 3.0, 4.0).normalize().unwrap();
+        let rhs = 5.0;
+        assert_eq!(lhs - rhs, &lhs - rhs);
+        assert_eq!(lhs - rhs, lhs - &rhs);
+        assert_eq!(lhs - rhs, &lhs - &rhs);
+    }
+
+    #[test]
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[allow(clippy::op_ref)]
+    fn test_mul_real_with_ref_unit_quaternion() {
+        let lhs = Quaternion::new(1.0, 2.0, 3.0, 4.0).normalize().unwrap();
+        let rhs = 5.0;
+        assert_eq!(lhs * rhs, &lhs * rhs);
+        assert_eq!(lhs * rhs, lhs * &rhs);
+        assert_eq!(lhs * rhs, &lhs * &rhs);
+    }
+
+    #[test]
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[allow(clippy::op_ref)]
+    fn test_div_real_with_ref_unit_quaternion() {
+        let lhs = Quaternion::new(1.0, 2.0, 3.0, 4.0).normalize().unwrap();
+        let rhs = 5.0;
         assert_eq!(lhs / rhs, &lhs / rhs);
         assert_eq!(lhs / rhs, lhs / &rhs);
         assert_eq!(lhs / rhs, &lhs / &rhs);
