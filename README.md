@@ -126,6 +126,9 @@ dual-licensed under the Apache-2.0 and MIT licenses.
 If you have any questions or need help, feel free to open an
 [issue on GitHub](https://github.com/ralphtandetzky/num-quaternion/issues).
 
+Further instructions can be found in the [CONTRIBUTING.md](CONTRIBUTING.md)
+guidelines.
+
 
 ## License
 
