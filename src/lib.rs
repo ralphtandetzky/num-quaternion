@@ -104,6 +104,9 @@
 //! If you have any questions or need help, feel free to open an
 //! [issue on GitHub](https://github.com/ralphtandetzky/num-quaternion/issues).
 //!
+//! Further instructions can be found in the [CONTRIBUTING.md](CONTRIBUTING.md)
+//! guidelines.
+//!
 //! # Acknowledgements
 //!
 //! Special thanks to [@cuviper](https://github.com/cuviper) for the
