@@ -1,3 +1,10 @@
+# Release 0.2.6 (2024-06-15)
+
+- Added arithmetic operators which take references as arguments.
+
+**Contributors**: @ralphtandetzky
+
+
 # Release 0.2.5 (2024-06-13)
 
 - Added a lot of top level documentation.
