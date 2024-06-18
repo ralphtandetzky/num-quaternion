@@ -45,7 +45,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    - uses: dtolnay/rust-toolchain@1.62.0
+    - uses: dtolnay/rust-toolchain@1.79.0
       with:
         components: rustfmt
     - run: cargo fmt --check
@@ -54,7 +54,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    - uses: dtolnay/rust-toolchain@1.62.0
+    - uses: dtolnay/rust-toolchain@1.79.0
     - name: install clippy
       run: rustup component add clippy
     - name: Check style violations
