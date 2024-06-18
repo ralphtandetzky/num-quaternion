@@ -23,12 +23,4 @@ Please include the following information in your report:
 
 We take security vulnerabilities seriously and will address them as quickly as possible.
 
-## Response
-
-Upon receiving a security report, we will:
-1. Acknowledge receipt of your report within a week.
-2. Investigate and confirm the vulnerability.
-3. Provide an initial response within two weeks, including an estimated timeline for a fix.
-4. Notify you when the issue has been resolved.
-
 We appreciate your help in maintaining the security of `num-quaternion`.
