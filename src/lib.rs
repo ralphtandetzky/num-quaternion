@@ -871,6 +871,33 @@ where
     }
 }
 
+#[cfg(feature = "serde")]
+impl<T> serde::Serialize for Quaternion<T>
+where
+    T: serde::Serialize,
+{
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        (&self.w, &self.x, &self.y, &self.z).serialize(serializer)
+    }
+}
+
+#[cfg(feature = "serde")]
+impl<'de, T> serde::Deserialize<'de> for Quaternion<T>
+where
+    T: serde::Deserialize<'de>,
+{
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let (w, x, y, z) = serde::Deserialize::deserialize(deserializer)?;
+        Ok(Self::new(w, x, y, z))
+    }
+}
+
 /// A quaternion with norm $1$.
 ///
 /// Unit quaternions form a non-commutative group that can be conveniently used
@@ -938,6 +965,33 @@ pub struct EulerAngles<T> {
     pub pitch: T,
     /// The yaw angle.
     pub yaw: T,
+}
+
+#[cfg(feature = "serde")]
+impl<T> serde::Serialize for EulerAngles<T>
+where
+    T: serde::Serialize,
+{
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        (&self.roll, &self.pitch, &self.yaw).serialize(serializer)
+    }
+}
+
+#[cfg(feature = "serde")]
+impl<'de, T> serde::Deserialize<'de> for EulerAngles<T>
+where
+    T: serde::Deserialize<'de>,
+{
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let (roll, pitch, yaw) = serde::Deserialize::deserialize(deserializer)?;
+        Ok(Self { roll, pitch, yaw })
+    }
 }
 
 #[cfg(any(feature = "std", feature = "libm"))]
@@ -1609,6 +1663,33 @@ where
         // The following result is already normalized, if the inputs are
         // normalized (which we assume).
         Self(*self * s0 + other * s1)
+    }
+}
+
+#[cfg(feature = "serde")]
+impl<T> serde::Serialize for UnitQuaternion<T>
+where
+    T: serde::Serialize,
+{
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        self.0.serialize(serializer)
+    }
+}
+
+#[cfg(feature = "serde")]
+impl<'de, T> serde::Deserialize<'de> for UnitQuaternion<T>
+where
+    T: serde::Deserialize<'de>,
+{
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let q = serde::Deserialize::deserialize(deserializer)?;
+        Ok(Self(q))
     }
 }
 
