@@ -1,3 +1,16 @@
+# Release 0.2.7 (2024-06-19)
+
+- Added a [Code of Conduct](CODE_OF_CONDUCT.md).
+- Added [Contribution information](CONTRIBUTING.md).
+- Added a [Security Policy](SECURITY.md)
+- Added scripts for better security checks on GitHub.
+- Added pull request template.
+- Updated crate's keywords and categories.
+- Minor updates in documentation and scripts.
+
+**Contributors**: @ralphtandetzky
+
+
 # Release 0.2.6 (2024-06-15)
 
 - Added arithmetic operators which take references as arguments.
