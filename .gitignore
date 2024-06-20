@@ -1,2 +1,7 @@
+# Please keep in alphabetical order
+
 Cargo.lock
 /target
+/.vscode/
+
+# Please keep in alphabetical order
