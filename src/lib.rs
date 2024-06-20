@@ -2435,7 +2435,7 @@ mod tests {
         for q in test_data.into_iter().map(|q| q.normalize().unwrap()) {
             let EulerAngles { roll, pitch, yaw } = q.to_euler_angles();
             let p = UQ64::from_euler_angles(roll, pitch, yaw);
-            assert!((p - q).norm() < core::f64::EPSILON);
+            assert!((p - q).norm() < f64::EPSILON);
         }
     }
 
@@ -2490,9 +2490,9 @@ mod tests {
         // Quaternion representing a 180-degree rotation around the x-axis
         let q = UQ64::J;
         let rotation_vector = q.to_rotation_vector();
-        assert!((rotation_vector[0]).abs() < core::f64::EPSILON);
-        assert!((rotation_vector[1] - core::f64::consts::PI).abs() < core::f64::EPSILON);
-        assert!((rotation_vector[2]).abs() < core::f64::EPSILON);
+        assert!((rotation_vector[0]).abs() < f64::EPSILON);
+        assert!((rotation_vector[1] - core::f64::consts::PI).abs() < f64::EPSILON);
+        assert!((rotation_vector[2]).abs() < f64::EPSILON);
     }
 
     #[cfg(any(feature = "std", feature = "libm"))]
@@ -2916,7 +2916,7 @@ mod tests {
             q = q * q;
         }
         assert!((q.into_quaternion().norm() - 1.0).abs() > 0.5);
-        assert!((q.adjust_norm().into_quaternion().norm() - 1.0).abs() <= 2.0 * core::f32::EPSILON);
+        assert!((q.adjust_norm().into_quaternion().norm() - 1.0).abs() <= 2.0 * f32::EPSILON);
     }
 
     #[test]
