@@ -124,10 +124,13 @@ use core::{
     borrow::Borrow,
     ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign},
 };
-use num_traits::{ConstOne, ConstZero, FloatConst, Inv, Num, One, Zero};
+use num_traits::{ConstOne, ConstZero, Inv, Num, One, Zero};
 
 #[cfg(any(feature = "std", feature = "libm"))]
-use {core::num, num_traits::float::Float};
+use {
+    core::num,
+    num_traits::{float::Float, FloatConst},
+};
 
 /// Quaternion type.
 ///
@@ -2326,6 +2329,23 @@ mod tests {
         hasher.finish()
     }
 
+    #[cfg(feature = "serde")]
+    #[test]
+    fn test_serde_quaternion() {
+        // Create a sample quaternion
+        let q = Q32::new(1.0, 2.0, 3.0, 4.0);
+
+        // Serialize the quaternion to a JSON string
+        let serialized = serde_json::to_string(&q).expect("Failed to serialize quaternion");
+
+        // Deserialize the JSON string back into a quaternion
+        let deserialized: Quaternion<f32> =
+            serde_json::from_str(&serialized).expect("Failed to deserialize quaternion");
+
+        // Assert that the deserialized quaternion is equal to the original
+        assert_eq!(q, deserialized);
+    }
+
     // We test if the hash value of a unit quaternion is equal to the hash
     // value of the inner quaternion. This is required because `UnitQuaternion`
     // implements both `Hash` and `Borrow<Quaternion>`.
@@ -2348,6 +2368,27 @@ mod tests {
             compute_hash(UnitQuaternion::<i128>::K),
             compute_hash(Quaternion::<i128>::K)
         );
+    }
+
+    #[cfg(feature = "serde")]
+    #[test]
+    fn test_serde_euler_angles() {
+        // Create a sample angles
+        let angles = EulerAngles {
+            roll: 1.0,
+            pitch: 2.0,
+            yaw: 3.0,
+        };
+
+        // Serialize the angles to a JSON string
+        let serialized = serde_json::to_string(&angles).expect("Failed to serialize angles");
+
+        // Deserialize the JSON string back into angles
+        let deserialized: EulerAngles<f64> =
+            serde_json::from_str(&serialized).expect("Failed to deserialize angles");
+
+        // Assert that the deserialized angles are equal to the original
+        assert_eq!(angles, deserialized);
     }
 
     #[cfg(any(feature = "std", feature = "libm"))]
@@ -2966,5 +3007,39 @@ mod tests {
         let result = q1.slerp(&q2, t);
         let expected = Q32::new(999_999.75, 0.5, 0.0, 0.0).normalize().unwrap();
         assert!((result - expected).norm() <= f32::EPSILON);
+    }
+
+    #[cfg(all(feature = "serde", any(feature = "std", feature = "libm")))]
+    #[test]
+    fn test_serde_unit_quaternion() {
+        // Create a sample quaternion
+        let q = Q64::new(1.0, 2.0, 3.0, 4.0).normalize().unwrap();
+
+        // Serialize the quaternion to a JSON string
+        let serialized = serde_json::to_string(&q).expect("Failed to serialize quaternion");
+
+        // Deserialize the JSON string back into a quaternion
+        let deserialized: UQ64 =
+            serde_json::from_str(&serialized).expect("Failed to deserialize quaternion");
+
+        // Assert that the deserialized quaternion is equal to the original
+        assert_eq!(q, deserialized);
+    }
+
+    #[cfg(feature = "serde")]
+    #[test]
+    fn test_serde_unit_quaternion_k() {
+        // Create a sample quaternion
+        let q = UQ64::K;
+
+        // Serialize the quaternion to a JSON string
+        let serialized = serde_json::to_string(&q).expect("Failed to serialize quaternion");
+
+        // Deserialize the JSON string back into a quaternion
+        let deserialized: UQ64 =
+            serde_json::from_str(&serialized).expect("Failed to deserialize quaternion");
+
+        // Assert that the deserialized quaternion is equal to the original
+        assert_eq!(q, deserialized);
     }
 }

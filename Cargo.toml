@@ -30,6 +30,9 @@ optional = true
 version = "1.0"
 default-features = false
 
+[dev-dependencies.serde_json]
+version = "1.0"
+
 [features]
 default = ["std"]
 std = ["num-traits/std"]
