@@ -94,6 +94,33 @@
 //! let interpolated = uq1.slerp(&uq2, 0.3);  // Perform SLERP with t=0.3
 //! ```
 //!
+//! # Cargo Features
+//!
+//! The crate offers the following features which can be freely enabled or
+//! disabled:
+//!
+//! - `std`: Enables the use of the Rust standard library. This feature is on
+//!   by default. If disabled (`default-features = false` in `Cargo.toml`),
+//!   the crate can be used in environments where the standard library is not
+//!   available or desired.
+//!
+//! - `libm`: This can be used as a fallback library to provide mathematical
+//!   functions which are otherwise provided by the standard library. Use
+//!   this feature if you want to work without standard library, but still
+//!   want features that internally require floating point functions like
+//!   `sqrt()` or `acos()`, etc. This includes functionality like computing
+//!   the norm, converting from and to Euler angles and spherical linear
+//!   interpolation.
+//!
+//! - `unstable`: Enables unstable features. Items marked as `unstable` may
+//!   undergo breaking changes in future releases without a major version
+//!   update. Use with caution in production environments.
+//!
+//! - `serde`: Implements the `Serialize` and `Deserialize` traits for all
+//!   data structures where possible. Useful for easy integration with
+//!   serialization frameworks, enabling data storage and communication
+//!   functionalities.
+//!
 //! # Contributing
 //!
 //! Contributions are welcome! Please fork
