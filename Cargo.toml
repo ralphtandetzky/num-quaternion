@@ -15,7 +15,7 @@ edition = "2021"
 rust-version = "1.60.0"
 
 [package.metadata.docs.rs]
-features = ["std", "libm", "unstable"]
+features = ["std", "libm", "serde", "unstable"]
 rustdoc-args = ["--html-in-header", "katex.html"]
 
 [dependencies.num-traits]
@@ -25,8 +25,17 @@ default-features = false
 [dependencies.num-integer]
 version = "0.1.46"
 
+[dependencies.serde]
+optional = true
+version = "1.0"
+default-features = false
+
+[dev-dependencies.serde_json]
+version = "1.0"
+
 [features]
 default = ["std"]
 std = ["num-traits/std"]
 libm = ["num-traits/libm"]
 unstable = []
+serde = ["dep:serde"]
