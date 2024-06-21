@@ -1,3 +1,11 @@
+# Release 0.2.8 (2024-06-21)
+
+- Added feature `serde`. Implemented `Serialize` and `Deserialize` traits for
+  all data structures.
+
+**Contributors**: @ralphtandetzky
+
+
 # Release 0.2.7 (2024-06-19)
 
 - Added a [Code of Conduct](CODE_OF_CONDUCT.md).
