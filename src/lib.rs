@@ -901,6 +901,50 @@ where
     }
 }
 
+#[cfg(any(feature = "std", feature = "libm"))]
+impl<T> Quaternion<T>
+where
+    T: Float + FloatConst,
+{
+    /// Given a quaternion $q$, returns $e^q$, where $e$ is the base of the
+    /// natural logarithm.
+    pub fn exp(self) -> Self {
+        // Compute the norm of the result
+        let result_norm = self.w.exp();
+
+        // Compute the square of the angle between the result and 1 (in 4d
+        // space).
+        let sqr_angle = self.x * self.x + self.y * self.y + self.z * self.z;
+
+        if sqr_angle > T::epsilon() {
+            // Angle is large enough --> no numerical instability
+            let angle = sqr_angle.sqrt();
+            let cos_angle = angle.cos();
+            let sinc_angle = angle.sin() / angle;
+            let w = result_norm * cos_angle;
+            let x = result_norm * self.x * sinc_angle;
+            let y = result_norm * self.y * sinc_angle;
+            let z = result_norm * self.z * sinc_angle;
+            Self::new(w, x, y, z)
+        } else {
+            // Angle is small --> approximation formula can be used and
+            // we still get minimal error.
+            // By Taylor expansion of `cos(angle)` we get
+            //     cos(angle) >= 1 - angle^2 / 2
+            // and thus |cos(angle) - 1| is less than half a floating point epsilon.
+            // Similarly,
+            //     sinc(angle) >= 1 - angle^2 / 6
+            // and thus |sinc(angle) - 1| is less than a sixth of a floating
+            // point epsilon.
+            let w = result_norm;
+            let x = result_norm * self.x;
+            let y = result_norm * self.y;
+            let z = result_norm * self.z;
+            Self::new(w, x, y, z)
+        }
+    }
+}
+
 #[cfg(feature = "serde")]
 impl<T> serde::Serialize for Quaternion<T>
 where
@@ -2346,6 +2390,46 @@ mod tests {
                 expected *= q;
             }
         }
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_exp_zero_quaternion() {
+        assert_eq!(Q32::ZERO.exp(), Q32::ONE);
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_exp_real_part_only() {
+        assert_eq!(Q32::ONE.exp(), core::f32::consts::E.into())
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_exp_imaginary_part_only() {
+        assert!(
+            (Q64::I.exp() - Q64::new(1.0f64.cos(), 1.0f64.sin(), 0.0, 0.0)).norm() <= f64::EPSILON
+        );
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_exp_complex_quaternion() {
+        let q = Q32::new(1.0, 1.0, 1.0, 1.0);
+        let exp_q = q.exp();
+        let expected_norm = 1.0f32.exp();
+        let angle = 3.0f32.sqrt();
+        assert!(
+            (exp_q
+                - Q32::new(
+                    expected_norm * angle.cos(),
+                    expected_norm * angle.sin() / angle,
+                    expected_norm * angle.sin() / angle,
+                    expected_norm * angle.sin() / angle
+                ))
+            .norm()
+                <= 2.0 * expected_norm * f32::EPSILON
+        );
     }
 
     /// Computes the hash value of `val` using the default hasher.
