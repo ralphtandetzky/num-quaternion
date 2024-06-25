@@ -155,7 +155,7 @@ use num_traits::{ConstOne, ConstZero, Inv, Num, One, Zero};
 
 #[cfg(any(feature = "std", feature = "libm"))]
 use {
-    core::num,
+    core::num::FpCategory,
     num_traits::{float::Float, FloatConst},
 };
 
@@ -479,9 +479,7 @@ where
     pub fn normalize(self) -> Option<UnitQuaternion<T>> {
         let norm = self.norm();
         match norm.classify() {
-            core::num::FpCategory::Normal | core::num::FpCategory::Subnormal => {
-                Some(UnitQuaternion(self / norm))
-            }
+            FpCategory::Normal | FpCategory::Subnormal => Some(UnitQuaternion(self / norm)),
             _ => None,
         }
     }
@@ -943,6 +941,160 @@ where
             Self::new(w, x, y, z)
         }
     }
+
+    fn is_finite(&self) -> bool {
+        self.w.is_finite() && self.x.is_finite() && self.y.is_finite() && self.z.is_finite()
+    }
+
+    /// Computes the natural logarithm of a quaternion.
+    ///
+    /// The function implements the following guarantees for extreme input
+    /// values:
+    ///
+    /// - The function is continuous onto the branch cut taking into account
+    ///   the sign of the coefficient of $i$.
+    /// - For all quaternions $q$ it holds `q.conj().ln() == q.ln().conj()`.
+    /// - The signs of the coefficients of the imaginary parts of the outputs
+    ///   are equal to the signs of the respective signs of the coefficients
+    ///   of the inputs. This also holds for signs of zeros, bur not for
+    ///   `NaNs`.
+    /// - If $q = -0 + 0i$, the result is $-\infty+\pi i$. (The coefficients
+    ///   of $j$ and $k$ are zero with the signs copied.)
+    /// - If $q = +0$, the result is $-\infty$.
+    /// - If the input has a `NaN` value, then the result is `NaN` in all
+    ///   components.
+    /// - Otherwise, if $q = w + xi + yj + zk$ where at least one of
+    ///   $w, x, y, z$ is infinite, then the real part of the result is
+    ///   $+\infty$ and the imaginary part is the imaginary part
+    ///   of the logarithm of $f(w) + f(x)i + f(y)j + f(z)k$ where
+    ///     - $f(+\infty) := 1$,
+    ///     - #f(-\infty) :=-1$, and
+    ///     - $f(s) = 0$ for finite values fo $s$.
+    pub fn ln(self) -> Self {
+        // The square norm of the imaginary part.
+        let sqr_norm_im = self.x * self.x + self.y * self.y + self.z * self.z;
+        // The square norm of `self`.
+        let sqr_norm = self.w * self.w + sqr_norm_im;
+
+        match sqr_norm.classify() {
+            FpCategory::Normal => {
+                // The normal case: First compute the real part of the result.
+                let w = sqr_norm.ln() * T::from(0.5).unwrap();
+                if sqr_norm_im <= self.w * self.w * T::epsilon() {
+                    // We're close to or on the positive real axis
+                    if self.w.is_sign_positive() {
+                        // This approximation leaves a relative error of less
+                        // than a floating point epsilon for the imaginary part
+                        let x = self.x / self.w;
+                        let y = self.y / self.w;
+                        let z = self.z / self.w;
+                        Self::new(w, x, y, z)
+                    } else if self.x.is_zero() && self.y.is_zero() && self.z.is_zero() {
+                        // We're on the negative real axis.
+                        Self::new(w, T::PI().copysign(self.x), self.y, self.z)
+                    } else {
+                        // We're close the the negative real axis. Compute the
+                        // norm of the imaginary part.
+                        let norm_im = if sqr_norm_im.is_normal() {
+                            // In this case we get maximum precision by using
+                            // `sqr_norm_im`.
+                            sqr_norm_im.sqrt()
+                        } else {
+                            // Otherwise, using `sqr_norm_im` is imprecise.
+                            // We magnify the imaginary part first, so we can
+                            // get around this problem.
+                            let f = T::min_positive_value().sqrt();
+                            let xf = self.x / f;
+                            let yf = self.y / f;
+                            let zf = self.z / f;
+                            let sqr_sum = xf * xf + yf * yf + zf * zf;
+                            sqr_sum.sqrt() * f
+                        };
+
+                        // The angle of `self` to the positive real axis is
+                        // pi minus the angle from the negative real axis.
+                        // The angle from the negative real axis
+                        // can be approximated by `norm_im / self.w.abs()``
+                        // which is equal to `-norm_im / self.w`. This the
+                        // angle from the positive real axis is
+                        // `pi + norm_im / self.w`. We obtain the imaginary
+                        // part of the result by multiplying this value by
+                        // the imaginary part of the input normalized, or
+                        // equivalently, by multiplying the imaginary part
+                        // of the input by the following factor:
+                        let f = T::PI() / norm_im + self.w.recip();
+
+                        Self::new(w, f * self.x, f * self.y, f * self.z)
+                    }
+                } else {
+                    // The most natural case: We're far enough from the real
+                    // axis and the norm of the input quaternion is large
+                    // enough to exclude any numerical instabilities.
+                    let norm_im = if sqr_norm_im.is_normal() {
+                        // `sqr_norm_im` has maximum precision.
+                        sqr_norm_im.sqrt()
+                    } else {
+                        // Otherwise, using `sqr_norm_im` is imprecise.
+                        // We magnify the imaginary part first, so we can
+                        // get around this problem.
+                        let f = T::min_positive_value().sqrt();
+                        let xf = self.x / f;
+                        let yf = self.y / f;
+                        let zf = self.z / f;
+                        let sqr_sum = xf * xf + yf * yf + zf * zf;
+                        sqr_sum.sqrt() * f
+                    };
+                    let angle = norm_im.atan2(self.w);
+                    let x = self.x * angle / norm_im;
+                    let y = self.y * angle / norm_im;
+                    let z = self.z * angle / norm_im;
+                    Self::new(w, x, y, z)
+                }
+            }
+            FpCategory::Zero if self.is_zero() => {
+                let x = if self.w.is_sign_positive() {
+                    self.x
+                } else {
+                    T::PI().copysign(self.x)
+                };
+                Self::new(T::neg_infinity(), x, self.y, self.z)
+            }
+            FpCategory::Nan => Self::nan(),
+            FpCategory::Infinite => {
+                // The square norm overflows.
+                if self.is_finite() {
+                    // There is no infinity entry in the quaternion. Hence,
+                    // We can scale the quaternion down and recurse.
+                    let factor = T::one() / T::max_value().sqrt();
+                    (self * factor).ln() - factor.ln()
+                } else {
+                    // There is an infinite value in the input quaternion.
+                    // Let's map the infinite entries to `±1` and all other
+                    // entries to `±0` maintaining the sign.
+                    let f = |r: T| {
+                        if r.is_infinite() {
+                            r.signum()
+                        } else {
+                            T::zero().copysign(r)
+                        }
+                    };
+                    let q = Self::new(f(self.w), f(self.x), f(self.y), f(self.z));
+                    // TODO: Optimize this. There are only a few possible
+                    // angles which could be hard-coded. Recursing here
+                    // may be a bit heavy.
+                    q.ln() + T::infinity()
+                }
+            }
+            _ => {
+                // Square norm is less than smallest positive normal value,
+                // but `self` is not zero. Let's scale up the value to obtain
+                // the precision by recursing and then fix the factor
+                // afterwards.
+                let factor = T::one() / T::min_positive_value().sqrt();
+                (self * factor).ln() - factor.ln()
+            }
+        }
+    }
 }
 
 #[cfg(feature = "serde")]
@@ -1152,14 +1304,14 @@ where
         let sqr_norm = v[0] * v[0] + v[1] * v[1] + v[2] * v[2];
         let two = T::one() + T::one();
         match sqr_norm.classify() {
-            num::FpCategory::Normal => {
+            FpCategory::Normal => {
                 // TODO: Optimize this further for norms that are not above pi.
                 let norm = sqr_norm.sqrt();
                 let (sine, cosine) = (norm / two).sin_cos();
                 let f = sine / norm;
                 Self(Quaternion::new(cosine, v[0] * f, v[1] * f, v[2] * f))
             }
-            num::FpCategory::Zero | num::FpCategory::Subnormal => Self(Quaternion::new(
+            FpCategory::Zero | FpCategory::Subnormal => Self(Quaternion::new(
                 // This formula could be used for norm <= epsilon generally,
                 // where epsilon is the floating point epsilon.
                 T::one(),
@@ -1167,7 +1319,7 @@ where
                 v[1] / two,
                 v[2] / two,
             )),
-            num::FpCategory::Nan | num::FpCategory::Infinite => Self(Quaternion::nan()),
+            FpCategory::Nan | FpCategory::Infinite => Self(Quaternion::nan()),
         }
     }
 }
