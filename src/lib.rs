@@ -108,7 +108,7 @@
 //!   functions which are otherwise provided by the standard library. Use
 //!   this feature if you want to work without standard library, but still
 //!   want features that internally require floating point functions like
-//!   `sqrt()` or `acos()`, etc. This includes functionality like computing
+//!   `sqrt` or `acos`, etc. This includes functionality like computing
 //!   the norm, converting from and to Euler angles and spherical linear
 //!   interpolation.
 //!
@@ -2891,7 +2891,7 @@ mod tests {
     fn test_to_rotation_vector_general_case() {
         // Quaternion representing a general rotation
         // Here we first compute the rotation vector and then
-        // check if `from_rotation_vector()` restores the original
+        // check if `from_rotation_vector` restores the original
         // quaternion appropriately.
         for q in [
             [1.0, 0.0, 0.0, 0.0],
