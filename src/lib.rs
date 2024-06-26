@@ -955,9 +955,8 @@ where
     ///   the sign of the coefficient of $i$.
     /// - For all quaternions $q$ it holds `q.conj().ln() == q.ln().conj()`.
     /// - The signs of the coefficients of the imaginary parts of the outputs
-    ///   are equal to the signs of the respective signs of the coefficients
-    ///   of the inputs. This also holds for signs of zeros, bur not for
-    ///   `NaNs`.
+    ///   are equal to the signs of the respective coefficients of the inputs.
+    ///   This also holds for signs of zeros, but not for `NaNs`.
     /// - If $q = -0 + 0i$, the result is $-\infty+\pi i$. (The coefficients
     ///   of $j$ and $k$ are zero with the signs copied.)
     /// - If $q = +0$, the result is $-\infty$.
@@ -968,8 +967,8 @@ where
     ///   $+\infty$ and the imaginary part is the imaginary part
     ///   of the logarithm of $f(w) + f(x)i + f(y)j + f(z)k$ where
     ///     - $f(+\infty) := 1$,
-    ///     - #f(-\infty) :=-1$, and
-    ///     - $f(s) = 0$ for finite values fo $s$.
+    ///     - $f(-\infty) :=-1$, and
+    ///     - $f(s) = 0$ for finite values of $s$.
     pub fn ln(self) -> Self {
         // The square norm of the imaginary part.
         let sqr_norm_im = self.x * self.x + self.y * self.y + self.z * self.z;
@@ -979,7 +978,8 @@ where
         match sqr_norm.classify() {
             FpCategory::Normal => {
                 // The normal case: First compute the real part of the result.
-                let w = sqr_norm.ln() * T::from(0.5).unwrap();
+                let w = sqr_norm.ln() * T::from(0.5).expect("Conversion failed");
+
                 if sqr_norm_im <= self.w * self.w * T::epsilon() {
                     // We're close to or on the positive real axis
                     if self.w.is_sign_positive() {
