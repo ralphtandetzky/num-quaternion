@@ -1,3 +1,10 @@
+# Release 0.2.9 (2024-06-26)
+
+- Implemented the functions `exp` and `ln`.
+
+**Contributors**: @ralphtandetzky
+
+
 # Release 0.2.8 (2024-06-21)
 
 - Added feature `serde`. Implemented `Serialize` and `Deserialize` traits for
@@ -43,8 +50,8 @@
 
 # Release 0.2.3 (2024-06-08)
 
-- Added the function `UnitQuaternion::to_rotation_vector()`.
-- Added new unstable function `from_euler_angles_struct()`. (It is marked
+- Added the function `UnitQuaternion::to_rotation_vector`.
+- Added new unstable function `from_euler_angles_struct`. (It is marked
   as unstable since the naming may change in the future.)
 
 **Contributors**: @ralphtandetzky
@@ -52,7 +59,7 @@
 
 # Release 0.2.2 (2024-06-05)
 
-- Added the function `UnitQuaternion::to_euler_angles()`.
+- Added the function `UnitQuaternion::to_euler_angles`.
 - Added the struct `EulerAngles<T>`.
 - Small improvements in the docs.
 
@@ -61,7 +68,7 @@
 
 # Release 0.2.1 (2024-06-04)
 
-- Added the function `UnitQuaternion::rotate_vector()`.
+- Added the function `UnitQuaternion::rotate_vector`.
 
 **Contributors**: @ralphtandetzky
 
