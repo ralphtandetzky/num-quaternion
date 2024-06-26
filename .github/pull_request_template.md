@@ -13,7 +13,3 @@ Fixes # (issue)
 - [ ] Changes are self-reviewed
 - [ ] Added/updated documentation
 - [ ] Added tests, if appropriate
-
-## Additional Notes
-
-Any other comments or notes.
