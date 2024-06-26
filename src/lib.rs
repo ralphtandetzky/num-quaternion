@@ -2584,6 +2584,104 @@ mod tests {
         );
     }
 
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_ln_normal_case() {
+        // Test a normal quaternion
+        let q = Quaternion::new(1.0, 2.0, 3.0, 4.0);
+        let ln_q = q.ln();
+        assert!((q.w - 30.0f64.ln() / 2.0) <= 4.0 * f64::EPSILON);
+        assert!((ln_q.z / ln_q.x - q.z / q.x) <= 2.0 * f64::EPSILON);
+        assert!((ln_q.y / ln_q.x - q.y / q.x) <= 2.0 * f64::EPSILON);
+        assert!((ln_q.x.hypot(ln_q.y.hypot(ln_q.z)) - 29.0f64.sqrt().atan()) <= 4.0 * f64::EPSILON);
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_ln_positive_real_axis() {
+        // Test close to the positive real axis
+        let q = Quaternion::new(1.0, 1e-10, 1e-10, 1e-10);
+        let ln_q = q.ln();
+        let expected = Quaternion::new(0.0, 1e-10, 1e-10, 1e-10); // ln(1) = 0 and imaginary parts small
+        assert!((ln_q - expected).norm() <= 1e-11);
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_ln_negative_real_axis() {
+        // Test close to the negative real axis
+        let q = Q32::new(-1.0, 0.0, 0.0, 0.0);
+        let ln_q = q.ln();
+        let expected = Q32::new(0.0, core::f32::consts::PI, 0.0, 0.0); // ln(-1) = pi*i
+        assert!((ln_q - expected).norm() <= core::f32::consts::PI * f32::EPSILON);
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_ln_zero() {
+        // Test the zero quaternion
+        let q = Q32::new(0.0, 0.0, 0.0, 0.0);
+        let ln_q = q.ln();
+        let expected = f32::NEG_INFINITY.into();
+        assert_eq!(ln_q, expected);
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_ln_negative_zero() {
+        // Test the negative zero quaternion
+        let q = Q64::new(-0.0, 0.0, 0.0, 0.0);
+        let ln_q = q.ln();
+        let expected = Q64::new(f64::NEG_INFINITY, core::f64::consts::PI, 0.0, 0.0);
+        assert_eq!(ln_q.w, expected.w);
+        assert!((ln_q.x - expected.x).abs() <= core::f64::consts::PI * f64::EPSILON);
+        assert_eq!(ln_q.y, expected.y);
+        assert_eq!(ln_q.z, expected.z);
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_ln_nan() {
+        // Test a quaternion with NaN
+        let q = Quaternion::new(f32::NAN, 1.0, 1.0, 1.0);
+        let ln_q = q.ln();
+        assert!(ln_q.w.is_nan());
+        assert!(ln_q.x.is_nan());
+        assert!(ln_q.y.is_nan());
+        assert!(ln_q.z.is_nan());
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_ln_infinite() {
+        // Test a quaternion with infinite components
+        let q = Q32::new(f32::INFINITY, 1.0, 1.0, 1.0);
+        let ln_q = q.ln();
+        let expected = Quaternion::new(f32::INFINITY, 0.0, 0.0, 0.0); // Real part infinity, imaginary parts 0
+        assert_eq!(ln_q, expected);
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_ln_finite_and_infinite() {
+        // Test a quaternion with finite and infinite components
+
+        use num_traits::Signed;
+        let q = Quaternion::new(1.0, f32::INFINITY, -f32::INFINITY, -1.0);
+        let ln_q = q.ln();
+        let expected = Quaternion::new(
+            f32::INFINITY,
+            core::f32::consts::PI / 8.0f32.sqrt(),
+            -core::f32::consts::PI / 8.0f32.sqrt(),
+            0.0,
+        );
+        assert_eq!(ln_q.w, expected.w);
+        assert!((ln_q.x - expected.x).abs() <= 4.0f32 * f32::EPSILON);
+        assert!((ln_q.y - expected.y).abs() <= 4.0f32 * f32::EPSILON);
+        assert_eq!(ln_q.z, 0.0);
+        assert!(ln_q.z.is_negative());
+    }
+
     /// Computes the hash value of `val` using the default hasher.
     #[cfg(feature = "std")]
     fn compute_hash(val: impl Hash) -> u64 {
