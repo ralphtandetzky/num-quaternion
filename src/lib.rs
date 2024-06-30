@@ -968,7 +968,7 @@ where
     ///   of the logarithm of $f(w) + f(x)i + f(y)j + f(z)k$ where
     ///     - $f(+\infty) := 1$,
     ///     - $f(-\infty) :=-1$, and
-    ///     - $f(s) = 0$ for finite values of $s$.
+    ///     - $f(s) := 0$ for finite values of $s$.
     pub fn ln(self) -> Self {
         // The square norm of the imaginary part.
         let sqr_norm_im = self.x * self.x + self.y * self.y + self.z * self.z;
