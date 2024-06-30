@@ -1090,7 +1090,7 @@ where
                 // but `self` is not zero. Let's scale up the value to obtain
                 // the precision by recursing and then fix the factor
                 // afterwards.
-                let factor = T::one() / T::min_positive_value().sqrt();
+                let factor = T::one() / T::min_positive_value();
                 (self * factor).ln() - factor.ln()
             }
         }
