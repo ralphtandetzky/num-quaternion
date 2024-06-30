@@ -1095,6 +1095,108 @@ where
             }
         }
     }
+
+    /// Computes the square root of a quaternion.
+    ///
+    /// Given the input quaternion $c$, this function returns the quaternion
+    /// $q$ which satisfies $q^2 = c$ and has a real part with positive sign.
+    ///
+    /// For extreme values, the following guarantees are implemented:
+    ///
+    /// - If any coefficient in $c$ is `NaN`, then the result is `NaN` in all
+    ///   components.
+    /// - Otherwise, for any input $c$, the expression `c.sqrt().conj()` is
+    ///   exactly equivalent to `c.conj().sqrt()` including the signs of
+    ///   zeros and infinities.
+    /// - For any input $c$, `c.sqrt().w` has always a positive sign.
+    /// - For any input $c$, the signs of the output components are the signs
+    ///   of the input components, except in the case of a `NaN` input.
+    /// - For negative real inputs $c$, the result is $\pm\sqrt{-c} i$, where
+    ///   the sign is determined by the sign of the input's coefficient of $i$.
+    /// - If there is at least one infinite coefficient in the imaginary part,
+    ///   then the result will have the same infinite imaginary coefficients
+    ///   and the real part is $+\infinity$. All other coefficients of the
+    ///   result are $0$ with the sign of the respective input.
+    /// - If the real part is $-\infty$ and the imaginary part if finite, then
+    ///   the result is $\pm\infty i$ with the sign of the coefficient of $i$
+    ///   from the input.
+    pub fn sqrt(self) -> Self {
+        let zero = T::zero();
+        let one = T::one();
+        let two = one + one;
+        let half = one / two;
+        let inf = T::infinity();
+        let s = one / T::min_positive_value(); // large scale factor
+        let norm_sqr = self.norm_sqr();
+        match norm_sqr.classify() {
+            FpCategory::Normal => {
+                // norm of the input
+                let norm = norm_sqr.sqrt();
+
+                if self.w.is_sign_positive() {
+                    // Compute real part of result directly and robustly.
+                    let w = ((self.w + norm) * half).sqrt();
+
+                    Self::new(w, self.x / two / w, self.y / two / w, self.z / two / w)
+                } else {
+                    // The first formula for the real part of the result may
+                    // not be so robust, if the sign of the input is negative.
+                    let im_norm_sqr = self.y * self.y + (self.x * self.x + self.z * self.z);
+                    if im_norm_sqr >= T::min_positive_value() {
+                        // Second formula for the real part of the result which
+                        // is robust for inputs with negative real part.
+                        let w = (im_norm_sqr * half / (norm - self.w)).sqrt();
+
+                        Self::new(w, self.x / two / w, self.y / two / w, self.z / two / w)
+                    } else if self.x.is_zero() && self.y.is_zero() && self.z.is_zero() {
+                        // The input is a negative real number.
+                        Self::new(zero, (-self.w).sqrt().copysign(self.x), self.y, self.z)
+                    } else {
+                        // `im_norm_sqr` is subnormal. We compute the norm of
+                        // the imaginary part by scaling up first.
+                        let sx = s * self.x;
+                        let sy = s * self.y;
+                        let sz = s * self.z;
+                        let im_norm = (sx * sx + sy * sy + sz * sz).sqrt() / s;
+
+                        // Compute the real part according to the second
+                        // formula from above.
+                        let w = im_norm / (two * (norm - self.w)).sqrt();
+
+                        Self::new(w, self.x / two / w, self.y / two / w, self.z / two / w)
+                    }
+                }
+            }
+            FpCategory::Zero if self.is_zero() => Self::new(zero, self.x, self.y, self.z),
+            FpCategory::Infinite => {
+                if self.w == inf
+                    || self.x.is_infinite()
+                    || self.y.is_infinite()
+                    || self.z.is_infinite()
+                {
+                    let f = |a: T| if a.is_infinite() { a } else { zero.copysign(a) };
+                    Self::new(inf, f(self.x), f(self.y), f(self.z))
+                } else if self.w == -inf {
+                    Self::new(
+                        zero,
+                        inf.copysign(self.x),
+                        zero.copysign(self.y),
+                        zero.copysign(self.z),
+                    )
+                } else {
+                    // Input has no infinities. Therefore, the square norm
+                    // overflowed. Let's scale down.
+                    (self / s).sqrt() * s.sqrt()
+                }
+            }
+            FpCategory::Nan => Self::nan(),
+            _ => {
+                // square norm is subnormal or zero (underflow), but `self` it
+                // not zero. Let's scale up.
+                (self * s).sqrt() / s.sqrt()
+            }
+        }
+    }
 }
 
 #[cfg(feature = "serde")]
@@ -2680,6 +2782,145 @@ mod tests {
         assert!((ln_q.y - expected.y).abs() <= 4.0f32 * f32::EPSILON);
         assert_eq!(ln_q.z, 0.0);
         assert!(ln_q.z.is_negative());
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_sqrt_normal() {
+        let q = Q64::new(1.0, 2.0, 3.0, 4.0);
+        assert!(((q * q).sqrt() - q).norm() <= q.norm() * f64::EPSILON);
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_sqrt_zero() {
+        assert_eq!(Q32::ZERO.sqrt(), Q32::ZERO);
+        let zero = Q32::new(-0.0, 0.0, -0.0, -0.0);
+        assert!(zero.sqrt().w.is_sign_positive());
+        assert!(zero.sqrt().x.is_sign_positive());
+        assert!(zero.sqrt().y.is_sign_negative());
+        assert!(zero.sqrt().z.is_sign_negative());
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_sqrt_negative_real() {
+        let q = Q64::new(-4.0, -0.0, 0.0, 0.0);
+        let sqrt_q = q.sqrt();
+        let expected = Q64::new(0.0, -2.0, 0.0, 0.0);
+        assert_eq!(sqrt_q, expected);
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_sqrt_nan() {
+        let q = Q32::new(f32::NAN, 0.0, 0.0, 0.0);
+        let sqrt_q = q.sqrt();
+        assert!(sqrt_q.w.is_nan());
+        assert!(sqrt_q.x.is_nan());
+        assert!(sqrt_q.y.is_nan());
+        assert!(sqrt_q.z.is_nan());
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_sqrt_infinity() {
+        let q = Q64::new(f64::INFINITY, -0.0, -0.0, 0.0);
+        let sqrt_q = q.sqrt();
+        assert!(sqrt_q.w.is_infinite());
+        assert!(sqrt_q.x.is_zero());
+        assert!(sqrt_q.y.is_zero());
+        assert!(sqrt_q.z.is_zero());
+        assert!(sqrt_q.w.is_sign_positive());
+        assert!(sqrt_q.x.is_sign_negative());
+        assert!(sqrt_q.y.is_sign_negative());
+        assert!(sqrt_q.z.is_sign_positive());
+
+        let q = Q32::new(0.0, 0.0, -f32::INFINITY, -0.0);
+        let sqrt_q = q.sqrt();
+        assert!(sqrt_q.w.is_infinite());
+        assert!(sqrt_q.x.is_zero());
+        assert!(sqrt_q.y.is_infinite());
+        assert!(sqrt_q.z.is_zero());
+        assert!(sqrt_q.w.is_sign_positive());
+        assert!(sqrt_q.x.is_sign_positive());
+        assert!(sqrt_q.y.is_sign_negative());
+        assert!(sqrt_q.z.is_sign_negative());
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_sqrt_negative_infinity_real() {
+        let q = Quaternion::new(-f64::INFINITY, 0.0, -1.0, 0.0);
+        let sqrt_q = q.sqrt();
+        assert!(sqrt_q.w.is_zero());
+        assert!(sqrt_q.x.is_infinite());
+        assert!(sqrt_q.y.is_zero());
+        assert!(sqrt_q.z.is_zero());
+        assert!(sqrt_q.w.is_sign_positive());
+        assert!(sqrt_q.x.is_sign_positive());
+        assert!(sqrt_q.y.is_sign_negative());
+        assert!(sqrt_q.z.is_sign_positive());
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_sqrt_commutativity_with_conjugate() {
+        let q = Q32::new(1.0, 2.0, 3.0, 4.0);
+        assert_eq!(q.conj().sqrt(), q.sqrt().conj());
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_sqrt_subnormal_values() {
+        let subnormal = f64::MIN_POSITIVE / 2.0;
+        let q = Quaternion::new(subnormal, subnormal, subnormal, subnormal);
+        let sqrt_q = q.sqrt();
+        let norm_sqr = sqrt_q.norm_sqr();
+        assert!((norm_sqr - f64::MIN_POSITIVE).abs() <= 4.0 * subnormal * f64::EPSILON);
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_sqrt_mixed_infinities() {
+        let q = Q32::new(
+            -f32::INFINITY,
+            -f32::INFINITY,
+            f32::INFINITY,
+            -f32::INFINITY,
+        );
+        let sqrt_q = q.sqrt();
+        assert_eq!(sqrt_q.w, f32::INFINITY);
+        assert_eq!(sqrt_q.x, -f32::INFINITY);
+        assert_eq!(sqrt_q.y, f32::INFINITY);
+        assert_eq!(sqrt_q.z, -f32::INFINITY);
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_sqrt_positive_real() {
+        let q = Q64::new(4.0, 0.0, 0.0, 0.0);
+        let sqrt_q = q.sqrt();
+        let expected = Q64::new(2.0, 0.0, 0.0, 0.0);
+        assert_eq!(sqrt_q, expected);
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_sqrt_purely_imaginary() {
+        let q = Q32::new(0.0, 3.0, 4.0, 0.0);
+        let sqrt_q = q.sqrt();
+        assert!(sqrt_q.w > 0.0);
+        assert!((sqrt_q * sqrt_q - q).norm() <= 2.0 * q.norm() * f32::EPSILON);
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_sqrt_negative_imaginary() {
+        let q = Q64::new(0.0, -3.0, -4.0, 0.0);
+        let sqrt_q = q.sqrt();
+        assert!(sqrt_q.w > 0.0);
+        assert!((sqrt_q * sqrt_q - q).norm() <= 16.0 * q.norm() * f64::EPSILON);
     }
 
     /// Computes the hash value of `val` using the default hasher.
