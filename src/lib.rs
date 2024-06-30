@@ -973,12 +973,12 @@ where
         // The square norm of the imaginary part.
         let sqr_norm_im = self.x * self.x + self.y * self.y + self.z * self.z;
         // The square norm of `self`.
-        let sqr_norm = self.w * self.w + sqr_norm_im;
+        let norm_sqr = self.w * self.w + sqr_norm_im;
 
-        match sqr_norm.classify() {
+        match norm_sqr.classify() {
             FpCategory::Normal => {
                 // The normal case: First compute the real part of the result.
-                let w = sqr_norm.ln() * T::from(0.5).expect("Conversion failed");
+                let w = norm_sqr.ln() * T::from(0.5).expect("Conversion failed");
 
                 if sqr_norm_im <= self.w * self.w * T::epsilon() {
                     // We're close to or on the positive real axis
