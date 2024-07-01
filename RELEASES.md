@@ -1,3 +1,10 @@
+# Release 0.2.10 (2024-07-02)
+
+- Implemented the function `sqrt` for `Quaternion`.
+
+**Contributors**: @ralphtandetzky
+
+
 # Release 0.2.9 (2024-06-26)
 
 - Implemented the functions `exp` and `ln`.
