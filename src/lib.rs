@@ -1107,17 +1107,18 @@ where
     ///   components.
     /// - Otherwise, for any input $c$, the expression `c.sqrt().conj()` is
     ///   exactly equivalent to `c.conj().sqrt()` including the signs of
-    ///   zeros and infinities.
+    ///   zeros and infinities, if any.
     /// - For any input $c$, `c.sqrt().w` has always a positive sign.
-    /// - For any input $c$, the signs of the output components are the signs
-    ///   of the input components, except in the case of a `NaN` input.
+    /// - For any input $c$, the signs of three output imaginary parts are the
+    ///   same signs as of the input imaginary parts in their respective order,
+    ///   except in the case of a `NaN` input.
     /// - For negative real inputs $c$, the result is $\pm\sqrt{-c} i$, where
     ///   the sign is determined by the sign of the input's coefficient of $i$.
     /// - If there is at least one infinite coefficient in the imaginary part,
     ///   then the result will have the same infinite imaginary coefficients
     ///   and the real part is $+\infinity$. All other coefficients of the
     ///   result are $0$ with the sign of the respective input.
-    /// - If the real part is $-\infty$ and the imaginary part if finite, then
+    /// - If the real part is $-\infty$ and the imaginary part is finite, then
     ///   the result is $\pm\infty i$ with the sign of the coefficient of $i$
     ///   from the input.
     pub fn sqrt(self) -> Self {
@@ -1134,10 +1135,26 @@ where
                 let norm = norm_sqr.sqrt();
 
                 if self.w.is_sign_positive() {
-                    // Compute real part of result directly and robustly.
-                    let w = ((self.w + norm) * half).sqrt();
+                    // Compute double the real part of result directly and
+                    // robustly.
+                    //
+                    // Note: We could also compute the real part directly.
+                    // However, this would be inferior for the following
+                    // reasons:
+                    //
+                    // - To compute the imaginary parts of the result, we
+                    //   would need to double the real part anyways which
+                    //   would require an extra arithmetic operation
+                    //   which would then add to the latency of the
+                    //   computation.
+                    // - To avoid this latency, we could also multiply
+                    //   `self.x`, `self.y` and `self.z` by 1/2 and then divide
+                    //   by the real part (which takes longer to compute).
+                    //   However, this could cost some accuracy for subnormal
+                    //   imaginary parts.
+                    let wx2 = ((self.w + norm) * two).sqrt();
 
-                    Self::new(w, self.x / two / w, self.y / two / w, self.z / two / w)
+                    Self::new(wx2 * half, self.x / wx2, self.y / wx2, self.z / wx2)
                 } else {
                     // The first formula for the real part of the result may
                     // not be so robust, if the sign of the input is negative.
@@ -1145,9 +1162,9 @@ where
                     if im_norm_sqr >= T::min_positive_value() {
                         // Second formula for the real part of the result which
                         // is robust for inputs with negative real part.
-                        let w = (im_norm_sqr * half / (norm - self.w)).sqrt();
+                        let wx2 = (im_norm_sqr * two / (norm - self.w)).sqrt();
 
-                        Self::new(w, self.x / two / w, self.y / two / w, self.z / two / w)
+                        Self::new(wx2 * half, self.x / wx2, self.y / wx2, self.z / wx2)
                     } else if self.x.is_zero() && self.y.is_zero() && self.z.is_zero() {
                         // The input is a negative real number.
                         Self::new(zero, (-self.w).sqrt().copysign(self.x), self.y, self.z)
@@ -1157,13 +1174,13 @@ where
                         let sx = s * self.x;
                         let sy = s * self.y;
                         let sz = s * self.z;
-                        let im_norm = (sx * sx + sy * sy + sz * sz).sqrt() / s;
+                        let im_norm = (sy * sy + (sx * sx + sz * sz)).sqrt() / s;
 
                         // Compute the real part according to the second
                         // formula from above.
-                        let w = im_norm / (two * (norm - self.w)).sqrt();
+                        let w = im_norm / (half * (norm - self.w)).sqrt();
 
-                        Self::new(w, self.x / two / w, self.y / two / w, self.z / two / w)
+                        Self::new(w * half, self.x / w, self.y / w, self.z / w)
                     }
                 }
             }
@@ -1185,7 +1202,10 @@ where
                     )
                 } else {
                     // Input has no infinities. Therefore, the square norm
-                    // overflowed. Let's scale down.
+                    // must have overflowed. Let's scale down.
+                    // In release mode, the compiler turns the division into
+                    // a multiplication, because `s` is a power of two. Thus,
+                    // it's fast.
                     (self / s).sqrt() * s.sqrt()
                 }
             }
@@ -1193,6 +1213,9 @@ where
             _ => {
                 // square norm is subnormal or zero (underflow), but `self` it
                 // not zero. Let's scale up.
+                // In release mode, the compiler turns the division into a
+                // multiplication, because `s.sqrt()` is a power of two. Thus,
+                // it's fast.
                 (self * s).sqrt() / s.sqrt()
             }
         }
