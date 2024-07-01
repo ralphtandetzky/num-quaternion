@@ -1096,28 +1096,28 @@ where
         }
     }
 
-    /// Computes the square root of a quaternion.
+    // Computes the square root of a quaternion.
     ///
     /// Given the input quaternion $c$, this function returns the quaternion
-    /// $q$ which satisfies $q^2 = c$ and has a real part with positive sign.
+    /// $q$ which satisfies $q^2 = c$ and has a real part with a positive sign.
     ///
     /// For extreme values, the following guarantees are implemented:
     ///
     /// - If any coefficient in $c$ is `NaN`, then the result is `NaN` in all
     ///   components.
     /// - Otherwise, for any input $c$, the expression `c.sqrt().conj()` is
-    ///   exactly equivalent to `c.conj().sqrt()` including the signs of
+    ///   exactly equivalent to `c.conj().sqrt()`, including the signs of
     ///   zeros and infinities, if any.
-    /// - For any input $c$, `c.sqrt().w` has always a positive sign.
-    /// - For any input $c$, the signs of three output imaginary parts are the
-    ///   same signs as of the input imaginary parts in their respective order,
+    /// - For any input $c$, `c.sqrt().w` always has a positive sign.
+    /// - For any input $c$, the signs of the three output imaginary parts are
+    ///   the same as the input imaginary parts in their respective order,
     ///   except in the case of a `NaN` input.
     /// - For negative real inputs $c$, the result is $\pm\sqrt{-c} i$, where
     ///   the sign is determined by the sign of the input's coefficient of $i$.
     /// - If there is at least one infinite coefficient in the imaginary part,
     ///   then the result will have the same infinite imaginary coefficients
-    ///   and the real part is $+\infinity$. All other coefficients of the
-    ///   result are $0$ with the sign of the respective input.
+    ///   and the real part is $+\infty$. All other coefficients of the result
+    ///   are $0$ with the sign of the respective input.
     /// - If the real part is $-\infty$ and the imaginary part is finite, then
     ///   the result is $\pm\infty i$ with the sign of the coefficient of $i$
     ///   from the input.
@@ -1135,33 +1135,34 @@ where
                 let norm = norm_sqr.sqrt();
 
                 if self.w.is_sign_positive() {
-                    // Compute double the real part of result directly and
+                    // Compute double the real part of the result directly and
                     // robustly.
                     //
                     // Note: We could also compute the real part directly.
                     // However, this would be inferior for the following
-                    // reasons:
+                    //  reasons:
                     //
                     // - To compute the imaginary parts of the result, we
-                    //   would need to double the real part anyways which
-                    //   would require an extra arithmetic operation
-                    //   which would then add to the latency of the
-                    //   computation.
+                    //   would need to double the real part anyway, which
+                    //   would require an extra arithmetic operation, adding
+                    //   to the latency of the computation.
                     // - To avoid this latency, we could also multiply
-                    //   `self.x`, `self.y` and `self.z` by 1/2 and then divide
-                    //   by the real part (which takes longer to compute).
-                    //   However, this could cost some accuracy for subnormal
-                    //   imaginary parts.
+                    //   `self.x`, `self.y`, and `self.z` by 1/2 and then
+                    //   divide by the real part (which takes longer to
+                    //   compute). However, this could cost some accuracy
+                    //   for subnormal imaginary parts.
                     let wx2 = ((self.w + norm) * two).sqrt();
 
                     Self::new(wx2 * half, self.x / wx2, self.y / wx2, self.z / wx2)
                 } else {
                     // The first formula for the real part of the result may
-                    // not be so robust, if the sign of the input is negative.
+                    //  not be robust if the sign of the input real part is
+                    // negative.
                     let im_norm_sqr = self.y * self.y + (self.x * self.x + self.z * self.z);
                     if im_norm_sqr >= T::min_positive_value() {
-                        // Second formula for the real part of the result which
-                        // is robust for inputs with negative real part.
+                        // Second formula for the real part of the result,
+                        // which is robust for inputs with a negative real
+                        // part.
                         let wx2 = (im_norm_sqr * two / (norm - self.w)).sqrt();
 
                         Self::new(wx2 * half, self.x / wx2, self.y / wx2, self.z / wx2)
@@ -1169,8 +1170,8 @@ where
                         // The input is a negative real number.
                         Self::new(zero, (-self.w).sqrt().copysign(self.x), self.y, self.z)
                     } else {
-                        // `im_norm_sqr` is subnormal. We compute the norm of
-                        // the imaginary part by scaling up first.
+                        // `im_norm_sqr` is subnormal. Compute the norm of the
+                        // imaginary part by scaling up first.
                         let sx = s * self.x;
                         let sy = s * self.y;
                         let sz = s * self.z;
@@ -1211,8 +1212,8 @@ where
             }
             FpCategory::Nan => Self::nan(),
             _ => {
-                // square norm is subnormal or zero (underflow), but `self` it
-                // not zero. Let's scale up.
+                // Square norm is subnormal or zero (underflow), but `self`
+                // is not zero. Let's scale up.
                 // In release mode, the compiler turns the division into a
                 // multiplication, because `s.sqrt()` is a power of two. Thus,
                 // it's fast.
