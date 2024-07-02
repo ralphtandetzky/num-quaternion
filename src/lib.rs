@@ -2018,6 +2018,83 @@ where
     }
 }
 
+#[cfg(any(feature = "std", feature = "libm"))]
+impl<T> UnitQuaternion<T>
+where
+    T: Float + FloatConst,
+{
+    // Computes the square root of a unit quaternion.
+    ///
+    /// Given an input unit quaternion $c$, this function returns the unit
+    /// quaternion $q$ which satisfies $q^2 = c$ and has a real part with a
+    /// positive sign.
+    ///
+    /// For $c = -1$, there are multiple solutions to these constraints. In
+    /// that case $q = \pm i$ is returned. The sign is determined by the input
+    /// coefficient of the imaginary unit $i$.
+    ///
+    /// In any case, the three imaginary parts of the result have the same sign
+    /// as the three imaginary parts of the input.
+    pub fn sqrt(self) -> Self {
+        let zero = T::zero();
+        let one = T::one();
+        let two = one + one;
+        let half = one / two;
+        let UnitQuaternion(c) = self;
+
+        if c.w >= -half {
+            // Compute double the real part of the result directly and
+            // robustly.
+            //
+            // Note: We could also compute the real part directly.
+            // However, this would be inferior for the following reasons:
+            //
+            // - To compute the imaginary parts of the result, we would need
+            //   to double the real part anyway, which would require an
+            //   extra arithmetic operation, adding to the latency of the
+            //   computation.
+            // - To avoid this latency, we could also multiply `c.x`, `c.y`,
+            //   and `c.z` by 1/2 and then divide by the real part (which
+            //   takes longer to compute). However, this could cost some
+            //   accuracy for subnormal imaginary parts.
+            let wx2 = (c.w * two + two).sqrt();
+
+            UnitQuaternion(Quaternion::new(wx2 * half, c.x / wx2, c.y / wx2, c.z / wx2))
+        } else {
+            // For cases where the real part is too far in the negative direction.
+            //
+            // Note: We could also use the formula 1 - c.w * c.w for the
+            // square norm of the imaginary part. However, if the real part
+            // `c.w` is close to -1, then this becomes inaccurate. This is
+            // especially the case, if the actual norm of the input
+            // quaternion $c$ is not close enough to one.
+            let im_norm_sqr = c.y * c.y + (c.x * c.x + c.z * c.z);
+            if im_norm_sqr >= T::min_positive_value() {
+                // Robust computation for negative real part inputs.
+                let wx2 = (im_norm_sqr * two / (one - c.w)).sqrt();
+                UnitQuaternion(Quaternion::new(wx2 * half, c.x / wx2, c.y / wx2, c.z / wx2))
+            } else if c.x.is_zero() && c.y.is_zero() && c.z.is_zero() {
+                // Special case: input is -1. The result is `±i` with the same
+                // signs for the imaginary parts as the input.
+                UnitQuaternion(Quaternion::new(zero, one.copysign(c.x), c.y, c.z))
+            } else {
+                // `im_norm_sqr` is subnormal, scale up first.
+                let s = one / T::min_positive_value();
+                let sx = s * c.x;
+                let sy = s * c.y;
+                let sz = s * c.z;
+                let im_norm = (sy * sy + (sx * sx + sz * sz)).sqrt() / s;
+                UnitQuaternion(Quaternion::new(
+                    im_norm * half,
+                    c.x / im_norm,
+                    c.y / im_norm,
+                    c.z / im_norm,
+                ))
+            }
+        }
+    }
+}
+
 #[cfg(feature = "serde")]
 impl<T> serde::Serialize for UnitQuaternion<T>
 where
@@ -3633,6 +3710,67 @@ mod tests {
         let result = q1.slerp(&q2, t);
         let expected = Q32::new(999_999.75, 0.5, 0.0, 0.0).normalize().unwrap();
         assert!((result - expected).norm() <= f32::EPSILON);
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_sqrt_of_identity() {
+        assert_eq!(UQ32::ONE.sqrt(), UQ32::ONE);
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_sqrt_of_negative_identity() {
+        let q = Q64::new(-1.0, 0.0, -0.0, -0.0).normalize().unwrap();
+        assert_eq!(q.sqrt(), UQ64::I);
+        assert!(q.sqrt().0.w.is_sign_positive());
+        assert!(q.sqrt().0.y.is_sign_negative());
+        assert!(q.sqrt().0.z.is_sign_negative());
+
+        let q = Q64::new(-1.0, -0.0, 0.0, 0.0).normalize().unwrap();
+        assert_eq!(q.sqrt(), -UQ64::I);
+        assert!(q.sqrt().0.w.is_sign_positive());
+        assert!(q.sqrt().0.y.is_sign_positive());
+        assert!(q.sqrt().0.z.is_sign_positive());
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_sqrt_general_case() {
+        let c = Q64::new(1.0, 2.0, -3.0, 4.0).normalize().unwrap();
+        let q = c.sqrt();
+        assert!((q * q - c).norm() <= f64::EPSILON);
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_sqrt_with_negative_real_part() {
+        let c = Q64::new(-4.0, 2.0, -3.0, 1.0).normalize().unwrap();
+        let q = c.sqrt();
+        assert!((q * q - c).norm() <= f64::EPSILON);
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_sqrt_with_subnormal_imaginary_parts() {
+        let min_positive = f64::MIN_POSITIVE;
+        let q = UnitQuaternion(Quaternion::new(
+            -1.0,
+            min_positive,
+            min_positive,
+            min_positive,
+        ));
+        let result = q.sqrt();
+        let expected = UnitQuaternion(Quaternion::new(
+            min_positive * 0.75f64.sqrt(),
+            (1.0f64 / 3.0).sqrt(),
+            (1.0f64 / 3.0).sqrt(),
+            (1.0f64 / 3.0).sqrt(),
+        ));
+        assert!((result.0.w - expected.0.w).abs() <= 2.0 * expected.0.w * f64::EPSILON);
+        assert!((result.0.x - expected.0.x).abs() <= 2.0 * expected.0.x * f64::EPSILON);
+        assert!((result.0.y - expected.0.y).abs() <= 2.0 * expected.0.y * f64::EPSILON);
+        assert!((result.0.z - expected.0.z).abs() <= 2.0 * expected.0.z * f64::EPSILON);
     }
 
     #[cfg(all(feature = "serde", any(feature = "std", feature = "libm")))]
