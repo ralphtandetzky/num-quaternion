@@ -2023,7 +2023,7 @@ impl<T> UnitQuaternion<T>
 where
     T: Float + FloatConst,
 {
-    // Computes the square root of a unit quaternion.
+    /// Computes the square root of a unit quaternion.
     ///
     /// Given an input unit quaternion $c$, this function returns the unit
     /// quaternion $q$ which satisfies $q^2 = c$ and has a real part with a
