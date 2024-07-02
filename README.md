@@ -28,14 +28,13 @@ orientations.
 - **Comprehensive Documentation**: Detailed documentation with examples to
   help you get started quickly.
 
-
 ## Installation
 
 Add `num-quaternion` to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-num-quaternion = "0.2.10"
+num-quaternion = "0.2.11"
 ```
 
 For `#![no_std]` environments, disable the default `std` feature and enable
@@ -43,7 +42,7 @@ For `#![no_std]` environments, disable the default `std` feature and enable
 
 ```toml
 [dependencies]
-num-quaternion = { version = "0.2.10", default-features = false, features = ["libm"] }
+num-quaternion = { version = "0.2.11", default-features = false, features = ["libm"] }
 ```
 
 Then, include it in your crate:
@@ -110,11 +109,9 @@ let interpolated = uq1.slerp(&uq2, 0.3);  // Perform SLERP with t=0.3
 Comprehensive documentation with examples can be found on
 [docs.rs](https://docs.rs/num-quaternion/latest/num-quaternion/).
 
-
 ## Releases
 
 Detailed release notes are provided in [RELEASES.md](RELEASES.md).
-
 
 ## Contributing
 
@@ -129,7 +126,6 @@ If you have any questions or need help, feel free to open an
 Further instructions can be found in the [CONTRIBUTING.md](CONTRIBUTING.md)
 guidelines.
 
-
 ## License
 
 Licensed under either of
@@ -138,7 +134,6 @@ Licensed under either of
 - [MIT license](LICENSE-MIT.md)
 
 at your option.
-
 
 ## Acknowledgements
 
