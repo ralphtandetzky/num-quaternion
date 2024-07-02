@@ -1,4 +1,11 @@
-# Releases in reverse chronological order
+# Releases in Reverse Chronological Order
+
+## Release 0.2.11 (2024-07-03)
+
+- Implemented the function `sqrt` for `UnitQuaternion`.
+- Fixed warnings in markdown files.
+
+**Contributors**: @ralphtandetzky
 
 ## Release 0.2.10 (2024-07-02)
 
