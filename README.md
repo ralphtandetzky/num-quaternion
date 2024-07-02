@@ -28,7 +28,6 @@ orientations.
 - **Comprehensive Documentation**: Detailed documentation with examples to
   help you get started quickly.
 
-
 ## Installation
 
 Add `num-quaternion` to your `Cargo.toml`:
@@ -110,11 +109,9 @@ let interpolated = uq1.slerp(&uq2, 0.3);  // Perform SLERP with t=0.3
 Comprehensive documentation with examples can be found on
 [docs.rs](https://docs.rs/num-quaternion/latest/num-quaternion/).
 
-
 ## Releases
 
 Detailed release notes are provided in [RELEASES.md](RELEASES.md).
-
 
 ## Contributing
 
@@ -129,7 +126,6 @@ If you have any questions or need help, feel free to open an
 Further instructions can be found in the [CONTRIBUTING.md](CONTRIBUTING.md)
 guidelines.
 
-
 ## License
 
 Licensed under either of
@@ -138,7 +134,6 @@ Licensed under either of
 - [MIT license](LICENSE-MIT.md)
 
 at your option.
-
 
 ## Acknowledgements
 

@@ -11,12 +11,13 @@ Security updates will be provided for the following versions:
 
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability in `num-quaternion`, please do not 
+If you discover a security vulnerability in `num-quaternion`, please do not
 open an issue. Instead, send a detailed report to the following:
 
 **Email:** [num.quaternion@gmail.com](mailto:num.quaternion@gmail.com)
 
 Please include the following information in your report:
+
 - A detailed description of the vulnerability.
 - Steps to reproduce the vulnerability.
 - Any potential impacts or exploits.
