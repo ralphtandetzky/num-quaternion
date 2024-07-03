@@ -60,15 +60,20 @@
 //! ## Unit Quaternions
 //!
 //! ```rust
+//! # #[cfg(feature = "std")]
+//! # {
 //! # use num_quaternion::{Q32, UQ32};
 //! # let q1 = Q32::ONE;
 //! let uq1 = q1.normalize().expect("Normalization failed"); // Normalize quaternion
 //! let uq2 = UQ32::I;  // Unit quaternion representing the imaginary unit
+//! # }
 //! ```
 //!
 //! ## Conversion Functions
 //!
 //! ```rust
+//! # #[cfg(feature = "std")]
+//! # {
 //! # use num_quaternion::UnitQuaternion;
 //! // From Euler angles
 //! let (roll, pitch, yaw) = (1.5, 1.0, 3.0);
@@ -83,15 +88,19 @@
 //!
 //! // To rotation vector
 //! let rotation_vector = uq.to_rotation_vector();
+//! # }
 //! ```
 //!
 //! ## Spherical Linear Interpolation (SLERP)
 //!
 //! ```rust
+//! # #[cfg(feature = "std")]
+//! # {
 //! # use num_quaternion::UQ32;
 //! let uq1 = UQ32::ONE;  // Create a unit quaternion
 //! let uq2 = UQ32::I;    // Create another unit quaternion
 //! let interpolated = uq1.slerp(&uq2, 0.3);  // Perform SLERP with t=0.3
+//! # }
 //! ```
 //!
 //! # Cargo Features
@@ -1291,6 +1300,8 @@ where
 /// Basic usage:
 ///
 /// ```rust
+/// # #[cfg(feature = "std")]
+/// # {
 /// # use num_quaternion::UnitQuaternion;
 /// // Creating a UnitQuaternion from Euler angles
 /// let (roll, pitch, yaw) = (1.5, 1.0, 3.0);
@@ -1299,6 +1310,7 @@ where
 /// // Rotating a vector using the UnitQuaternion
 /// let vector = [1.0, 0.0, 0.0];
 /// let rotated_vector = uq.rotate_vector(vector);
+/// # }
 /// ```
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub struct UnitQuaternion<T>(Quaternion<T>);
@@ -2137,6 +2149,7 @@ mod tests {
     use num_traits::One;
     use num_traits::Zero;
 
+    #[cfg(any(feature = "std", feature = "libm", feature = "serde"))]
     use crate::EulerAngles;
     use crate::Quaternion;
     use crate::UnitQuaternion;
