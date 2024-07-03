@@ -53,7 +53,12 @@ jobs:
       run: rustup component add clippy
     - name: Check style violations
       run: cargo clippy
-    - name: Check SemVer violations
+
+  semver_checks:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Check semver violations
       uses: obi1kenobi/cargo-semver-checks-action@v2
 
   # One job that "summarizes" the success state of this pipeline. This can then be added to branch
@@ -61,7 +66,7 @@ jobs:
   success:
     name: Success
     runs-on: ubuntu-latest
-    needs: [build_and_test, check_formatting, static_analysis]
+    needs: [build_and_test, check_formatting, static_analysis, semver_checks]
     # Github branch protection is exceedingly silly and treats "jobs skipped because a dependency
     # failed" as success. So we have to do some contortions to ensure the job fails if any of its
     # dependencies fails.
