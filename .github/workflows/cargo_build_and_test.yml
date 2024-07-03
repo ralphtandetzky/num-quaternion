@@ -33,13 +33,7 @@ jobs:
     - name: Build
       run: cargo build --verbose
     - name: Run tests
-      run: cargo test --verbose
-    - name: Run tests with all features turned on
-      run: cargo test --verbose --features="unstable"
-    - name: Test with no_std
-      run: cargo test --verbose --no-default-features --all-targets
-    - name: Test with libm and no_std
-      run: cargo test --verbose --no-default-features --features="libm"
+      run: ./ci/test_full.sh
 
   check_formatting:
     runs-on: ubuntu-latest
