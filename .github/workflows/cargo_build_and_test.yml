@@ -52,7 +52,7 @@ jobs:
     - name: install clippy
       run: rustup component add clippy
     - name: Check style violations
-      run: cargo clippy
+      run: cargo clippy --all-features
 
   semver_checks:
     runs-on: ubuntu-latest
