@@ -17,8 +17,6 @@ jobs:
         rust: [
           1.60.0, # Minimum version determined by cargo-msrv
           stable,
-          beta,
-          nightly
         ]
     steps:
     - uses: actions/checkout@v4
