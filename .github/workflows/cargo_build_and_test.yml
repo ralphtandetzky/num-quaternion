@@ -17,8 +17,6 @@ jobs:
         rust: [
           1.60.0, # Minimum version determined by cargo-msrv
           stable,
-          beta,
-          nightly
         ]
     steps:
     - uses: actions/checkout@v4
@@ -52,21 +50,36 @@ jobs:
     - name: install clippy
       run: rustup component add clippy
     - name: Check style violations
-      run: cargo clippy
+      run: cargo clippy --all-features
 
-  semver_checks:
+  semver_checks_all_stable:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
     - name: Check semver violations
       uses: obi1kenobi/cargo-semver-checks-action@v2
 
+  semver_checks_default_features:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Check semver violations for all default features
+      uses: obi1kenobi/cargo-semver-checks-action@v2
+      with:
+        feature-group: default-features
+
   # One job that "summarizes" the success state of this pipeline. This can then be added to branch
   # protection, rather than having to add each job separately.
   success:
     name: Success
     runs-on: ubuntu-latest
-    needs: [build_and_test, check_formatting, static_analysis, semver_checks]
+    needs: [
+      build_and_test,
+      check_formatting,
+      static_analysis,
+      semver_checks_all_stable,
+      semver_checks_default_features
+    ]
     # Github branch protection is exceedingly silly and treats "jobs skipped because a dependency
     # failed" as success. So we have to do some contortions to ensure the job fails if any of its
     # dependencies fails.

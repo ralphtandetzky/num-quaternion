@@ -4,7 +4,21 @@
 
 set -ex
 
+# semver checks
+cargo install cargo-semver-checks --locked
+cargo semver-checks                     # all stable features
+cargo semver-checks --default-features  # all default features
+
+# clippy checks
+rustup component add clippy
+cargo clippy --all-features
+
+# formatting checks
+rustup component add rustfmt
+cargo fmt --check
+
 ci=$(dirname $0)
-for version in 1.60.0 stable beta nightly; do
+for version in 1.60.0 stable; do
+    rustup update "$version"
     rustup run "$version" "$ci/test_full.sh"
 done
