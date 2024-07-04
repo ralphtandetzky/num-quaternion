@@ -54,12 +54,21 @@ jobs:
     - name: Check style violations
       run: cargo clippy --all-features
 
-  semver_checks:
+  semver_checks_all_stable:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
     - name: Check semver violations
       uses: obi1kenobi/cargo-semver-checks-action@v2
+
+  semver_checks_default_features:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Check semver violations for all default features
+      uses: obi1kenobi/cargo-semver-checks-action@v2
+      with:
+        feature-group: default-features
 
   # One job that "summarizes" the success state of this pipeline. This can then be added to branch
   # protection, rather than having to add each job separately.
