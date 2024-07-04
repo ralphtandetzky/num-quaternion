@@ -1,5 +1,13 @@
 # Releases in Reverse Chronological Order
 
+## Release 0.2.12 (2024-07-05)
+
+- Fixed failing rustdoc tests for disabled features.
+- Improvements in CI.
+- Added scripts for running CI tests locally.
+
+**Contributors**: @ralphtandetzky
+
 ## Release 0.2.11 (2024-07-03)
 
 - Implemented the function `sqrt` for `UnitQuaternion`.
