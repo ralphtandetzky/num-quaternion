@@ -937,10 +937,10 @@ where
             // Angle is small --> approximation formula can be used and
             // we still get minimal error.
             // By Taylor expansion of `cos(angle)` we get
-            //     cos(angle) >= 1 - angle^2 / 2
+            //     cos(angle) >= 1 - angle² / 2
             // and thus |cos(angle) - 1| is less than half a floating point epsilon.
             // Similarly,
-            //     sinc(angle) >= 1 - angle^2 / 6
+            //     sinc(angle) >= 1 - angle² / 6
             // and thus |sinc(angle) - 1| is less than a sixth of a floating
             // point epsilon.
             let w = result_norm;
