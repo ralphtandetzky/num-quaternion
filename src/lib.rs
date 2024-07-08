@@ -937,10 +937,10 @@ where
             // Angle is small --> approximation formula can be used and
             // we still get minimal error.
             // By Taylor expansion of `cos(angle)` we get
-            //     cos(angle) >= 1 - angle^2 / 2
+            //     cos(angle) >= 1 - angle² / 2
             // and thus |cos(angle) - 1| is less than half a floating point epsilon.
             // Similarly,
-            //     sinc(angle) >= 1 - angle^2 / 6
+            //     sinc(angle) >= 1 - angle² / 6
             // and thus |sinc(angle) - 1| is less than a sixth of a floating
             // point epsilon.
             let w = result_norm;
@@ -1523,6 +1523,132 @@ where
         let z = q.z / sin_half_angle;
 
         [x * angle, y * angle, z * angle]
+    }
+}
+
+#[cfg(any(feature = "std", feature = "libm"))]
+impl<T> UnitQuaternion<T>
+where
+    T: Float,
+{
+    /// Given a unit vector $\vec a$, returns a unit vector that is
+    /// perpendicular to $\vec a$.
+    fn make_perpendicular_unit_vector(a: &[T; 3]) -> [T; 3] {
+        // Find the component of `a` with the smallest absolute value and form
+        // a normalized perpendicular vector using the other two components.
+        let zero = T::zero();
+        let a_sqr = [a[0] * a[0], a[1] * a[1], a[2] * a[2]];
+        if a_sqr[0] <= a_sqr[1] {
+            if a_sqr[0] <= a_sqr[2] {
+                // component 0 is minimal
+                let norm = (a_sqr[1] + a_sqr[2]).sqrt();
+                [zero, a[2] / norm, -a[1] / norm]
+            } else {
+                // component 2 is minimal
+                let norm = (a_sqr[0] + a_sqr[1]).sqrt();
+                [a[1] / norm, -a[0] / norm, zero]
+            }
+        } else if a_sqr[1] <= a_sqr[2] {
+            // component 1 is minimal
+            let norm = (a_sqr[0] + a_sqr[2]).sqrt();
+            [a[2] / norm, zero, -a[0] / norm]
+        } else {
+            // component 2 is minimal
+            let norm = (a_sqr[0] + a_sqr[1]).sqrt();
+            [a[1] / norm, -a[0] / norm, zero]
+        }
+    }
+
+    /// Returns a unit quaternion that rotates vector $\vec a$ to vector
+    /// $\vec b$ with the minimum angle of rotation.
+    ///
+    /// The method [`rotate_vector`](UnitQuaternion::rotate_vector) can be used
+    /// to apply the rotation. The resulting unit quaternion maps the ray
+    /// $\{t\vec{a} : t > 0\}$ to the ray $\{t\vec{b} : t > 0\}$.
+    ///
+    /// Note that the input vectors neither need to be normalized nor have the
+    /// same magnitude. In the case where the input vectors point in opposite
+    /// directions, there are multiple solutions to the problem, and one will
+    /// be returned. If one (or both) of the input vectors is the zero vector,
+    /// the unit quaternion $1$ is returned.
+    pub fn from_two_vectors(a: &[T; 3], b: &[T; 3]) -> UnitQuaternion<T> {
+        // Normalize vectors `a` and `b`. Let alpha be the angle between `a`
+        // and `b`. We aim to compute the quaternion
+        //     q = cos(alpha / 2) + sin(alpha / 2) * normalized_axis
+        // Start with the cross product and the dot product:
+        //     v := a × b = normalized_axis * sin(alpha)
+        //     d := a.dot(b) = cos(alpha) = 2 * cos(alpha / 2)² - 1
+        // Thus, we can compute double the real part as
+        //     wx2 := 2 * cos(alpha / 2) = √(2d + 2).
+        // Since
+        //     sin(alpha) = 2 * sin(alpha / 2) * cos(alpha / 2),
+        // it follows that
+        //     sin(alpha / 2) = sin(alpha) / cos(alpha / 2) / 2
+        //                    = sin(alpha) / wx2.
+        // Consequently, we can compute the quaternion as
+        //     q = wx2 / 2 + v / wx2.
+        // If d -> -1, then wx2 -> 0, leading to large relative errors in
+        // the computation of wx2, making the imaginary part of q inaccurate.
+        // This occurs when `a` and `b` point in nearly opposite directions.
+        // We can check if they are exactly opposite by testing if `v` is a
+        // null vector. If not, then
+        //     sin(alpha) = |v|, and
+        //     cos(alpha) = -√(1-|v|²) = d
+        //     wx2 = √(2d + 2)
+        //         = √(2 - 2√(1-|v|²))
+        //         = 2|v| / √(2 + 2√(1-|v|²))
+        //         = |v| / √(1/2 - d/2).
+        // This last formula is numerically stable for negative values of d.
+        // Therefore,
+        //     q = |v| / √(1/2 - d/2) / 2 + v / |v| * √(1/2 - d/2)
+
+        // Constants
+        let zero = T::zero();
+        let one = T::one();
+        let two = one + one;
+        let half = one / two;
+
+        // Normalize vector inputs
+        let a_norm = a[0].hypot(a[1].hypot(a[2]));
+        let b_norm = b[0].hypot(b[1].hypot(b[2]));
+        if a_norm.is_zero() || b_norm.is_zero() {
+            return UnitQuaternion::one();
+        }
+        let a = [a[0] / a_norm, a[1] / a_norm, a[2] / a_norm];
+        let b = [b[0] / b_norm, b[1] / b_norm, b[2] / b_norm];
+
+        // Cross product
+        let v = [
+            a[1] * b[2] - a[2] * b[1],
+            a[2] * b[0] - a[0] * b[2],
+            a[0] * b[1] - a[1] * b[0],
+        ];
+
+        // Dot product
+        let d = a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+
+        let wx2 = if d >= -half {
+            // Simple stable formula for the general case
+            (two * d + two).sqrt()
+        } else {
+            // `a` and `b` may be close to anti-parallel
+            let v_norm_sqr = v[0] * v[0] + v[1] * v[1] + v[2] * v[2];
+            if v_norm_sqr.is_zero() {
+                // Exactly anti-parallel
+                let [x, y, z] = Self::make_perpendicular_unit_vector(&a);
+                return UnitQuaternion(Quaternion::new(zero, x, y, z));
+            }
+            // Stable, more expensive formula for wx2
+            (v_norm_sqr / (half - d * half)).sqrt()
+        };
+
+        // Return the computed quaternion
+        UnitQuaternion(Quaternion::new(
+            wx2 / two,
+            v[0] / wx2,
+            v[1] / wx2,
+            v[2] / wx2,
+        ))
     }
 }
 
@@ -3274,6 +3400,99 @@ mod tests {
             let p = UQ64::from_rotation_vector(&rot);
             assert!((p - q).norm() <= 6.0 * f64::EPSILON);
         }
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_zero_vector_a() {
+        let a = [0.0, 0.0, 0.0];
+        let b = [1.0, 0.0, 0.0];
+        let q = UnitQuaternion::from_two_vectors(&a, &b);
+        assert_eq!(q, UnitQuaternion::one());
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_zero_vector_b() {
+        let a = [1.0, 0.0, 0.0];
+        let b = [0.0, 0.0, 0.0];
+        let q = UnitQuaternion::from_two_vectors(&a, &b);
+        assert_eq!(q, UnitQuaternion::one());
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_parallel_vectors() {
+        let a = [1.0, 0.0, 0.0];
+        let b = [2.0, 0.0, 0.0];
+        let q = UnitQuaternion::from_two_vectors(&a, &b);
+        assert_eq!(q, UnitQuaternion::one());
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_opposite_vectors() {
+        let a = [1.0, 0.0, 0.0];
+        let b = [-1.0, 0.0, 0.0];
+        let q = UnitQuaternion::from_two_vectors(&a, &b);
+        assert_eq!(q.as_quaternion().w, 0.0);
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_perpendicular_vectors() {
+        let a = [1.0f32, 0.0, 0.0];
+        let b = [0.0f32, 1.0, 0.0];
+        let q = UQ32::from_two_vectors(&a, &b);
+        let expected = Q32::new(1.0, 0.0, 0.0, 1.0).normalize().unwrap();
+        assert!((q - expected).norm() <= 2.0 * f32::EPSILON);
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_non_normalized_vectors() {
+        let a = [0.0, 3.0, 0.0];
+        let b = [0.0, 5.0, 5.0];
+        let q = UQ64::from_two_vectors(&a, &b);
+        let expected = Q64::new(1.0, core::f64::consts::FRAC_PI_8.tan(), 0.0, 0.0)
+            .normalize()
+            .unwrap();
+        assert!((q - expected).norm() <= 2.0 * f64::EPSILON);
+
+        let a = [0.0, 3.0, 0.0];
+        let b = [0.0, -5.0, 5.0];
+        let q = UQ64::from_two_vectors(&a, &b);
+        let expected = Q64::new(1.0, (3.0 * core::f64::consts::FRAC_PI_8).tan(), 0.0, 0.0)
+            .normalize()
+            .unwrap();
+        assert!((q - expected).norm() <= 2.0 * f64::EPSILON);
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_same_vector() {
+        let a = [1.0, 1.0, 1.0];
+        let q = UnitQuaternion::from_two_vectors(&a, &a);
+        assert_eq!(q, UnitQuaternion::one());
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_arbitrary_vectors() {
+        let a = [1.0, 2.0, 3.0];
+        let b = [4.0, 5.0, 6.0];
+        let q = UQ64::from_two_vectors(&a, &b);
+        let v = [-3.0, 6.0, -3.0]; // cross product
+        let v_norm = 54.0f64.sqrt();
+        let dir = [v[0] / v_norm, v[1] / v_norm, v[2] / v_norm];
+        let cos_angle = (a[0] * b[0] + a[1] * b[1] + a[2] * b[2])
+            / ((a[0] * a[0] + a[1] * a[1] + a[2] * a[2])
+                * (b[0] * b[0] + b[1] * b[1] + b[2] * b[2]))
+                .sqrt();
+        let angle = cos_angle.acos();
+        let expected =
+            UQ64::from_rotation_vector(&[dir[0] * angle, dir[1] * angle, dir[2] * angle]);
+        assert!((q - expected).norm() <= 2.0 * f64::EPSILON);
     }
 
     #[test]
