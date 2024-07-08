@@ -1,5 +1,11 @@
 # Releases in Reverse Chronological Order
 
+## Release 0.2.13 (2024-07-08)
+
+- Added new function `UnitQuaternion::from_two_vectors`.
+
+**Contributors**: @ralphtandetzky
+
 ## Release 0.2.12 (2024-07-05)
 
 - Fixed failing rustdoc tests for disabled features.
