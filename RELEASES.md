@@ -1,5 +1,11 @@
 # Releases in Reverse Chronological Order
 
+## Release 0.2.14 (2024-07-11)
+
+- Added new function `UnitQuaternion::to_rotation_matrix3x3`.
+
+**Contributors**: @ralphtandetzky
+
 ## Release 0.2.13 (2024-07-08)
 
 - Added new function `UnitQuaternion::from_two_vectors`.
