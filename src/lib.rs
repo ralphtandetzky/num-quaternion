@@ -1526,6 +1526,63 @@ where
     }
 }
 
+impl<T> UnitQuaternion<T>
+where
+    T: Add<Output = T> + Sub<Output = T> + Mul<Output = T> + One + Clone,
+{
+    /// Computes the rotation matrix implied by a unit quaternion.
+    ///
+    /// The matrix is returned in row major order, i. e. the indices into the
+    /// result array yield the elements in the following order:
+    ///
+    /// ```text
+    ///     [0, 1, 2,
+    ///      3, 4, 5,
+    ///      6, 7, 8]
+    /// ```
+    ///
+    /// Multiplying by the returned matrix gives the same result as using
+    /// [`rotate_vector`](UnitQuaternion::rotate_vector) modulo slightly
+    /// different rounding errors.
+    ///
+    /// # Runtime Considerations
+    ///
+    /// The matrix multiplication itself can be assumed to be more runtime
+    /// efficient than [`rotate_vector`](UnitQuaternion::rotate_vector).
+    /// However, computing the matrix also comes with additional cost. Thus
+    /// general advice is: Use [`rotate_vector`](UnitQuaternion::rotate_vector),
+    /// if you want to rotate a single vector. Perform the matrix
+    /// multiplication, if more than one vector needs to be rotated.
+    #[inline]
+    pub fn to_rotation_matrix3x3(self) -> [T; 9] {
+        let two = T::one() + T::one();
+
+        let Self(Quaternion { w, x, y, z }) = self;
+
+        let wx = two.clone() * w.clone() * x.clone();
+        let wy = two.clone() * w.clone() * y.clone();
+        let wz = two.clone() * w * z.clone();
+        let xx = two.clone() * x.clone() * x.clone();
+        let xy = two.clone() * x.clone() * y.clone();
+        let xz = two.clone() * x * z.clone();
+        let yy = two.clone() * y.clone() * y.clone();
+        let yz = two.clone() * y * z.clone();
+        let zz = two * z.clone() * z;
+
+        [
+            T::one() - yy.clone() - zz.clone(),
+            xy.clone() + wz.clone(),
+            xz.clone() - wy.clone(),
+            xy - wz,
+            T::one() - xx.clone() - zz,
+            yz.clone() + wx.clone(),
+            xz + wy,
+            yz - wx,
+            T::one() - xx - yy,
+        ]
+    }
+}
+
 #[cfg(any(feature = "std", feature = "libm"))]
 impl<T> UnitQuaternion<T>
 where
@@ -3399,6 +3456,92 @@ mod tests {
             let rot = q.to_rotation_vector();
             let p = UQ64::from_rotation_vector(&rot);
             assert!((p - q).norm() <= 6.0 * f64::EPSILON);
+        }
+    }
+
+    #[test]
+    fn test_rotation_matrix_identity() {
+        let q = UQ64::ONE;
+        let rot_matrix = q.to_rotation_matrix3x3();
+        let expected = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0];
+        assert_eq!(rot_matrix, expected);
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_rotation_matrix_90_degrees_x() {
+        let q = Q64::new(1.0, 1.0, 0.0, 0.0).normalize().unwrap();
+        let rot_matrix = q.to_rotation_matrix3x3();
+        let expected = [
+            1.0, 0.0, 0.0, //
+            0.0, 0.0, 1.0, //
+            0.0, -1.0, 0.0,
+        ];
+        for (r, e) in rot_matrix.iter().zip(expected) {
+            assert!((r - e).abs() <= f64::EPSILON);
+        }
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_rotation_matrix_90_degrees_y() {
+        let q = Q64::new(1.0, 0.0, 1.0, 0.0).normalize().unwrap();
+        let rot_matrix = q.to_rotation_matrix3x3();
+        let expected = [
+            0.0, 0.0, -1.0, //
+            0.0, 1.0, 0.0, //
+            1.0, 0.0, 0.0,
+        ];
+        for (r, e) in rot_matrix.iter().zip(expected) {
+            assert!((r - e).abs() <= f64::EPSILON);
+        }
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_rotation_matrix_90_degrees_z() {
+        let q = Q64::new(1.0, 0.0, 0.0, 1.0).normalize().unwrap();
+        let rot_matrix = q.to_rotation_matrix3x3();
+        let expected = [
+            0.0, 1.0, 0.0, //
+            -1.0, 0.0, 0.0, //
+            0.0, 0.0, 1.0,
+        ];
+        for (r, e) in rot_matrix.iter().zip(expected) {
+            assert!((r - e).abs() <= f64::EPSILON);
+        }
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_rotation_matrix_120_degrees_xyz() {
+        let q = Q64::new(1.0, 1.0, 1.0, 1.0).normalize().unwrap();
+        let rot_matrix = q.to_rotation_matrix3x3();
+        let expected = [
+            0.0, 1.0, 0.0, //
+            0.0, 0.0, 1.0, //
+            1.0, 0.0, 0.0,
+        ];
+        for (r, e) in rot_matrix.iter().zip(expected) {
+            assert!((r - e).abs() <= f64::EPSILON);
+        }
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_rotation_matrix_general() {
+        let q = Q64::new(-1.0, 2.0, -3.0, 4.0).normalize().unwrap();
+        let rot_matrix = q.to_rotation_matrix3x3();
+        let [x1, y1, z1] = q.rotate_vector([1.0, 0.0, 0.0]);
+        let [x2, y2, z2] = q.rotate_vector([0.0, 1.0, 0.0]);
+        let [x3, y3, z3] = q.rotate_vector([0.0, 0.0, 1.0]);
+        let expected = [
+            x1, x2, x3, //
+            y1, y2, y3, //
+            z1, z2, z3,
+        ];
+        for (r, e) in rot_matrix.iter().zip(expected) {
+            assert!((r - e).abs() <= f64::EPSILON);
         }
     }
 
