@@ -3529,6 +3529,24 @@ mod tests {
 
     #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
+    fn test_rotation_matrix_general() {
+        let q = Q64::new(-1.0, 2.0, -3.0, 4.0).normalize().unwrap();
+        let rot_matrix = q.to_rotation_matrix3x3();
+        let [x1, y1, z1] = q.rotate_vector([1.0, 0.0, 0.0]);
+        let [x2, y2, z2] = q.rotate_vector([0.0, 1.0, 0.0]);
+        let [x3, y3, z3] = q.rotate_vector([0.0, 0.0, 1.0]);
+        let expected = [
+            x1, y1, z1, //
+            x2, y2, z2, //
+            x3, y3, z3,
+        ];
+        for (r, e) in rot_matrix.iter().zip(expected) {
+            assert!((r - e).abs() <= f64::EPSILON);
+        }
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
     fn test_zero_vector_a() {
         let a = [0.0, 0.0, 0.0];
         let b = [1.0, 0.0, 0.0];
