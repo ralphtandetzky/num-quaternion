@@ -1603,6 +1603,12 @@ impl<T> ReadMat3x3<T> for [[T; 3]; 3] {
     }
 }
 
+// TODO: Provide interop with other linear algebra libraries, such as
+// * nalgebra
+// * cgmath
+// * ndarray
+// In other words, implement `ReadMat3x3` for the 3x3 matrix implementations.
+
 #[cfg(any(feature = "std", feature = "libm"))]
 impl<T> UnitQuaternion<T>
 where
