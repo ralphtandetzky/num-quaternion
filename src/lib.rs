@@ -1583,6 +1583,96 @@ where
     }
 }
 
+/// Interface for reading entries of a 3x3 matrix.
+pub trait ReadMat3x3<T> {
+    /// Returns the entry at the given row and column.
+    ///
+    /// Both `row` and `col` are zero-based.
+    fn at(&self, row: usize, col: usize) -> &T;
+}
+
+impl<T> ReadMat3x3<T> for [T; 9] {
+    fn at(&self, row: usize, col: usize) -> &T {
+        &self[col + 3 * row]
+    }
+}
+
+impl<T> ReadMat3x3<T> for [[T; 3]; 3] {
+    fn at(&self, row: usize, col: usize) -> &T {
+        &self[row][col]
+    }
+}
+
+#[cfg(any(feature = "std", feature = "libm"))]
+impl<T> UnitQuaternion<T>
+where
+    T: Float,
+{
+    /// Computes a quaternion from a 3x3 rotation matrix.
+    ///
+    /// The input matrix $O$ is required to be an actual rotation matrix, i. e.
+    /// $O^TO$ is the identity matrix and $\det O = 1$ (neglecting floating
+    /// point rounding errors).
+    ///
+    /// The quaternion solution with non-negative real part is returned.
+    pub fn from_rotation_matrix3x3(mat: &impl ReadMat3x3<T>) -> UnitQuaternion<T> {
+        let zero = T::zero();
+        let one = T::one();
+        let two = one + one;
+        let quarter = one / (two * two);
+        let m00 = mat.at(0, 0);
+        let m11 = mat.at(1, 1);
+        let m22 = mat.at(2, 2);
+        let trace: T = *m00 + *m11 + *m22;
+
+        // We distinguish different cases and select a computation method which
+        // provides robust results. See
+        // https://en.wikipedia.org/wiki/Rotation_formalisms_in_three_dimensions#Rotation_matrix_%E2%86%94_quaternion
+        // where some details of the computation are described.
+        if trace > zero {
+            let s = (trace + one).sqrt() * two; // s=4*qw
+            let qw = quarter * s;
+            let qx = (*mat.at(2, 1) - *mat.at(1, 2)) / s;
+            let qy = (*mat.at(0, 2) - *mat.at(2, 0)) / s;
+            let qz = (*mat.at(1, 0) - *mat.at(0, 1)) / s;
+            Self(Quaternion::new(qw, qx, qy, qz))
+        } else if (m00 > m11) && (m00 > m22) {
+            let s = (one + *m00 - *m11 - *m22).sqrt() * two; // s=4*qx
+            let qw = (*mat.at(2, 1) - *mat.at(1, 2)) / s;
+            let qx = quarter * s;
+            let qy = (*mat.at(0, 1) + *mat.at(1, 0)) / s;
+            let qz = (*mat.at(0, 2) + *mat.at(2, 0)) / s;
+            if *mat.at(2, 1) >= *mat.at(1, 2) {
+                Self(Quaternion::new(qw, qx, qy, qz))
+            } else {
+                Self(Quaternion::new(-qw, -qx, -qy, -qz))
+            }
+        } else if m11 > m22 {
+            let s = (one + *m11 - *m00 - *m22).sqrt() * two; // s=4*qy
+            let qw = (*mat.at(0, 2) - *mat.at(2, 0)) / s;
+            let qx = (*mat.at(0, 1) + *mat.at(1, 0)) / s;
+            let qy = quarter * s;
+            let qz = (*mat.at(1, 2) + *mat.at(2, 1)) / s;
+            if *mat.at(0, 2) >= *mat.at(2, 0) {
+                Self(Quaternion::new(qw, qx, qy, qz))
+            } else {
+                Self(Quaternion::new(-qw, -qx, -qy, -qz))
+            }
+        } else {
+            let s = (one + *m22 - *m00 - *m11).sqrt() * two; // s=4*qz
+            let qw = (*mat.at(1, 0) - *mat.at(0, 1)) / s;
+            let qx = (*mat.at(0, 2) + *mat.at(2, 0)) / s;
+            let qy = (*mat.at(1, 2) + *mat.at(2, 1)) / s;
+            let qz = quarter * s;
+            if *mat.at(1, 0) >= *mat.at(0, 1) {
+                Self(Quaternion::new(qw, qx, qy, qz))
+            } else {
+                Self(Quaternion::new(-qw, -qx, -qy, -qz))
+            }
+        }
+    }
+}
+
 #[cfg(any(feature = "std", feature = "libm"))]
 impl<T> UnitQuaternion<T>
 where
@@ -3543,6 +3633,76 @@ mod tests {
         for (r, e) in rot_matrix.iter().zip(expected) {
             assert!((r - e).abs() <= f64::EPSILON);
         }
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_identity_matrix() {
+        let identity: [[f32; 3]; 3] = [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]];
+        let q = UQ32::from_rotation_matrix3x3(&identity);
+        let expected = UQ32::ONE;
+        assert_eq!(q, expected);
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_rotation_x() {
+        let angle = core::f32::consts::PI / 5.0;
+        let rotation_x: [[f32; 3]; 3] = [
+            [1.0, 0.0, 0.0],
+            [0.0, angle.cos(), -angle.sin()],
+            [0.0, angle.sin(), angle.cos()],
+        ];
+        let q = UQ32::from_rotation_matrix3x3(&rotation_x);
+        let expected = UQ32::from_rotation_vector(&[angle, 0.0, 0.0]);
+        assert!((q - expected).norm() <= f32::EPSILON);
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_rotation_y() {
+        let angle = 4.0 * core::f32::consts::PI / 5.0;
+        let rotation_y: [[f32; 3]; 3] = [
+            [angle.cos(), 0.0, angle.sin()],
+            [0.0, 1.0, 0.0],
+            [-angle.sin(), 0.0, angle.cos()],
+        ];
+        let q = UQ32::from_rotation_matrix3x3(&rotation_y);
+        let expected = UQ32::from_rotation_vector(&[0.0, angle, 0.0]);
+        assert!((q - expected).norm() <= f32::EPSILON);
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_rotation_z() {
+        let angle = 3.0 * core::f64::consts::PI / 5.0;
+        let rotation_z: [[f64; 3]; 3] = [
+            [angle.cos(), -angle.sin(), 0.0],
+            [angle.sin(), angle.cos(), 0.0],
+            [0.0, 0.0, 1.0],
+        ];
+        let q = UQ64::from_rotation_matrix3x3(&rotation_z);
+        let expected = UQ64::from_rotation_vector(&[0.0, 0.0, angle]);
+        assert!((q - expected).norm() <= f64::EPSILON);
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_arbitrary_rotation() {
+        let arbitrary_rotation: [[f32; 3]; 3] = [[0.0, 1.0, 0.0], [0.0, 0.0, 1.0], [1.0, 0.0, 0.0]];
+        let q = UnitQuaternion::from_rotation_matrix3x3(&arbitrary_rotation);
+        let expected = Q32::new(1.0, -1.0, -1.0, -1.0).normalize().unwrap();
+        assert!((q - expected).norm() <= f32::EPSILON);
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_flat_array() {
+        let angle = core::f32::consts::PI / 2.0;
+        let rotation_z: [f32; 9] = [0.0, -1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0];
+        let q = UQ32::from_rotation_matrix3x3(&rotation_z);
+        let expected = UQ32::from_rotation_vector(&[0.0, 0.0, angle]);
+        assert!((q - expected).norm() <= f32::EPSILON);
     }
 
     #[cfg(any(feature = "std", feature = "libm"))]
