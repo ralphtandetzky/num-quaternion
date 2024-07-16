@@ -1,5 +1,12 @@
 # Releases in Reverse Chronological Order
 
+## Release 0.2.16 (2024-07-16)
+
+- Fixed inaccuracy in `Quaternion::norm` for very large and very small results. (https://github.com/ralphtandetzky/num-quaternion/issues/51)
+- Added new function `Quaternion::fast_norm` for branchless fast (but possibly inaccurate) norm calculation.
+
+**Contributors**: @ralphtandetzky
+
 ## Release 0.2.15 (2024-07-13)
 
 - Added new function `UnitQuaternion::from_rotation_matrix3x3`.
