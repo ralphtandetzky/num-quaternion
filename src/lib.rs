@@ -2677,18 +2677,21 @@ mod tests {
         );
     }
 
+    #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_norm_normal_values() {
         let q = Q64::new(1.0, 2.0, 3.0, 4.0);
         assert_eq!(q.norm(), 30.0f64.sqrt());
     }
 
+    #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_norm_zero_quaternion() {
         let q = Q32::new(0.0, 0.0, 0.0, 0.0);
         assert_eq!(q.norm(), 0.0, "Norm of zero quaternion should be 0");
     }
 
+    #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_norm_subnormal_values() {
         let s = f64::MIN_POSITIVE;
@@ -2699,6 +2702,7 @@ mod tests {
         );
     }
 
+    #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_norm_infinite_values() {
         let inf = f32::INFINITY;
@@ -2708,6 +2712,7 @@ mod tests {
         assert_eq!(Q32::new(1.0, 1.0, 1.0, inf).norm(), inf);
     }
 
+    #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_norm_nan_values() {
         let nan = f32::NAN;
@@ -2717,6 +2722,7 @@ mod tests {
         assert!(Q32::new(1.0, 1.0, 1.0, nan).norm().is_nan());
     }
 
+    #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_fast_norm_normal_values() {
         let q = Q64 {
@@ -2732,6 +2738,7 @@ mod tests {
         );
     }
 
+    #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_fast_norm_zero_quaternion() {
         assert_eq!(
@@ -2741,6 +2748,7 @@ mod tests {
         );
     }
 
+    #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_fast_norm_infinite_values() {
         let inf = f32::INFINITY;
@@ -2750,6 +2758,7 @@ mod tests {
         assert_eq!(Q32::new(1.0, 1.0, 1.0, inf).fast_norm(), inf);
     }
 
+    #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_fast_norm_nan_values() {
         let nan = f32::NAN;
@@ -2759,6 +2768,7 @@ mod tests {
         assert!(Q32::new(1.0, 1.0, 1.0, nan).fast_norm().is_nan());
     }
 
+    #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_fast_norm_for_norm_sqr_underflow() {
         let s = f64::MIN_POSITIVE;
@@ -2766,6 +2776,7 @@ mod tests {
         assert_eq!(q.fast_norm(), 0.0);
     }
 
+    #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_fast_norm_for_norm_sqr_overflow() {
         let s = f32::MAX / 16.0;
