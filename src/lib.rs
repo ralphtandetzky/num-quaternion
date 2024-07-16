@@ -468,12 +468,84 @@ where
     /// Calculates |self|.
     ///
     /// The result is $\sqrt{w^2+x^2+y^2+z^2}$ with some possible rounding
-    /// errors. The rounding error is at most 1.5
+    /// errors. The total relative rounding error is at most two
     /// [ulps](https://en.wikipedia.org/wiki/Unit_in_the_last_place).
+    ///
+    /// If any of the components of the input quaternion is `NaN`, then `NaN`
+    /// is returned. Otherwise, if any of the components is infinite, then
+    /// a positive infinite value is returned.
     #[inline]
     pub fn norm(self) -> T {
-        // TODO: Optimize this function.
-        self.w.hypot(self.x).hypot(self.y.hypot(self.z))
+        let Self { w, x, y, z } = self;
+        let norm_sqr = w * w + x * x + y * y + z * z;
+        if norm_sqr.is_normal() {
+            // The most likely case first: everything is normal.
+            norm_sqr.sqrt()
+        } else {
+            // This function call may not be inlined each time `norm()` is
+            // inlined. This can avoid code bloat. At the same time is keeps
+            // the norm function simple.
+            self.handle_non_normal_cases(norm_sqr)
+        }
+    }
+
+    /// Computes the norm of self under the precondition that the square norm
+    /// of self is not a normal floating point number.
+    fn handle_non_normal_cases(self, norm_sqr: T) -> T {
+        debug_assert!(!norm_sqr.is_normal());
+        let s = T::min_positive_value();
+        if norm_sqr < s {
+            // norm_sqr is either subnormal or zero.
+            if self.is_zero() {
+                // Likely, the whole vector is zero. If so, we can return
+                // zero directly and avoid expensive floating point math.
+                T::zero()
+            } else {
+                // Otherwise, scale up, such that the norm will be in the
+                // normal floating point range, then scale down the result.
+                (self / s).fast_norm() * s
+            }
+        } else if norm_sqr.is_infinite() {
+            // There are two possible cases:
+            //   1. one of w, x, y, z is infinite, or
+            //   2. none of them is infinite.
+            // In the first case, multiplying by s or dividing by it does
+            // not change the infiniteness and thus the correct result is
+            // returned. In the second case, multiplying by s makes sure
+            // that the square norm is a normal floating point number.
+            // Dividing by it will rescale the result to the correct
+            // magnitude.
+            (self * s).fast_norm() / s
+        } else {
+            debug_assert!(norm_sqr.is_nan(), "norm_sqr is not NaN");
+            T::nan()
+        }
+    }
+
+    /// Calculates |self| without branching.
+    ///
+    /// This function returns the same result as [`norm`](Self::norm), if
+    /// |self|² is a normal floating point number (i. e. there is no overflow
+    /// nor underflow), or if `self` is zero. In these cases the maximum
+    /// relative error of the result is guaranteed to be less than two ulps.
+    /// In all other cases, there's no guarantee on the precision of the
+    /// result:
+    ///
+    /// * If |self|² overflows, then $\infty$ is returned.
+    /// * If |self|² underflows to zero, then zero will be returned.
+    /// * If |self|² is a subnormal number (very small floating point value
+    ///   with reduced relative precision), then the result is the square root
+    ///   of that.
+    ///
+    /// In other words, this function can be imprecise for very large and very
+    /// small floating point numbers, but it is generally faster than
+    /// [`norm`](Self::norm), because it does not do any branching. So if you
+    /// are interested in maximum speed of your code, feel free to use this
+    /// function. If you need to be precise results for the whole range of the
+    /// floating point type `T`, stay with [`norm`](Self::norm).
+    #[inline]
+    pub fn fast_norm(self) -> T {
+        self.norm_sqr().sqrt()
     }
 
     /// Normalizes the quaternion to length $1$.
@@ -2607,13 +2679,109 @@ mod tests {
 
     #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
-    fn test_norm() {
-        assert_eq!(Q64::ONE.norm(), 1.0);
-        assert_eq!(Q32::I.norm(), 1.0);
-        assert_eq!(Q64::J.norm(), 1.0);
-        assert_eq!(Q32::K.norm(), 1.0);
-        assert_eq!(Q64::new(9.0, 12.0, -12.0, -16.0).norm(), 25.0);
-        assert_eq!(Q32::new(-1.0, -1.0, 1.0, -1.0).norm(), 2.0);
+    fn test_norm_normal_values() {
+        let q = Q64::new(1.0, 2.0, 3.0, 4.0);
+        assert_eq!(q.norm(), 30.0f64.sqrt());
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_norm_zero_quaternion() {
+        let q = Q32::new(0.0, 0.0, 0.0, 0.0);
+        assert_eq!(q.norm(), 0.0, "Norm of zero quaternion should be 0");
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_norm_subnormal_values() {
+        let s = f64::MIN_POSITIVE;
+        let q = Q64::new(s, s, s, s);
+        assert!(
+            (q.norm() - 2.0 * s).abs() <= 2.0 * s * f64::EPSILON,
+            "Norm of subnormal is computed correctly"
+        );
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_norm_infinite_values() {
+        let inf = f32::INFINITY;
+        assert_eq!(Q32::new(inf, 1.0, 1.0, 1.0).norm(), inf);
+        assert_eq!(Q32::new(1.0, inf, 1.0, 1.0).norm(), inf);
+        assert_eq!(Q32::new(1.0, 1.0, inf, 1.0).norm(), inf);
+        assert_eq!(Q32::new(1.0, 1.0, 1.0, inf).norm(), inf);
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_norm_nan_values() {
+        let nan = f32::NAN;
+        assert!(Q32::new(nan, 1.0, 1.0, 1.0).norm().is_nan());
+        assert!(Q32::new(1.0, nan, 1.0, 1.0).norm().is_nan());
+        assert!(Q32::new(1.0, 1.0, nan, 1.0).norm().is_nan());
+        assert!(Q32::new(1.0, 1.0, 1.0, nan).norm().is_nan());
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_fast_norm_normal_values() {
+        let q = Q64 {
+            w: 1.1,
+            x: 2.7,
+            y: 3.4,
+            z: 4.9,
+        };
+        assert_eq!(
+            q.fast_norm(),
+            q.norm(),
+            "Fast norm is equal to norm for normal floating point values"
+        );
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_fast_norm_zero_quaternion() {
+        assert_eq!(
+            Q32::zero().fast_norm(),
+            0.0,
+            "Fast norm of zero quaternion should be 0"
+        );
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_fast_norm_infinite_values() {
+        let inf = f32::INFINITY;
+        assert_eq!(Q32::new(inf, 1.0, 1.0, 1.0).fast_norm(), inf);
+        assert_eq!(Q32::new(1.0, inf, 1.0, 1.0).fast_norm(), inf);
+        assert_eq!(Q32::new(1.0, 1.0, inf, 1.0).fast_norm(), inf);
+        assert_eq!(Q32::new(1.0, 1.0, 1.0, inf).fast_norm(), inf);
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_fast_norm_nan_values() {
+        let nan = f32::NAN;
+        assert!(Q32::new(nan, 1.0, 1.0, 1.0).fast_norm().is_nan());
+        assert!(Q32::new(1.0, nan, 1.0, 1.0).fast_norm().is_nan());
+        assert!(Q32::new(1.0, 1.0, nan, 1.0).fast_norm().is_nan());
+        assert!(Q32::new(1.0, 1.0, 1.0, nan).fast_norm().is_nan());
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_fast_norm_for_norm_sqr_underflow() {
+        let s = f64::MIN_POSITIVE;
+        let q = Q64::new(s, s, s, s);
+        assert_eq!(q.fast_norm(), 0.0);
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_fast_norm_for_norm_sqr_overflow() {
+        let s = f32::MAX / 16.0;
+        let q = Q32::new(s, s, s, s);
+        assert_eq!(q.fast_norm(), f32::INFINITY);
     }
 
     #[cfg(any(feature = "std", feature = "libm"))]
