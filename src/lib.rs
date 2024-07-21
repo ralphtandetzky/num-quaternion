@@ -990,8 +990,7 @@ where
     /// natural logarithm.
     ///
     /// This method computes the exponential of a quaternion, handling various
-    /// edge cases to ensure
-    /// numerical stability and correctness:
+    /// edge cases to ensure numerical stability and correctness:
     ///
     /// 1. **Negative Real Part**: If the real part is sufficiently negative,
     ///    such that $e^{\Re q}$ is approximately zero, the method returns
