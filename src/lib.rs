@@ -158,6 +158,7 @@ extern crate std;
 
 use core::{
     borrow::Borrow,
+    cmp::Ordering,
     ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign},
 };
 use num_traits::{ConstOne, ConstZero, Inv, Num, One, Zero};
@@ -987,39 +988,118 @@ where
 {
     /// Given a quaternion $q$, returns $e^q$, where $e$ is the base of the
     /// natural logarithm.
+    ///
+    /// This method computes the exponential of a quaternion, handling various
+    /// edge cases to ensure
+    /// numerical stability and correctness:
+    ///
+    /// 1. **Negative Real Part**: If the real part is sufficiently negative,
+    ///    such that $e^{\Re q}$ is approximately zero, the method returns
+    ///    zero. This is done even if the imaginary part contains infinite or
+    ///    NaN values.
+    ///
+    /// 2. **NaN Input**: If any component of the input quaternion is `NaN`,
+    ///    the method returns a quaternion filled with `NaN` values.
+    ///
+    /// 3. **Large Imaginary Norm**: If the norm of the imaginary part is too
+    ///    large, the method may return a `NaN` quaternion or a quaternion with
+    ///    the correct magnitude but inaccurate direction.
+    ///
+    /// 4. **Infinite Result**: If $e^{\Re q}$ results in `+∞`, the method
+    ///    computes the direction and returns an infinite quaternion in that
+    ///    direction, ensuring that `∞ * 0` values are mapped to zero instead
+    ///    of `NaN`.
+    ///
+    /// 5. **Finite Norm**: For finite norms, the method ensures a very small
+    ///    relative error in all components, depending on the accuracy of the
+    ///    underlying floating point function implementations.
     pub fn exp(self) -> Self {
-        // Compute the norm of the result
+        let one = T::one();
+        let two = one + one;
+        let four = two + two;
+        let half = one / two;
+        let quarter = one / four;
+        let inf = T::infinity();
+
+        // Compute the exponential of the real part, which gives the norm of
+        // the result
         let result_norm = self.w.exp();
 
-        // Compute the square of the angle between the result and 1 (in 4d
-        // space).
-        let sqr_angle = self.x * self.x + self.y * self.y + self.z * self.z;
+        match result_norm.partial_cmp(&inf) {
+            Some(Ordering::Less) => {
+                if result_norm.is_zero() {
+                    return Self::zero();
+                }
+                // Case: 0 < result_norm < ∞
 
-        if sqr_angle > T::epsilon() {
-            // Angle is large enough --> no numerical instability
-            let angle = sqr_angle.sqrt();
-            let cos_angle = angle.cos();
-            let sinc_angle = angle.sin() / angle;
-            let w = result_norm * cos_angle;
-            let x = result_norm * self.x * sinc_angle;
-            let y = result_norm * self.y * sinc_angle;
-            let z = result_norm * self.z * sinc_angle;
-            Self::new(w, x, y, z)
-        } else {
-            // Angle is small --> approximation formula can be used and
-            // we still get minimal error.
-            // By Taylor expansion of `cos(angle)` we get
-            //     cos(angle) >= 1 - angle² / 2
-            // and thus |cos(angle) - 1| is less than half a floating point epsilon.
-            // Similarly,
-            //     sinc(angle) >= 1 - angle² / 6
-            // and thus |sinc(angle) - 1| is less than a sixth of a floating
-            // point epsilon.
-            let w = result_norm;
-            let x = result_norm * self.x;
-            let y = result_norm * self.y;
-            let z = result_norm * self.z;
-            Self::new(w, x, y, z)
+                // Compute the squared norm of the imaginary part
+                let sqr_angle = self.x * self.x + self.y * self.y + self.z * self.z;
+
+                if sqr_angle <= T::epsilon() {
+                    // Use Taylor series approximation for small angles to
+                    // maintain numerical stability. By Taylor expansion of
+                    // `cos(angle)` we get
+                    //     cos(angle) >= 1 - angle² / 2
+                    // and thus |cos(angle) - 1| is less than half a floating
+                    // point epsilon. Similarly,
+                    //     sinc(angle) >= 1 - angle² / 6
+                    // and thus |sinc(angle) - 1| is less than a sixth of a
+                    // floating point epsilon.
+                    let w = result_norm;
+                    let x = result_norm * self.x;
+                    let y = result_norm * self.y;
+                    let z = result_norm * self.z;
+                    Self::new(w, x, y, z)
+                } else {
+                    // Standard computation for larger angles
+                    let angle = sqr_angle.sqrt();
+                    let cos_angle = angle.cos();
+                    let sinc_angle = angle.sin() / angle;
+                    let w = result_norm * cos_angle;
+                    let x = result_norm * self.x * sinc_angle;
+                    let y = result_norm * self.y * sinc_angle;
+                    let z = result_norm * self.z * sinc_angle;
+                    Self::new(w, x, y, z)
+                }
+            }
+            Some(_) => {
+                // Case: result_norm == ∞
+                let map = |a: T| {
+                    // Map zero to zero with same sign and everything else to
+                    // infinity with same sign as the input.
+                    if a.is_zero() {
+                        a
+                    } else {
+                        inf.copysign(a)
+                    }
+                };
+                let sqr_angle = self.x * self.x + self.y * self.y + self.z * self.z;
+                if sqr_angle < T::PI() * T::PI() * quarter {
+                    // Angle less than 90 degrees
+                    Self::new(inf, map(self.x), map(self.y), map(self.z))
+                } else if sqr_angle.is_finite() {
+                    // Angle 90 degrees or more -> careful sign handling
+                    let angle = sqr_angle.sqrt();
+                    let angle_revolutions_fract = (angle * T::FRAC_1_PI() * half).fract();
+                    let cos_angle_signum = (angle_revolutions_fract - half).abs() - quarter;
+                    let sin_angle_signum = one.copysign(half - angle_revolutions_fract);
+                    Self::new(
+                        inf.copysign(cos_angle_signum),
+                        map(self.x) * sin_angle_signum,
+                        map(self.y) * sin_angle_signum,
+                        map(self.z) * sin_angle_signum,
+                    )
+                } else {
+                    // Angle is super large or NaN
+                    assert!(sqr_angle.is_infinite() || sqr_angle.is_nan());
+                    Self::nan()
+                }
+            }
+            None => {
+                // Case: result_norm is NaN
+                debug_assert!(result_norm.is_nan());
+                Self::nan()
+            }
         }
     }
 
@@ -2498,6 +2578,7 @@ mod tests {
 
     use num_traits::ConstOne;
     use num_traits::ConstZero;
+    use num_traits::FloatConst;
     use num_traits::Inv;
     use num_traits::One;
     use num_traits::Zero;
@@ -3247,6 +3328,99 @@ mod tests {
             .norm()
                 <= 2.0 * expected_norm * f32::EPSILON
         );
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_exp_negative_real_part() {
+        let q = Q64::new(-1000.0, 0.0, f64::INFINITY, f64::NAN);
+        let exp_q = q.exp();
+        assert_eq!(exp_q, Q64::zero());
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_exp_nan_input() {
+        let q = Q32::new(f32::NAN, 1.0, 1.0, 1.0);
+        let exp_q = q.exp();
+        assert!(exp_q.w.is_nan());
+        assert!(exp_q.x.is_nan());
+        assert!(exp_q.y.is_nan());
+        assert!(exp_q.z.is_nan());
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_exp_large_imaginary_norm() {
+        let q = Q32::new(1.0, 1e30, 1e30, 1e30);
+        let exp_q = q.exp();
+        assert!(exp_q.w.is_nan());
+        assert!(exp_q.x.is_nan());
+        assert!(exp_q.y.is_nan());
+        assert!(exp_q.z.is_nan());
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_exp_infinite_real_part() {
+        let inf = f64::INFINITY;
+        let q = Quaternion::new(inf, 1.0, 1.0, 1.0);
+        let exp_q = q.exp();
+        assert_eq!(exp_q.w, -inf);
+        assert_eq!(exp_q.x, inf);
+        assert_eq!(exp_q.y, inf);
+        assert_eq!(exp_q.z, inf);
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_exp_infinite_imaginary_part() {
+        let q = Q32::new(1.0, f32::INFINITY, 0.0, 0.0);
+        let exp_q = q.exp();
+        assert!(exp_q.w.is_nan());
+        assert!(exp_q.x.is_nan());
+        assert!(exp_q.y.is_nan());
+        assert!(exp_q.z.is_nan());
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_exp_small_imaginary_norm() {
+        let epsilon = f32::EPSILON;
+        let q = Quaternion::new(0.5, epsilon, epsilon, epsilon);
+        let exp_q = q.exp();
+        let result_norm = q.w.exp();
+        let expected_exp_q = Quaternion::new(
+            result_norm,
+            result_norm * q.x,
+            result_norm * q.y,
+            result_norm * q.z,
+        );
+        assert!((exp_q - expected_exp_q).norm() <= epsilon);
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_exp_infinite_result_angle_greater_than_90_degrees() {
+        let angle = f32::PI() * 0.75; // Angle > 90 degrees
+        let q = Q32::new(f32::INFINITY, angle, 0.0, 0.0);
+        let exp_q = q.exp();
+        assert_eq!(exp_q.w, -f32::INFINITY);
+        assert_eq!(exp_q.x, f32::INFINITY);
+        assert_eq!(exp_q.y, 0.0);
+        assert_eq!(exp_q.z, 0.0);
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_exp_infinite_result_angle_greater_than_180_degrees() {
+        let angle = f64::PI() * 1.25; // Angle > 180 degrees
+        let q = Q64::new(f64::INFINITY, 0.0, angle, 0.0);
+        let exp_q = q.exp();
+        assert_eq!(exp_q.w, -f64::INFINITY);
+        assert_eq!(exp_q.x, 0.0);
+        assert_eq!(exp_q.y, -f64::INFINITY);
+        assert_eq!(exp_q.z, 0.0);
     }
 
     #[cfg(any(feature = "std", feature = "libm"))]
