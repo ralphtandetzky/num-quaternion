@@ -1,5 +1,11 @@
 # Releases in Reverse Chronological Order
 
+## Release 0.2.17 (2024-07-22)
+
+- Implemented edge cases of `Quaternion::exp` method.
+
+**Contributors**: @ralphtandetzky
+
 ## Release 0.2.16 (2024-07-16)
 
 - Fixed inaccuracy in `Quaternion::norm` for very large and very small results. (https://github.com/ralphtandetzky/num-quaternion/issues/51)
