@@ -2,6 +2,12 @@
 
 ## Release 0.2.16 (2024-07-16)
 
+- Implemented edge cases of `Quaternion::exp` method.
+
+**Contributors**: @ralphtandetzky
+
+## Release 0.2.16 (2024-07-16)
+
 - Fixed inaccuracy in `Quaternion::norm` for very large and very small results. (https://github.com/ralphtandetzky/num-quaternion/issues/51)
 - Added new function `Quaternion::fast_norm` for branchless fast (but possibly inaccurate) norm calculation.
 
