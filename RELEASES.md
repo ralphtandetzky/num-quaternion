@@ -1,6 +1,6 @@
 # Releases in Reverse Chronological Order
 
-## Release 0.2.16 (2024-07-16)
+## Release 0.2.17 (2024-07-22)
 
 - Implemented edge cases of `Quaternion::exp` method.
 
