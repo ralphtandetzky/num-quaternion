@@ -1,5 +1,11 @@
 # Releases in Reverse Chronological Order
 
+## Release 0.2.18 (2024-07-23)
+
+- Implemented `Quaternion::expf` method.
+
+**Contributors**: @ralphtandetzky
+
 ## Release 0.2.17 (2024-07-22)
 
 - Implemented edge cases of `Quaternion::exp` method.
