@@ -1139,10 +1139,10 @@ where
     /// If the true result's norm is neither greater than the largest
     /// representable floating point value nor less than the smallest
     /// representable floating point value, and the direction of the output
-    /// quaternion cannot be accurately determined, a `NaN` quaternion may be
-    /// returned to indicate inaccuracy. This can occur when $\|\Im(q) \ln t\|$
-    /// is on the order of $1/\varepsilon$, where $\varepsilon$ is the machine
-    /// precision of the floating point type used.
+    /// quaternion cannot be accurately determined, a `NaN` quaternion may or
+    /// may not be returned to indicate inaccuracy. This can occur when
+    /// $\|\Im(q) \ln t\|$ is on the order of $1/\varepsilon$, where
+    /// $\varepsilon$ is the machine precision of the floating point type used.
     #[inline]
     pub fn expf(self, base: T) -> Self {
         if (base.is_infinite()
