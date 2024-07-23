@@ -1,6 +1,6 @@
 # Releases in Reverse Chronological Order
 
-## Release 0.2.18 (2023-07-23)
+## Release 0.2.18 (2024-07-23)
 
 - Implemented `Quaternion::expf` method.
 
