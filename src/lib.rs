@@ -1131,8 +1131,6 @@ where
     ///   returned.
     /// - Otherwise, if $\Re q$ is infinite and $t = 1$, a `NaN` quaternion is
     ///   returned.
-    /// - Otherwise, if one of the imaginary components of $q$ is $\pm\infty$,
-    ///   a `NaN` quaternion is returned.
     /// - Otherwise, if $\Re q = +\infty$ and $t > 1$, an infinite quaternion
     ///   without `NaN` values is returned.
     /// - Otherwise, if $\Re q = -\infty$ and $0 < t < 1$, an infinite
