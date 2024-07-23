@@ -1102,6 +1102,66 @@ where
         }
     }
 
+    /// Raises a real value (`base`) to a quaternion (`self`) power.
+    ///
+    /// Given a quaternion $q$ and a real value $t$, this function computes
+    /// $t^q := e^{q \ln t}$. The function handles special cases as follows:
+    ///
+    /// - If $t = \pm 0$ and $\Re q > 0$, or $t = +\infty$ and $\Re q < 0$,
+    ///   a zero quaternion is returned.
+    /// - If $t < 0$ or $t$ is `NaN`, a `NaN` quaternion (filled with `NaN`
+    ///   values) is returned.
+    /// - If $t$ is $+0$, $-0$, or $+\infty$ and $\Re q = 0$, a `NaN`
+    ///   quaternion is returned.
+    /// - If $t = +\infty$ and $q$ is a positive real number, $+\infty$ is
+    ///   returned. For other values of $q$ with $\Re q > 0$, a `NaN`
+    ///   quaternion is returned.
+    /// - If $t = \pm 0$ and $q$ is a negative real number, $+\infty$ is
+    ///   returned. For other values of $q$ with $\Re q < 0$, a `NaN`
+    ///   quaternion is returned.
+    ///
+    /// For finite positive $t$, the following conventions for boundary values
+    /// of $q$ are applied:
+    ///
+    /// - If any component of $q$ is `NaN` or any imaginary component of $q$ is
+    ///   infinite, a `NaN` quaternion is returned.
+    /// - Otherwise, if $\Re q = -\infty$ and $t > 1$, a zero quaternion is
+    ///   returned.
+    /// - Otherwise, if $\Re q = +\infty$ and $0 < t < 1$, a zero quaternion is
+    ///   returned.
+    /// - Otherwise, if $\Re q$ is infinite and $t = 1$, a `NaN` quaternion is
+    ///   returned.
+    /// - Otherwise, if $\Re q = +\infty$ and $t > 1$, an infinite quaternion
+    ///   without `NaN` values is returned.
+    /// - Otherwise, if $\Re q = -\infty$ and $0 < t < 1$, an infinite
+    ///   quaternion without `NaN` values is returned.
+    ///
+    /// If the true result's norm is neither greater than the largest
+    /// representable floating point value nor less than the smallest
+    /// representable floating point value, and the direction of the output
+    /// quaternion cannot be accurately determined, a `NaN` quaternion may or
+    /// may not be returned to indicate inaccuracy. This can occur when
+    /// $\|\Im(q) \ln t\|$ is on the order of $1/\varepsilon$, where
+    /// $\varepsilon$ is the machine precision of the floating point type used.
+    #[inline]
+    pub fn expf(self, base: T) -> Self {
+        if (base.is_infinite()
+            && self.w > T::zero()
+            && self.x.is_zero()
+            && self.y.is_zero()
+            && self.z.is_zero())
+            || (base.is_zero()
+                && self.w < T::zero()
+                && self.x.is_zero()
+                && self.y.is_zero()
+                && self.z.is_zero())
+        {
+            T::infinity().into()
+        } else {
+            (self * base.ln()).exp()
+        }
+    }
+
     fn is_finite(&self) -> bool {
         self.w.is_finite() && self.x.is_finite() && self.y.is_finite() && self.z.is_finite()
     }
@@ -3420,6 +3480,103 @@ mod tests {
         assert_eq!(exp_q.x, 0.0);
         assert_eq!(exp_q.y, -f64::INFINITY);
         assert_eq!(exp_q.z, 0.0);
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_expf_zero_base_positive_real_quaternion() {
+        assert_eq!(Q64::new(1.0, 0.0, 0.0, 0.0).expf(0.0), Q64::ZERO);
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_expf_zero_base_negative_real_quaternion() {
+        assert_eq!(
+            Q32::new(-1.0, 0.0, 0.0, 0.0).expf(0.0),
+            f32::INFINITY.into()
+        );
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_expf_infinity_base_positive_real_quaternion() {
+        let inf = f64::INFINITY;
+        assert_eq!(Q64::new(1.0, 0.0, 0.0, 0.0).expf(inf), inf.into());
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_expf_infinity_base_negative_real_quaternion() {
+        assert_eq!(
+            Q32::new(-1.0, 0.0, 0.0, 0.0).expf(f32::INFINITY),
+            0.0f32.into()
+        );
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_expf_negative_base() {
+        let q = Q64::new(1.0, 0.0, 0.0, 0.0).expf(-1.0);
+        assert!(q.w.is_nan());
+        assert!(q.x.is_nan());
+        assert!(q.y.is_nan());
+        assert!(q.z.is_nan());
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_expf_nan_base() {
+        let q = Q32::new(1.0, 0.0, 0.0, 0.0).expf(f32::NAN);
+        assert!(q.w.is_nan());
+        assert!(q.x.is_nan());
+        assert!(q.y.is_nan());
+        assert!(q.z.is_nan());
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_expf_finite_positive_base() {
+        let q = Q64::new(1.0, 2.0, 3.0, 4.0);
+        let base = 2.0;
+        let result = q.expf(base);
+        let expected = (q * base.ln()).exp();
+        assert!((result - expected).norm() <= expected.norm() * f64::EPSILON);
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_expf_nan_quaternion_component() {
+        let q = Q64::new(f64::NAN, 1.0, 1.0, 1.0).expf(3.0);
+        assert!(q.w.is_nan());
+        assert!(q.x.is_nan());
+        assert!(q.y.is_nan());
+        assert!(q.z.is_nan());
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_expf_infinity_quaternion_component() {
+        let q = Q32::new(1.0, f32::INFINITY, 1.0, 1.0).expf(2.0);
+        assert!(q.w.is_nan());
+        assert!(q.x.is_nan());
+        assert!(q.y.is_nan());
+        assert!(q.z.is_nan());
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_expf_infinite_real_component_with_t_greater_than_1() {
+        let inf = f64::INFINITY;
+        assert_eq!(Q64::new(inf, 0.0, 0.0, 0.0).expf(5.0), inf.into());
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_expf_infinite_real_component_with_t_between_0_and_1() {
+        assert_eq!(
+            Quaternion::new(f32::NEG_INFINITY, 0.0, 0.0, 0.0).expf(0.5),
+            f32::INFINITY.into()
+        );
     }
 
     #[cfg(any(feature = "std", feature = "libm"))]
