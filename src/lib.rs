@@ -1177,9 +1177,8 @@ where
     /// - The signs of the coefficients of the imaginary parts of the outputs
     ///   are equal to the signs of the respective coefficients of the inputs.
     ///   This also holds for signs of zeros, but not for `NaNs`.
-    /// - If $q = -0 + 0i$, the result is $-\infty+\pi i$. (The coefficients
-    ///   of $j$ and $k$ are zero with the signs copied.)
-    /// - If $q = +0$, the result is $-\infty$.
+    /// - If $q = 0$, the result is $-\infty$. (The coefficients of $i$, $j$,
+    ///   and $k$ are zero with the original signs copied.)
     /// - If the input has a `NaN` value, then the result is `NaN` in all
     ///   components.
     /// - Otherwise, if $q = w + xi + yj + zk$ where at least one of
@@ -1272,12 +1271,7 @@ where
                 }
             }
             FpCategory::Zero if self.is_zero() => {
-                let x = if self.w.is_sign_positive() {
-                    self.x
-                } else {
-                    T::PI().copysign(self.x)
-                };
-                Self::new(T::neg_infinity(), x, self.y, self.z)
+                Self::new(T::neg_infinity(), self.x, self.y, self.z)
             }
             FpCategory::Nan => Self::nan(),
             FpCategory::Infinite => {
@@ -3627,9 +3621,9 @@ mod tests {
         // Test the negative zero quaternion
         let q = Q64::new(-0.0, 0.0, 0.0, 0.0);
         let ln_q = q.ln();
-        let expected = Q64::new(f64::NEG_INFINITY, core::f64::consts::PI, 0.0, 0.0);
+        let expected = Q64::new(f64::NEG_INFINITY, 0.0, 0.0, 0.0);
         assert_eq!(ln_q.w, expected.w);
-        assert!((ln_q.x - expected.x).abs() <= core::f64::consts::PI * f64::EPSILON);
+        assert_eq!(ln_q.x, expected.x);
         assert_eq!(ln_q.y, expected.y);
         assert_eq!(ln_q.z, expected.z);
     }
