@@ -1,5 +1,11 @@
 # Releases in Reverse Chronological Order
 
+## Release 0.2.19 (2024-07-27)
+
+- Changed orientation of some `UnitQuaternion` functions to conform to common conventions.
+
+**Contributors**: @ralphtandetzky
+
 ## Release 0.2.18 (2024-07-23)
 
 - Implemented `Quaternion::expf` method.
