@@ -1,5 +1,13 @@
 # Releases in Reverse Chronological Order
 
+## Release 0.2.20 (2024-07-28)
+
+- Implemented `Quaternion::powf` method.
+- Changed method `Quaternion::ln` for zero arguments to return `NEG_INFINITY`
+  independent of the signs of the input quaternion components.
+
+**Contributors**: @ralphtandetzky
+
 ## Release 0.2.19 (2024-07-27)
 
 - Changed orientation of some `UnitQuaternion` functions to conform to common conventions.
