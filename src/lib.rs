@@ -24,7 +24,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! num-quaternion = { version = "0.2.18", default-features = false, features = ["libm"] }
+//! num-quaternion = { version = "0.2.19", default-features = false, features = ["libm"] }
 //! ```
 //!
 //! Then, include it in your crate:
@@ -1861,13 +1861,13 @@ where
 
         [
             T::one() - yy.clone() - zz.clone(),
-            xy.clone() + wz.clone(),
-            xz.clone() - wy.clone(),
-            xy - wz,
+            xy.clone() - wz.clone(),
+            xz.clone() + wy.clone(),
+            xy + wz,
             T::one() - xx.clone() - zz,
-            yz.clone() + wx.clone(),
-            xz + wy,
-            yz - wx,
+            yz.clone() - wx.clone(),
+            xz - wy,
+            yz + wx,
             T::one() - xx - yy,
         ]
     }
@@ -1930,39 +1930,39 @@ where
         if trace > zero {
             let s = (trace + one).sqrt() * two; // s=4*qw
             let qw = quarter * s;
-            let qx = (*mat.at(1, 2) - *mat.at(2, 1)) / s;
-            let qy = (*mat.at(2, 0) - *mat.at(0, 2)) / s;
-            let qz = (*mat.at(0, 1) - *mat.at(1, 0)) / s;
+            let qx = (*mat.at(2, 1) - *mat.at(1, 2)) / s;
+            let qy = (*mat.at(0, 2) - *mat.at(2, 0)) / s;
+            let qz = (*mat.at(1, 0) - *mat.at(0, 1)) / s;
             Self(Quaternion::new(qw, qx, qy, qz))
         } else if (m00 > m11) && (m00 > m22) {
             let s = (one + *m00 - *m11 - *m22).sqrt() * two; // s=4*qx
-            let qw = (*mat.at(1, 2) - *mat.at(2, 1)) / s;
+            let qw = (*mat.at(2, 1) - *mat.at(1, 2)) / s;
             let qx = quarter * s;
-            let qy = (*mat.at(1, 0) + *mat.at(0, 1)) / s;
-            let qz = (*mat.at(2, 0) + *mat.at(0, 2)) / s;
-            if *mat.at(1, 2) >= *mat.at(2, 1) {
+            let qy = (*mat.at(0, 1) + *mat.at(1, 0)) / s;
+            let qz = (*mat.at(0, 2) + *mat.at(2, 0)) / s;
+            if *mat.at(2, 1) >= *mat.at(1, 2) {
                 Self(Quaternion::new(qw, qx, qy, qz))
             } else {
                 Self(Quaternion::new(-qw, -qx, -qy, -qz))
             }
         } else if m11 > m22 {
             let s = (one + *m11 - *m00 - *m22).sqrt() * two; // s=4*qy
-            let qw = (*mat.at(2, 0) - *mat.at(0, 2)) / s;
-            let qx = (*mat.at(1, 0) + *mat.at(0, 1)) / s;
+            let qw = (*mat.at(0, 2) - *mat.at(2, 0)) / s;
+            let qx = (*mat.at(0, 1) + *mat.at(1, 0)) / s;
             let qy = quarter * s;
-            let qz = (*mat.at(2, 1) + *mat.at(1, 2)) / s;
-            if *mat.at(2, 0) >= *mat.at(0, 2) {
+            let qz = (*mat.at(1, 2) + *mat.at(2, 1)) / s;
+            if *mat.at(0, 2) >= *mat.at(2, 0) {
                 Self(Quaternion::new(qw, qx, qy, qz))
             } else {
                 Self(Quaternion::new(-qw, -qx, -qy, -qz))
             }
         } else {
             let s = (one + *m22 - *m00 - *m11).sqrt() * two; // s=4*qz
-            let qw = (*mat.at(0, 1) - *mat.at(1, 0)) / s;
-            let qx = (*mat.at(2, 0) + *mat.at(0, 2)) / s;
-            let qy = (*mat.at(2, 1) + *mat.at(1, 2)) / s;
+            let qw = (*mat.at(1, 0) - *mat.at(0, 1)) / s;
+            let qx = (*mat.at(0, 2) + *mat.at(2, 0)) / s;
+            let qy = (*mat.at(1, 2) + *mat.at(2, 1)) / s;
             let qz = quarter * s;
-            if *mat.at(0, 1) >= *mat.at(1, 0) {
+            if *mat.at(1, 0) >= *mat.at(0, 1) {
                 Self(Quaternion::new(qw, qx, qy, qz))
             } else {
                 Self(Quaternion::new(-qw, -qx, -qy, -qz))
@@ -2544,13 +2544,13 @@ where
     pub fn rotate_vector(self, vector: [T; 3]) -> [T; 3] {
         let q = self.into_quaternion();
         let [vx, vy, vz] = vector;
-        let q_inv_v = Quaternion::<T>::new(
-            q.x.clone() * vx.clone() + q.y.clone() * vy.clone() + q.z.clone() * vz.clone(),
-            q.w.clone() * vx.clone() - q.y.clone() * vz.clone() + q.z.clone() * vy.clone(),
-            q.w.clone() * vy.clone() + q.x.clone() * vz.clone() - q.z.clone() * vx.clone(),
-            q.w.clone() * vz - q.x.clone() * vy + q.y.clone() * vx,
+        let v_q_inv = Quaternion::<T>::new(
+            vx.clone() * q.x.clone() + vy.clone() * q.y.clone() + vz.clone() * q.z.clone(),
+            vx.clone() * q.w.clone() - vy.clone() * q.z.clone() + vz.clone() * q.y.clone(),
+            vx.clone() * q.z.clone() + vy.clone() * q.w.clone() - vz.clone() * q.x.clone(),
+            vy * q.x.clone() - vx * q.y.clone() + vz * q.w.clone(),
         );
-        let result = q_inv_v * q;
+        let result = q * v_q_inv;
         [result.x, result.y, result.z]
     }
 }
@@ -4302,8 +4302,8 @@ mod tests {
         let rot_matrix = q.to_rotation_matrix3x3();
         let expected = [
             1.0, 0.0, 0.0, //
-            0.0, 0.0, 1.0, //
-            0.0, -1.0, 0.0,
+            0.0, 0.0, -1.0, //
+            0.0, 1.0, 0.0,
         ];
         for (r, e) in rot_matrix.iter().zip(expected) {
             assert!((r - e).abs() <= f64::EPSILON);
@@ -4316,9 +4316,9 @@ mod tests {
         let q = Q64::new(1.0, 0.0, 1.0, 0.0).normalize().unwrap();
         let rot_matrix = q.to_rotation_matrix3x3();
         let expected = [
-            0.0, 0.0, -1.0, //
+            0.0, 0.0, 1.0, //
             0.0, 1.0, 0.0, //
-            1.0, 0.0, 0.0,
+            -1.0, 0.0, 0.0,
         ];
         for (r, e) in rot_matrix.iter().zip(expected) {
             assert!((r - e).abs() <= f64::EPSILON);
@@ -4331,8 +4331,8 @@ mod tests {
         let q = Q64::new(1.0, 0.0, 0.0, 1.0).normalize().unwrap();
         let rot_matrix = q.to_rotation_matrix3x3();
         let expected = [
-            0.0, 1.0, 0.0, //
-            -1.0, 0.0, 0.0, //
+            0.0, -1.0, 0.0, //
+            1.0, 0.0, 0.0, //
             0.0, 0.0, 1.0,
         ];
         for (r, e) in rot_matrix.iter().zip(expected) {
@@ -4346,9 +4346,9 @@ mod tests {
         let q = Q64::new(1.0, 1.0, 1.0, 1.0).normalize().unwrap();
         let rot_matrix = q.to_rotation_matrix3x3();
         let expected = [
-            0.0, 1.0, 0.0, //
             0.0, 0.0, 1.0, //
-            1.0, 0.0, 0.0,
+            1.0, 0.0, 0.0, //
+            0.0, 1.0, 0.0,
         ];
         for (r, e) in rot_matrix.iter().zip(expected) {
             assert!((r - e).abs() <= f64::EPSILON);
@@ -4388,8 +4388,8 @@ mod tests {
         let angle = core::f32::consts::PI / 5.0;
         let rotation_x: [[f32; 3]; 3] = [
             [1.0, 0.0, 0.0],
-            [0.0, angle.cos(), angle.sin()],
-            [0.0, -angle.sin(), angle.cos()],
+            [0.0, angle.cos(), -angle.sin()],
+            [0.0, angle.sin(), angle.cos()],
         ];
         let q = UQ32::from_rotation_matrix3x3(&rotation_x);
         let expected = UQ32::from_rotation_vector(&[angle, 0.0, 0.0]);
@@ -4401,9 +4401,9 @@ mod tests {
     fn test_rotation_y() {
         let angle = 4.0 * core::f32::consts::PI / 5.0;
         let rotation_y: [[f32; 3]; 3] = [
-            [angle.cos(), 0.0, -angle.sin()],
+            [angle.cos(), 0.0, angle.sin()],
             [0.0, 1.0, 0.0],
-            [angle.sin(), 0.0, angle.cos()],
+            [-angle.sin(), 0.0, angle.cos()],
         ];
         let q = UQ32::from_rotation_matrix3x3(&rotation_y);
         let expected = UQ32::from_rotation_vector(&[0.0, angle, 0.0]);
@@ -4415,8 +4415,8 @@ mod tests {
     fn test_rotation_z() {
         let angle = 3.0 * core::f64::consts::PI / 5.0;
         let rotation_z: [[f64; 3]; 3] = [
-            [angle.cos(), angle.sin(), 0.0],
-            [-angle.sin(), angle.cos(), 0.0],
+            [angle.cos(), -angle.sin(), 0.0],
+            [angle.sin(), angle.cos(), 0.0],
             [0.0, 0.0, 1.0],
         ];
         let q = UQ64::from_rotation_matrix3x3(&rotation_z);
@@ -4427,7 +4427,7 @@ mod tests {
     #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_arbitrary_rotation() {
-        let arbitrary_rotation: [[f32; 3]; 3] = [[0.0, 1.0, 0.0], [0.0, 0.0, 1.0], [1.0, 0.0, 0.0]];
+        let arbitrary_rotation: [[f32; 3]; 3] = [[0.0, 0.0, 1.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]];
         let q = UnitQuaternion::from_rotation_matrix3x3(&arbitrary_rotation);
         let expected = Q32::new(1.0, 1.0, 1.0, 1.0).normalize().unwrap();
         assert!((q - expected).norm() <= f32::EPSILON);
@@ -4437,7 +4437,11 @@ mod tests {
     #[test]
     fn test_flat_array() {
         let angle = core::f32::consts::PI / 2.0;
-        let rotation_z: [f32; 9] = [0.0, 1.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 1.0];
+        let rotation_z: [f32; 9] = [
+            0.0, -1.0, 0.0, //
+            1.0, 0.0, 0.0, //
+            0.0, 0.0, 1.0,
+        ];
         let q = UQ32::from_rotation_matrix3x3(&rotation_z);
         let expected = UQ32::from_rotation_vector(&[0.0, 0.0, angle]);
         assert!((q - expected).norm() <= f32::EPSILON);
@@ -4922,7 +4926,7 @@ mod tests {
         let q = Q32::new(1.0, 1.0, 1.0, 1.0).normalize().unwrap();
         let v = [1.0, 2.0, 3.0];
         let result = q.rotate_vector(v);
-        assert_eq!(result, [2.0, 3.0, 1.0]);
+        assert_eq!(result, [3.0, 1.0, 2.0]);
     }
 
     #[cfg(any(feature = "std", feature = "libm"))]
