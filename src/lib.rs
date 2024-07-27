@@ -1162,6 +1162,91 @@ where
         }
     }
 
+    /// Raises a quaternion (`self`) to a real value (`exponent`) power.
+    ///
+    /// Given a quaternion $q$ and a real value $t$, this function computes
+    /// $q^t := e^{t \ln q}$. The function handles special cases as follows:
+    ///
+    /// - If $q = 0$ and $t > 0$, a zero quaternion is returned.
+    /// - If $|q| = \infty$ and $t < 0$, a zero quaternion is returned.
+    /// - If $|q| = \infty$ and $t > 0$ is not too large to prevent
+    ///   numerical accuracy for the direction of the quaternion, then an
+    ///   infinite quaternion without `NaN` components is returned. For larger
+    ///   but finite values of $t$ this may still be hold, or alternatively a
+    ///   quaternion filled with `NaN` values is returned.
+    /// - If $q = +\infty$ and $t = +\infty$, then positive infinity is
+    ///   returned.
+    /// - If $|q| = \infty$, but $q \neq +\infty$ and $t = +\infty$, then `NaN`
+    ///   is returned.
+    /// - If $q = 0$ and $t < 0$, then positive infinity is returned.
+    /// - If $q$ contains a `NaN` component, or if $t$ is `NaN`, a `NaN`
+    ///   quaternion is returned.
+    /// - If $|q| = \infty$ and $t = 0$, a `NaN` quaternion is returned.
+    /// - If $q = 0$ and $t = 0$, a `NaN` quaternion is returned.
+    ///
+    /// For non-zero finite $q$, the following conventions for boundary values
+    /// of $t$ are applied:
+    ///
+    /// - If $t = +\infty$ and $q, |q| \ge 1$ is not real or $q = 1$ or
+    ///   $q \le -1$, a `NaN` quaternion is returned.
+    /// - If $t = +\infty$ and $q > 1$, positive infinity is returned.
+    /// - If $t = +\infty$ and $|q| < 1$, zero is returned.
+    /// - If $t = -\infty$ and $|q| > 1$, zero is returned.
+    /// - If $t = -\infty$ and $0 \le q < 1$, positive infinity is returned.
+    /// - If $t = -\infty$ and $q, |q| \le 1$ is not real or $q = 1$ or
+    ///   $-1 \le q < 0$, a `NaN` quaternion is returned.
+    ///
+    /// If the true result's norm is neither greater than the largest
+    /// representable floating point value nor less than the smallest
+    /// representable floating point value, and the direction of the output
+    /// quaternion cannot be accurately determined, a `NaN` quaternion may or
+    /// may not be returned to indicate inaccuracy. This can occur when
+    /// $\|t \Im(\ln q)\|$ is on the order of $1/\varepsilon$, where
+    /// $\varepsilon$ is the machine precision of the floating point type used.
+    #[inline]
+    pub fn powf(self, exponent: T) -> Self {
+        if exponent.is_finite() {
+            // -∞ < t < +∞ ==> apply the general formula.
+            (self.ln() * exponent).exp()
+        } else if exponent > T::zero() {
+            // t = +∞
+            if self.x.is_zero() && self.y.is_zero() && self.z.is_zero() {
+                // q is real --> handle special cases
+                match self.w.partial_cmp(&T::one()) {
+                    Some(Ordering::Greater) => T::infinity().into(),
+                    Some(Ordering::Less) => T::zero().into(),
+                    _ => Self::nan(),
+                }
+            } else if self.norm_sqr() < T::one() {
+                // |q| < 1
+                Self::zero()
+            } else {
+                // Otherwise, return NaN
+                Self::nan()
+            }
+        } else if exponent < T::zero() {
+            // t = -∞
+            if self.x.is_zero() && self.y.is_zero() && self.z.is_zero() {
+                // q is real --> handle special cases
+                match self.w.partial_cmp(&T::one()) {
+                    Some(Ordering::Greater) => T::zero().into(),
+                    Some(Ordering::Less) => T::infinity().into(),
+                    _ => Self::nan(),
+                }
+            } else if self.norm_sqr() > T::one() {
+                // |q| > 1
+                Self::zero()
+            } else {
+                // Otherwise, return NaN
+                Self::nan()
+            }
+        } else {
+            // t is NaN
+            debug_assert!(exponent.is_nan());
+            Self::nan()
+        }
+    }
+
     fn is_finite(&self) -> bool {
         self.w.is_finite() && self.x.is_finite() && self.y.is_finite() && self.z.is_finite()
     }
@@ -1177,9 +1262,8 @@ where
     /// - The signs of the coefficients of the imaginary parts of the outputs
     ///   are equal to the signs of the respective coefficients of the inputs.
     ///   This also holds for signs of zeros, but not for `NaNs`.
-    /// - If $q = -0 + 0i$, the result is $-\infty+\pi i$. (The coefficients
-    ///   of $j$ and $k$ are zero with the signs copied.)
-    /// - If $q = +0$, the result is $-\infty$.
+    /// - If $q = 0$, the result is $-\infty$. (The coefficients of $i$, $j$,
+    ///   and $k$ are zero with the original signs copied.)
     /// - If the input has a `NaN` value, then the result is `NaN` in all
     ///   components.
     /// - Otherwise, if $q = w + xi + yj + zk$ where at least one of
@@ -1272,12 +1356,7 @@ where
                 }
             }
             FpCategory::Zero if self.is_zero() => {
-                let x = if self.w.is_sign_positive() {
-                    self.x
-                } else {
-                    T::PI().copysign(self.x)
-                };
-                Self::new(T::neg_infinity(), x, self.y, self.z)
+                Self::new(T::neg_infinity(), self.x, self.y, self.z)
             }
             FpCategory::Nan => Self::nan(),
             FpCategory::Infinite => {
@@ -3581,6 +3660,159 @@ mod tests {
 
     #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
+    fn test_powf_zero_q_positive_t() {
+        let q = Quaternion::zero();
+        let t = 1.0;
+        let result = q.powf(t);
+        assert_eq!(result, Quaternion::zero());
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_powf_infinite_q_negative_t() {
+        let q = Quaternion::new(f64::INFINITY, 0.0, 0.0, 0.0);
+        let t = -1.0;
+        let result = q.powf(t);
+        assert_eq!(result, Quaternion::zero());
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_powf_infinite_q_positive_t_not_too_large() {
+        let q = Quaternion::new(f64::INFINITY, 0.0, 0.0, 0.0);
+        let t = 1.0;
+        let result = q.powf(t);
+        assert_eq!(result, f64::INFINITY.into());
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_powf_infinite_q_large_positive_t() {
+        let q = Quaternion::new(0.0, f64::INFINITY, 0.0, 0.0);
+        let t = f64::MAX;
+        let result = q.powf(t);
+        assert!(result.w.is_nan());
+        assert!(result.x.is_nan());
+        assert!(result.y.is_nan());
+        assert!(result.z.is_nan());
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_powf_infinite_q_infinite_t() {
+        let q = Quaternion::new(f64::INFINITY, 0.0, 0.0, 0.0);
+        let t = f64::INFINITY;
+        let result = q.powf(t);
+        assert_eq!(result, f64::INFINITY.into());
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_powf_infinite_q_infinite_t_not_positive() {
+        let q = Quaternion::new(f64::INFINITY, 1.0, 0.0, 0.0);
+        let t = f64::INFINITY;
+        let result = q.powf(t);
+        assert!(result.w.is_nan());
+        assert!(result.x.is_nan());
+        assert!(result.y.is_nan());
+        assert!(result.z.is_nan());
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_powf_zero_q_negative_t() {
+        let q = Quaternion::zero();
+        let t = -1.0;
+        let result = q.powf(t);
+        assert_eq!(result, f64::INFINITY.into());
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_powf_nan_q_or_t() {
+        let q = Quaternion::new(0.0, 0.0, f64::NAN, 0.0);
+        let t = 1.0;
+        let result = q.powf(t);
+        assert!(result.w.is_nan());
+        assert!(result.x.is_nan());
+        assert!(result.y.is_nan());
+        assert!(result.z.is_nan());
+
+        let q = Quaternion::one();
+        let t = f64::NAN;
+        let result = q.powf(t);
+        assert!(result.w.is_nan());
+        assert!(result.x.is_nan());
+        assert!(result.y.is_nan());
+        assert!(result.z.is_nan());
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_powf_infinite_q_zero_t() {
+        let q = Quaternion::new(f64::INFINITY, 0.0, 0.0, 0.0);
+        let t = 0.0;
+        let result = q.powf(t);
+        assert!(result.w.is_nan());
+        assert!(result.x.is_nan());
+        assert!(result.y.is_nan());
+        assert!(result.z.is_nan());
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_powf_zero_q_zero_t() {
+        let q = Q32::zero();
+        let t = 0.0;
+        let result = q.powf(t);
+        assert!(result.w.is_nan());
+        assert!(result.x.is_nan());
+        assert!(result.y.is_nan());
+        assert!(result.z.is_nan());
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_powf_non_zero_q_positive_infinite_t() {
+        let q = Quaternion::new(2.0, 0.0, 0.0, 0.0);
+        let t = f64::INFINITY;
+        let result = q.powf(t);
+        assert_eq!(result, f64::INFINITY.into());
+
+        let q = Quaternion::new(0.5, 0.0, 0.0, 0.0);
+        let result = q.powf(t);
+        assert_eq!(result, Quaternion::zero());
+
+        let q = Quaternion::new(1.0, 0.0, 0.0, 0.0);
+        let result = q.powf(t);
+        assert!(result.w.is_nan());
+        assert!(result.x.is_nan());
+        assert!(result.y.is_nan());
+        assert!(result.z.is_nan());
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_powf_non_zero_q_negative_infinite_t() {
+        let q = Quaternion::new(2.0, 0.0, 0.0, 0.0);
+        let t = f64::NEG_INFINITY;
+        let result = q.powf(t);
+        assert_eq!(result, Quaternion::zero());
+
+        let q = Quaternion::new(0.5, 0.0, 0.0, 0.0);
+        let result = q.powf(t);
+        assert_eq!(result, f64::INFINITY.into());
+
+        let q = Quaternion::new(1.0, 0.0, 0.0, 0.0);
+        let result = q.powf(t);
+        assert!(result.w.is_nan());
+        assert!(result.x.is_nan());
+        assert!(result.y.is_nan());
+        assert!(result.z.is_nan());
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
     fn test_ln_normal_case() {
         // Test a normal quaternion
         let q = Quaternion::new(1.0, 2.0, 3.0, 4.0);
@@ -3627,9 +3859,9 @@ mod tests {
         // Test the negative zero quaternion
         let q = Q64::new(-0.0, 0.0, 0.0, 0.0);
         let ln_q = q.ln();
-        let expected = Q64::new(f64::NEG_INFINITY, core::f64::consts::PI, 0.0, 0.0);
+        let expected = Q64::new(f64::NEG_INFINITY, 0.0, 0.0, 0.0);
         assert_eq!(ln_q.w, expected.w);
-        assert!((ln_q.x - expected.x).abs() <= core::f64::consts::PI * f64::EPSILON);
+        assert_eq!(ln_q.x, expected.x);
         assert_eq!(ln_q.y, expected.y);
         assert_eq!(ln_q.z, expected.z);
     }
