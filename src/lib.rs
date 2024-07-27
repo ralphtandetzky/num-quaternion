@@ -1170,19 +1170,22 @@ where
     /// - If $q = 0$ and $t > 0$, a zero quaternion is returned.
     /// - If $|q| = \infty$ and $t < 0$, a zero quaternion is returned.
     /// - If $|q| = \infty$ and $t > 0$ is not too large to prevent
-    ///   numerical accuracy for the direction of the quaternion, then an infinite
-    ///   quaternion without `NaN` components is returned. For larger but finite values
-    ///   of $t$ this may still be hold, or alternatively a quaternion filled with
-    ///   `NaN` values is returned.
-    /// - If $q = +\infty$ and $t = +\infty$, then positive infinity is returned.
-    /// - If $|q| = \infty$, but $q \neq +\infty$ and $t = +\infty$, then `NaN` is returned.
-    /// - If $q = 0$ and $t < 0$, then positive infinity is returned.
-    /// - If $q$ contains a `NaN` component, or if $t$ is `NaN`, a `NaN` quaternion
+    ///   numerical accuracy for the direction of the quaternion, then an
+    ///   infinite quaternion without `NaN` components is returned. For larger
+    ///   but finite values of $t$ this may still be hold, or alternatively a
+    ///   quaternion filled with `NaN` values is returned.
+    /// - If $q = +\infty$ and $t = +\infty$, then positive infinity is
+    ///   returned.
+    /// - If $|q| = \infty$, but $q \neq +\infty$ and $t = +\infty$, then `NaN`
     ///   is returned.
+    /// - If $q = 0$ and $t < 0$, then positive infinity is returned.
+    /// - If $q$ contains a `NaN` component, or if $t$ is `NaN`, a `NaN`
+    ///   quaternion is returned.
     /// - If $|q| = \infty$ and $t = 0$, a `NaN` quaternion is returned.
     /// - If $q = 0$ and $t = 0$, a `NaN` quaternion is returned.
     ///
-    /// For non-zero finite $q$, the following conventions for boundary values of $t$ are applied:
+    /// For non-zero finite $q$, the following conventions for boundary values
+    /// of $t$ are applied:
     ///
     /// - If $t = +\infty$ and $q, |q| \ge 1$ is not real or $q = 1$ or
     ///   $q \le -1$, a `NaN` quaternion is returned.
