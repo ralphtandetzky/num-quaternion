@@ -1205,9 +1205,8 @@ where
     /// $\varepsilon$ is the machine precision of the floating point type used.
     #[inline]
     pub fn powf(self, exponent: T) -> Self {
-        // Check if the exponent is a finite value
         if exponent.is_finite() {
-            // If the exponent is finite, we can apply the general formula.
+            // -∞ < t < +∞ ==> apply the general formula.
             (self.ln() * exponent).exp()
         } else if exponent > T::zero() {
             // t = +∞
@@ -1226,6 +1225,7 @@ where
                 Self::nan()
             }
         } else if exponent < T::zero() {
+            // t = -∞
             if self.x.is_zero() && self.y.is_zero() && self.z.is_zero() {
                 // q is real --> handle special cases
                 match self.w.partial_cmp(&T::one()) {
