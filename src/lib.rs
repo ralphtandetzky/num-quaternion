@@ -375,7 +375,7 @@ impl<T> Quaternion<T>
 where
     T: Float,
 {
-    /// Returns a quaternion filled with `NAN` values.
+    /// Returns a quaternion filled with `NaN` values.
     #[inline]
     pub fn nan() -> Self {
         let nan = T::nan();
@@ -408,7 +408,7 @@ impl<T> Quaternion<T>
 where
     T: Clone + Neg<Output = T>,
 {
-    /// Returns the conjugate quaternion. i.e. the imaginary part is negated.
+    /// Returns the conjugate quaternion, i. e. the imaginary part is negated.
     #[inline]
     pub fn conj(&self) -> Self {
         Self::new(
@@ -2212,7 +2212,7 @@ impl<T> UnitQuaternion<T>
 where
     T: Clone + Neg<Output = T>,
 {
-    /// Returns the conjugate quaternion. i.e. the imaginary part is negated.
+    /// Returns the conjugate quaternion, i. e. the imaginary part is negated.
     #[inline]
     pub fn conj(&self) -> Self {
         Self(self.0.conj())
