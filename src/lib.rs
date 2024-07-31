@@ -159,7 +159,9 @@ extern crate std;
 use core::{
     borrow::Borrow,
     cmp::Ordering,
-    ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign},
+    ops::{
+        Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign,
+    },
 };
 use num_traits::{ConstOne, ConstZero, Inv, Num, One, Zero};
 
@@ -274,7 +276,10 @@ where
 
     #[inline]
     fn is_zero(&self) -> bool {
-        self.w.is_zero() && self.x.is_zero() && self.y.is_zero() && self.z.is_zero()
+        self.w.is_zero()
+            && self.x.is_zero()
+            && self.y.is_zero()
+            && self.z.is_zero()
     }
 
     #[inline]
@@ -329,7 +334,10 @@ where
 
     #[inline]
     fn is_one(&self) -> bool {
-        self.w.is_one() && self.x.is_zero() && self.y.is_zero() && self.z.is_zero()
+        self.w.is_one()
+            && self.x.is_zero()
+            && self.y.is_zero()
+            && self.z.is_zero()
     }
 
     #[inline]
@@ -375,7 +383,7 @@ impl<T> Quaternion<T>
 where
     T: Float,
 {
-    /// Returns a quaternion filled with `NAN` values.
+    /// Returns a quaternion filled with `NaN` values.
     #[inline]
     pub fn nan() -> Self {
         let nan = T::nan();
@@ -400,7 +408,8 @@ where
     #[inline]
     pub fn norm_sqr(&self) -> T {
         (self.w.clone() * self.w.clone() + self.y.clone() * self.y.clone())
-            + (self.x.clone() * self.x.clone() + self.z.clone() * self.z.clone())
+            + (self.x.clone() * self.x.clone()
+                + self.z.clone() * self.z.clone())
     }
 }
 
@@ -408,7 +417,7 @@ impl<T> Quaternion<T>
 where
     T: Clone + Neg<Output = T>,
 {
-    /// Returns the conjugate quaternion. i.e. the imaginary part is negated.
+    /// Returns the conjugate quaternion, i. e. the imaginary part is negated.
     #[inline]
     pub fn conj(&self) -> Self {
         Self::new(
@@ -561,7 +570,9 @@ where
     pub fn normalize(self) -> Option<UnitQuaternion<T>> {
         let norm = self.norm();
         match norm.classify() {
-            FpCategory::Normal | FpCategory::Subnormal => Some(UnitQuaternion(self / norm)),
+            FpCategory::Normal | FpCategory::Subnormal => {
+                Some(UnitQuaternion(self / norm))
+            }
             _ => None,
         }
     }
@@ -702,7 +713,8 @@ where
         let c = self.w.clone() * rhs.y.clone() - self.x.clone() * rhs.z.clone()
             + self.y.clone() * rhs.w.clone()
             + self.z.clone() * rhs.x.clone();
-        let d = self.w * rhs.z + self.x * rhs.y - self.y * rhs.x + self.z * rhs.w;
+        let d =
+            self.w * rhs.z + self.x * rhs.y - self.y * rhs.x + self.z * rhs.w;
         Self::new(a, b, c, d)
     }
 }
@@ -886,7 +898,9 @@ macro_rules! impl_ops_lhs_real {
     };
 }
 
-impl_ops_lhs_real!(usize, u8, u16, u32, u64, u128, isize, i8, i16, i32, i64, i128, f32, f64);
+impl_ops_lhs_real!(
+    usize, u8, u16, u32, u64, u128, isize, i8, i16, i32, i64, i128, f32, f64
+);
 
 impl Div<Q32> for f32 {
     type Output = Q32;
@@ -894,7 +908,12 @@ impl Div<Q32> for f32 {
     #[inline]
     fn div(mut self, rhs: Q32) -> Self::Output {
         self /= rhs.norm_sqr();
-        Self::Output::new(self * rhs.w, self * -rhs.x, self * -rhs.y, self * -rhs.z)
+        Self::Output::new(
+            self * rhs.w,
+            self * -rhs.x,
+            self * -rhs.y,
+            self * -rhs.z,
+        )
     }
 }
 
@@ -904,7 +923,12 @@ impl Div<Q64> for f64 {
     #[inline]
     fn div(mut self, rhs: Q64) -> Self::Output {
         self /= rhs.norm_sqr();
-        Self::Output::new(self * rhs.w, self * -rhs.x, self * -rhs.y, self * -rhs.z)
+        Self::Output::new(
+            self * rhs.w,
+            self * -rhs.x,
+            self * -rhs.y,
+            self * -rhs.z,
+        )
     }
 }
 
@@ -928,7 +952,9 @@ where
     /// 4D real vectors.
     #[inline]
     pub fn dot(self, other: Self) -> T {
-        self.w * other.w + self.y * other.y + (self.x * other.x + self.z * other.z)
+        self.w * other.w
+            + self.y * other.y
+            + (self.x * other.x + self.z * other.z)
     }
 }
 
@@ -1032,7 +1058,8 @@ where
                 // Case: 0 < result_norm < ∞
 
                 // Compute the squared norm of the imaginary part
-                let sqr_angle = self.x * self.x + self.y * self.y + self.z * self.z;
+                let sqr_angle =
+                    self.x * self.x + self.y * self.y + self.z * self.z;
 
                 if sqr_angle <= T::epsilon() {
                     // Use Taylor series approximation for small angles to
@@ -1072,16 +1099,20 @@ where
                         inf.copysign(a)
                     }
                 };
-                let sqr_angle = self.x * self.x + self.y * self.y + self.z * self.z;
+                let sqr_angle =
+                    self.x * self.x + self.y * self.y + self.z * self.z;
                 if sqr_angle < T::PI() * T::PI() * quarter {
                     // Angle less than 90 degrees
                     Self::new(inf, map(self.x), map(self.y), map(self.z))
                 } else if sqr_angle.is_finite() {
                     // Angle 90 degrees or more -> careful sign handling
                     let angle = sqr_angle.sqrt();
-                    let angle_revolutions_fract = (angle * T::FRAC_1_PI() * half).fract();
-                    let cos_angle_signum = (angle_revolutions_fract - half).abs() - quarter;
-                    let sin_angle_signum = one.copysign(half - angle_revolutions_fract);
+                    let angle_revolutions_fract =
+                        (angle * T::FRAC_1_PI() * half).fract();
+                    let cos_angle_signum =
+                        (angle_revolutions_fract - half).abs() - quarter;
+                    let sin_angle_signum =
+                        one.copysign(half - angle_revolutions_fract);
                     Self::new(
                         inf.copysign(cos_angle_signum),
                         map(self.x) * sin_angle_signum,
@@ -1248,7 +1279,10 @@ where
     }
 
     fn is_finite(&self) -> bool {
-        self.w.is_finite() && self.x.is_finite() && self.y.is_finite() && self.z.is_finite()
+        self.w.is_finite()
+            && self.x.is_finite()
+            && self.y.is_finite()
+            && self.z.is_finite()
     }
 
     /// Computes the natural logarithm of a quaternion.
@@ -1282,7 +1316,8 @@ where
         match norm_sqr.classify() {
             FpCategory::Normal => {
                 // The normal case: First compute the real part of the result.
-                let w = norm_sqr.ln() * T::from(0.5).expect("Conversion failed");
+                let w =
+                    norm_sqr.ln() * T::from(0.5).expect("Conversion failed");
 
                 if sqr_norm_im <= self.w * self.w * T::epsilon() {
                     // We're close to or on the positive real axis
@@ -1293,7 +1328,10 @@ where
                         let y = self.y / self.w;
                         let z = self.z / self.w;
                         Self::new(w, x, y, z)
-                    } else if self.x.is_zero() && self.y.is_zero() && self.z.is_zero() {
+                    } else if self.x.is_zero()
+                        && self.y.is_zero()
+                        && self.z.is_zero()
+                    {
                         // We're on the negative real axis.
                         Self::new(w, T::PI().copysign(self.x), self.y, self.z)
                     } else {
@@ -1377,7 +1415,8 @@ where
                             T::zero().copysign(r)
                         }
                     };
-                    let q = Self::new(f(self.w), f(self.x), f(self.y), f(self.z));
+                    let q =
+                        Self::new(f(self.w), f(self.x), f(self.y), f(self.z));
                     // TODO: Optimize this. There are only a few possible
                     // angles which could be hard-coded. Recursing here
                     // may be a bit heavy.
@@ -1452,29 +1491,49 @@ where
                     //   for subnormal imaginary parts.
                     let wx2 = ((self.w + norm) * two).sqrt();
 
-                    Self::new(wx2 * half, self.x / wx2, self.y / wx2, self.z / wx2)
+                    Self::new(
+                        wx2 * half,
+                        self.x / wx2,
+                        self.y / wx2,
+                        self.z / wx2,
+                    )
                 } else {
                     // The first formula for the real part of the result may
                     //  not be robust if the sign of the input real part is
                     // negative.
-                    let im_norm_sqr = self.y * self.y + (self.x * self.x + self.z * self.z);
+                    let im_norm_sqr =
+                        self.y * self.y + (self.x * self.x + self.z * self.z);
                     if im_norm_sqr >= T::min_positive_value() {
                         // Second formula for the real part of the result,
                         // which is robust for inputs with a negative real
                         // part.
                         let wx2 = (im_norm_sqr * two / (norm - self.w)).sqrt();
 
-                        Self::new(wx2 * half, self.x / wx2, self.y / wx2, self.z / wx2)
-                    } else if self.x.is_zero() && self.y.is_zero() && self.z.is_zero() {
+                        Self::new(
+                            wx2 * half,
+                            self.x / wx2,
+                            self.y / wx2,
+                            self.z / wx2,
+                        )
+                    } else if self.x.is_zero()
+                        && self.y.is_zero()
+                        && self.z.is_zero()
+                    {
                         // The input is a negative real number.
-                        Self::new(zero, (-self.w).sqrt().copysign(self.x), self.y, self.z)
+                        Self::new(
+                            zero,
+                            (-self.w).sqrt().copysign(self.x),
+                            self.y,
+                            self.z,
+                        )
                     } else {
                         // `im_norm_sqr` is subnormal. Compute the norm of the
                         // imaginary part by scaling up first.
                         let sx = s * self.x;
                         let sy = s * self.y;
                         let sz = s * self.z;
-                        let im_norm = (sy * sy + (sx * sx + sz * sz)).sqrt() / s;
+                        let im_norm =
+                            (sy * sy + (sx * sx + sz * sz)).sqrt() / s;
 
                         // Compute the real part according to the second
                         // formula from above.
@@ -1484,14 +1543,22 @@ where
                     }
                 }
             }
-            FpCategory::Zero if self.is_zero() => Self::new(zero, self.x, self.y, self.z),
+            FpCategory::Zero if self.is_zero() => {
+                Self::new(zero, self.x, self.y, self.z)
+            }
             FpCategory::Infinite => {
                 if self.w == inf
                     || self.x.is_infinite()
                     || self.y.is_infinite()
                     || self.z.is_infinite()
                 {
-                    let f = |a: T| if a.is_infinite() { a } else { zero.copysign(a) };
+                    let f = |a: T| {
+                        if a.is_infinite() {
+                            a
+                        } else {
+                            zero.copysign(a)
+                        }
+                    };
                     Self::new(inf, f(self.x), f(self.y), f(self.z))
                 } else if self.w == -inf {
                     Self::new(
@@ -1706,13 +1773,16 @@ where
 
             // In the gimbal lock case, roll and yaw are dependent
             let roll = T::zero();
-            let yaw = T::atan2(two * (x * y + w * z), one - two * (y * y + z * z));
+            let yaw =
+                T::atan2(two * (x * y + w * z), one - two * (y * y + z * z));
             EulerAngles { roll, pitch, yaw }
         } else {
             // General case
             let pitch = sin_pitch.asin();
-            let roll = T::atan2(two * (w * x + y * z), one - two * (x * x + y * y));
-            let yaw = T::atan2(two * (w * z + x * y), one - two * (y * y + z * z));
+            let roll =
+                T::atan2(two * (w * x + y * z), one - two * (x * x + y * y));
+            let yaw =
+                T::atan2(two * (w * z + x * y), one - two * (y * y + z * z));
             EulerAngles { roll, pitch, yaw }
         }
     }
@@ -1913,7 +1983,9 @@ where
     /// The quaternion solution with non-negative real part is returned. This
     /// function reverses the method
     /// [`to_rotation_matrix3x3`](UnitQuaternion::to_rotation_matrix3x3).
-    pub fn from_rotation_matrix3x3(mat: &impl ReadMat3x3<T>) -> UnitQuaternion<T> {
+    pub fn from_rotation_matrix3x3(
+        mat: &impl ReadMat3x3<T>,
+    ) -> UnitQuaternion<T> {
         let zero = T::zero();
         let one = T::one();
         let two = one + one;
@@ -2212,7 +2284,7 @@ impl<T> UnitQuaternion<T>
 where
     T: Clone + Neg<Output = T>,
 {
-    /// Returns the conjugate quaternion. i.e. the imaginary part is negated.
+    /// Returns the conjugate quaternion, i. e. the imaginary part is negated.
     #[inline]
     pub fn conj(&self) -> Self {
         Self(self.0.conj())
@@ -2545,9 +2617,13 @@ where
         let q = self.into_quaternion();
         let [vx, vy, vz] = vector;
         let v_q_inv = Quaternion::<T>::new(
-            vx.clone() * q.x.clone() + vy.clone() * q.y.clone() + vz.clone() * q.z.clone(),
-            vx.clone() * q.w.clone() - vy.clone() * q.z.clone() + vz.clone() * q.y.clone(),
-            vx.clone() * q.z.clone() + vy.clone() * q.w.clone() - vz.clone() * q.x.clone(),
+            vx.clone() * q.x.clone()
+                + vy.clone() * q.y.clone()
+                + vz.clone() * q.z.clone(),
+            vx.clone() * q.w.clone() - vy.clone() * q.z.clone()
+                + vz.clone() * q.y.clone(),
+            vx.clone() * q.z.clone() + vy.clone() * q.w.clone()
+                - vz.clone() * q.x.clone(),
             vy * q.x.clone() - vx * q.y.clone() + vz * q.w.clone(),
         );
         let result = q * v_q_inv;
@@ -2642,7 +2718,12 @@ where
             //   accuracy for subnormal imaginary parts.
             let wx2 = (c.w * two + two).sqrt();
 
-            UnitQuaternion(Quaternion::new(wx2 * half, c.x / wx2, c.y / wx2, c.z / wx2))
+            UnitQuaternion(Quaternion::new(
+                wx2 * half,
+                c.x / wx2,
+                c.y / wx2,
+                c.z / wx2,
+            ))
         } else {
             // For cases where the real part is too far in the negative direction.
             //
@@ -2655,11 +2736,21 @@ where
             if im_norm_sqr >= T::min_positive_value() {
                 // Robust computation for negative real part inputs.
                 let wx2 = (im_norm_sqr * two / (one - c.w)).sqrt();
-                UnitQuaternion(Quaternion::new(wx2 * half, c.x / wx2, c.y / wx2, c.z / wx2))
+                UnitQuaternion(Quaternion::new(
+                    wx2 * half,
+                    c.x / wx2,
+                    c.y / wx2,
+                    c.z / wx2,
+                ))
             } else if c.x.is_zero() && c.y.is_zero() && c.z.is_zero() {
                 // Special case: input is -1. The result is `±i` with the same
                 // signs for the imaginary parts as the input.
-                UnitQuaternion(Quaternion::new(zero, one.copysign(c.x), c.y, c.z))
+                UnitQuaternion(Quaternion::new(
+                    zero,
+                    one.copysign(c.x),
+                    c.y,
+                    c.z,
+                ))
             } else {
                 // `im_norm_sqr` is subnormal, scale up first.
                 let s = one / T::min_positive_value();
@@ -3031,8 +3122,14 @@ mod tests {
     fn test_normalize_zero_infinity_nan() {
         assert_eq!(Q64::ZERO.normalize(), None);
         assert_eq!(Q64::new(f64::INFINITY, 0.0, 0.0, 0.0).normalize(), None);
-        assert_eq!(Q64::new(0.0, f64::NEG_INFINITY, 0.0, 0.0).normalize(), None);
-        assert_eq!(Q64::new(0.0, 0.0, f64::NEG_INFINITY, 0.0).normalize(), None);
+        assert_eq!(
+            Q64::new(0.0, f64::NEG_INFINITY, 0.0, 0.0).normalize(),
+            None
+        );
+        assert_eq!(
+            Q64::new(0.0, 0.0, f64::NEG_INFINITY, 0.0).normalize(),
+            None
+        );
         assert_eq!(Q64::new(0.0, 0.0, 0.0, f64::INFINITY).normalize(), None);
         assert_eq!(Q64::new(f64::NAN, 0.0, 0.0, 0.0).normalize(), None);
         assert_eq!(Q64::new(0.0, f64::NAN, 0.0, 0.0).normalize(), None);
@@ -3354,7 +3451,10 @@ mod tests {
     #[test]
     fn test_add_lhs_real() {
         assert_eq!(42.0 + Quaternion::I, Quaternion::new(42.0, 1.0, 0.0, 0.0));
-        assert_eq!(1 + Quaternion::new(2, 4, 6, 8), Quaternion::new(3, 4, 6, 8));
+        assert_eq!(
+            1 + Quaternion::new(2, 4, 6, 8),
+            Quaternion::new(3, 4, 6, 8)
+        );
     }
 
     #[test]
@@ -3369,7 +3469,10 @@ mod tests {
     #[test]
     fn test_mul_lhs_real() {
         assert_eq!(42.0 * Quaternion::I, Quaternion::new(0.0, 42.0, 0.0, 0.0));
-        assert_eq!(2 * Quaternion::new(1, 2, 3, 4), Quaternion::new(2, 4, 6, 8));
+        assert_eq!(
+            2 * Quaternion::new(1, 2, 3, 4),
+            Quaternion::new(2, 4, 6, 8)
+        );
     }
 
     #[test]
@@ -3421,7 +3524,9 @@ mod tests {
             for e in 0..16 {
                 assert_eq!(q.powi(e), expected);
                 assert!(
-                    (q.powi(-e) - expected.inv()).norm_sqr() / expected.norm_sqr() < f32::EPSILON
+                    (q.powi(-e) - expected.inv()).norm_sqr()
+                        / expected.norm_sqr()
+                        < f32::EPSILON
                 );
                 expected *= q;
             }
@@ -3444,7 +3549,9 @@ mod tests {
     #[test]
     fn test_exp_imaginary_part_only() {
         assert!(
-            (Q64::I.exp() - Q64::new(1.0f64.cos(), 1.0f64.sin(), 0.0, 0.0)).norm() <= f64::EPSILON
+            (Q64::I.exp() - Q64::new(1.0f64.cos(), 1.0f64.sin(), 0.0, 0.0))
+                .norm()
+                <= f64::EPSILON
         );
     }
 
@@ -3820,7 +3927,10 @@ mod tests {
         assert!((q.w - 30.0f64.ln() / 2.0) <= 4.0 * f64::EPSILON);
         assert!((ln_q.z / ln_q.x - q.z / q.x) <= 2.0 * f64::EPSILON);
         assert!((ln_q.y / ln_q.x - q.y / q.x) <= 2.0 * f64::EPSILON);
-        assert!((ln_q.x.hypot(ln_q.y.hypot(ln_q.z)) - 29.0f64.sqrt().atan()) <= 4.0 * f64::EPSILON);
+        assert!(
+            (ln_q.x.hypot(ln_q.y.hypot(ln_q.z)) - 29.0f64.sqrt().atan())
+                <= 4.0 * f64::EPSILON
+        );
     }
 
     #[cfg(any(feature = "std", feature = "libm"))]
@@ -3840,7 +3950,9 @@ mod tests {
         let q = Q32::new(-1.0, 0.0, 0.0, 0.0);
         let ln_q = q.ln();
         let expected = Q32::new(0.0, core::f32::consts::PI, 0.0, 0.0); // ln(-1) = pi*i
-        assert!((ln_q - expected).norm() <= core::f32::consts::PI * f32::EPSILON);
+        assert!(
+            (ln_q - expected).norm() <= core::f32::consts::PI * f32::EPSILON
+        );
     }
 
     #[cfg(any(feature = "std", feature = "libm"))]
@@ -4002,7 +4114,10 @@ mod tests {
         let q = Quaternion::new(subnormal, subnormal, subnormal, subnormal);
         let sqrt_q = q.sqrt();
         let norm_sqr = sqrt_q.norm_sqr();
-        assert!((norm_sqr - f64::MIN_POSITIVE).abs() <= 4.0 * subnormal * f64::EPSILON);
+        assert!(
+            (norm_sqr - f64::MIN_POSITIVE).abs()
+                <= 4.0 * subnormal * f64::EPSILON
+        );
     }
 
     #[cfg(any(feature = "std", feature = "libm"))]
@@ -4063,11 +4178,12 @@ mod tests {
         let q = Q32::new(1.0, 2.0, 3.0, 4.0);
 
         // Serialize the quaternion to a JSON string
-        let serialized = serde_json::to_string(&q).expect("Failed to serialize quaternion");
+        let serialized =
+            serde_json::to_string(&q).expect("Failed to serialize quaternion");
 
         // Deserialize the JSON string back into a quaternion
-        let deserialized: Quaternion<f32> =
-            serde_json::from_str(&serialized).expect("Failed to deserialize quaternion");
+        let deserialized: Quaternion<f32> = serde_json::from_str(&serialized)
+            .expect("Failed to deserialize quaternion");
 
         // Assert that the deserialized quaternion is equal to the original
         assert_eq!(q, deserialized);
@@ -4108,11 +4224,12 @@ mod tests {
         };
 
         // Serialize the angles to a JSON string
-        let serialized = serde_json::to_string(&angles).expect("Failed to serialize angles");
+        let serialized =
+            serde_json::to_string(&angles).expect("Failed to serialize angles");
 
         // Deserialize the JSON string back into angles
-        let deserialized: EulerAngles<f64> =
-            serde_json::from_str(&serialized).expect("Failed to deserialize angles");
+        let deserialized: EulerAngles<f64> = serde_json::from_str(&serialized)
+            .expect("Failed to deserialize angles");
 
         // Assert that the deserialized angles are equal to the original
         assert_eq!(angles, deserialized);
@@ -4122,17 +4239,23 @@ mod tests {
     #[test]
     fn test_from_euler_angles() {
         assert!(
-            (UQ32::from_euler_angles(core::f32::consts::PI, 0.0, 0.0).into_quaternion() - Q32::I)
+            (UQ32::from_euler_angles(core::f32::consts::PI, 0.0, 0.0)
+                .into_quaternion()
+                - Q32::I)
                 .norm()
                 < f32::EPSILON
         );
         assert!(
-            (UQ64::from_euler_angles(0.0, core::f64::consts::PI, 0.0).into_quaternion() - Q64::J)
+            (UQ64::from_euler_angles(0.0, core::f64::consts::PI, 0.0)
+                .into_quaternion()
+                - Q64::J)
                 .norm()
                 < f64::EPSILON
         );
         assert!(
-            (UQ32::from_euler_angles(0.0, 0.0, core::f32::consts::PI).into_quaternion() - Q32::K)
+            (UQ32::from_euler_angles(0.0, 0.0, core::f32::consts::PI)
+                .into_quaternion()
+                - Q32::K)
                 .norm()
                 < f32::EPSILON
         );
@@ -4170,24 +4293,34 @@ mod tests {
     #[test]
     fn test_from_rotation_vector() {
         assert!(
-            (UQ32::from_rotation_vector(&[core::f32::consts::PI, 0.0, 0.0]) - Q32::I).norm()
+            (UQ32::from_rotation_vector(&[core::f32::consts::PI, 0.0, 0.0])
+                - Q32::I)
+                .norm()
                 < f32::EPSILON
         );
         assert!(
-            (UQ64::from_rotation_vector(&[0.0, core::f64::consts::PI, 0.0]) - Q64::J).norm()
+            (UQ64::from_rotation_vector(&[0.0, core::f64::consts::PI, 0.0])
+                - Q64::J)
+                .norm()
                 < f64::EPSILON
         );
         assert!(
-            (UQ32::from_rotation_vector(&[0.0, 0.0, core::f32::consts::PI]) - Q32::K).norm()
+            (UQ32::from_rotation_vector(&[0.0, 0.0, core::f32::consts::PI])
+                - Q32::K)
+                .norm()
                 < f32::EPSILON
         );
         let x = 2.0 * core::f64::consts::FRAC_PI_3 * (1.0f64 / 3.0).sqrt();
         assert!(
-            (UQ64::from_rotation_vector(&[x, x, x]) - Q64::new(0.5, 0.5, 0.5, 0.5)).norm()
+            (UQ64::from_rotation_vector(&[x, x, x])
+                - Q64::new(0.5, 0.5, 0.5, 0.5))
+            .norm()
                 < 4.0 * f64::EPSILON
         );
         assert!(
-            (UQ64::from_rotation_vector(&[-x, x, -x]) - Q64::new(0.5, -0.5, 0.5, -0.5)).norm()
+            (UQ64::from_rotation_vector(&[-x, x, -x])
+                - Q64::new(0.5, -0.5, 0.5, -0.5))
+            .norm()
                 < 4.0 * f64::EPSILON
         );
     }
@@ -4206,7 +4339,10 @@ mod tests {
         // Quaternion representing a 90-degree rotation around the x-axis
         let q = Q32::new(1.0, 1.0, 0.0, 0.0).normalize().unwrap();
         let rotation_vector = q.to_rotation_vector();
-        assert!((rotation_vector[0] - core::f32::consts::FRAC_PI_2).abs() < f32::EPSILON);
+        assert!(
+            (rotation_vector[0] - core::f32::consts::FRAC_PI_2).abs()
+                < f32::EPSILON
+        );
         assert!((rotation_vector[1]).abs() < f32::EPSILON);
         assert!((rotation_vector[2]).abs() < f32::EPSILON);
     }
@@ -4218,7 +4354,9 @@ mod tests {
         let q = UQ64::J;
         let rotation_vector = q.to_rotation_vector();
         assert!((rotation_vector[0]).abs() < f64::EPSILON);
-        assert!((rotation_vector[1] - core::f64::consts::PI).abs() < f64::EPSILON);
+        assert!(
+            (rotation_vector[1] - core::f64::consts::PI).abs() < f64::EPSILON
+        );
         assert!((rotation_vector[2]).abs() < f64::EPSILON);
     }
 
@@ -4376,7 +4514,8 @@ mod tests {
     #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_identity_matrix() {
-        let identity: [[f32; 3]; 3] = [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]];
+        let identity: [[f32; 3]; 3] =
+            [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]];
         let q = UQ32::from_rotation_matrix3x3(&identity);
         let expected = UQ32::ONE;
         assert_eq!(q, expected);
@@ -4427,7 +4566,8 @@ mod tests {
     #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_arbitrary_rotation() {
-        let arbitrary_rotation: [[f32; 3]; 3] = [[0.0, 0.0, 1.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]];
+        let arbitrary_rotation: [[f32; 3]; 3] =
+            [[0.0, 0.0, 1.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]];
         let q = UnitQuaternion::from_rotation_matrix3x3(&arbitrary_rotation);
         let expected = Q32::new(1.0, 1.0, 1.0, 1.0).normalize().unwrap();
         assert!((q - expected).norm() <= f32::EPSILON);
@@ -4512,17 +4652,19 @@ mod tests {
         let a = [0.0, 3.0, 0.0];
         let b = [0.0, 5.0, 5.0];
         let q = UQ64::from_two_vectors(&a, &b);
-        let expected = Q64::new(1.0, core::f64::consts::FRAC_PI_8.tan(), 0.0, 0.0)
-            .normalize()
-            .unwrap();
+        let expected =
+            Q64::new(1.0, core::f64::consts::FRAC_PI_8.tan(), 0.0, 0.0)
+                .normalize()
+                .unwrap();
         assert!((q - expected).norm() <= 2.0 * f64::EPSILON);
 
         let a = [0.0, 3.0, 0.0];
         let b = [0.0, -5.0, 5.0];
         let q = UQ64::from_two_vectors(&a, &b);
-        let expected = Q64::new(1.0, (3.0 * core::f64::consts::FRAC_PI_8).tan(), 0.0, 0.0)
-            .normalize()
-            .unwrap();
+        let expected =
+            Q64::new(1.0, (3.0 * core::f64::consts::FRAC_PI_8).tan(), 0.0, 0.0)
+                .normalize()
+                .unwrap();
         assert!((q - expected).norm() <= 2.0 * f64::EPSILON);
     }
 
@@ -4548,8 +4690,11 @@ mod tests {
                 * (b[0] * b[0] + b[1] * b[1] + b[2] * b[2]))
                 .sqrt();
         let angle = cos_angle.acos();
-        let expected =
-            UQ64::from_rotation_vector(&[dir[0] * angle, dir[1] * angle, dir[2] * angle]);
+        let expected = UQ64::from_rotation_vector(&[
+            dir[0] * angle,
+            dir[1] * angle,
+            dir[2] * angle,
+        ]);
         assert!((q - expected).norm() <= 2.0 * f64::EPSILON);
     }
 
@@ -4644,7 +4789,9 @@ mod tests {
     #[test]
     fn test_unit_quaternion_inv_trait() {
         assert_eq!(
-            <UQ32 as Inv>::inv(Q32::new(1.0, 2.0, 3.0, 4.0).normalize().unwrap()),
+            <UQ32 as Inv>::inv(
+                Q32::new(1.0, 2.0, 3.0, 4.0).normalize().unwrap()
+            ),
             Q32::new(1.0, 2.0, 3.0, 4.0).normalize().unwrap().conj()
         )
     }
@@ -4653,7 +4800,9 @@ mod tests {
     #[test]
     fn test_unit_quaternion_ref_inv_trait() {
         assert_eq!(
-            <&UQ32 as Inv>::inv(&Q32::new(1.0, 2.0, 3.0, 4.0).normalize().unwrap()),
+            <&UQ32 as Inv>::inv(
+                &Q32::new(1.0, 2.0, 3.0, 4.0).normalize().unwrap()
+            ),
             Q32::new(1.0, 2.0, 3.0, 4.0).normalize().unwrap().conj()
         )
     }
@@ -4909,7 +5058,10 @@ mod tests {
             q = q * q;
         }
         assert!((q.into_quaternion().norm() - 1.0).abs() > 0.5);
-        assert!((q.adjust_norm().into_quaternion().norm() - 1.0).abs() <= 2.0 * f32::EPSILON);
+        assert!(
+            (q.adjust_norm().into_quaternion().norm() - 1.0).abs()
+                <= 2.0 * f32::EPSILON
+        );
     }
 
     #[test]
@@ -4965,8 +5117,12 @@ mod tests {
             for q2 in generate_unit_quaternion_data() {
                 let result = q1.slerp(&q2, 1.0);
                 match q1.dot(q2).partial_cmp(&0.0) {
-                    Some(Ordering::Greater) => assert!((result - q2).norm() <= f32::EPSILON),
-                    Some(Ordering::Less) => assert!((result + q2).norm() <= f32::EPSILON),
+                    Some(Ordering::Greater) => {
+                        assert!((result - q2).norm() <= f32::EPSILON)
+                    }
+                    Some(Ordering::Less) => {
+                        assert!((result + q2).norm() <= f32::EPSILON)
+                    }
                     _ => {}
                 }
             }
@@ -4986,7 +5142,10 @@ mod tests {
                     Some(Ordering::Less) => -1.0,
                     _ => continue, // uncertain due to rounding, better skip it
                 };
-                assert!((result - (q1 + dot_sign * q2).normalize().unwrap()).norm() <= f32::EPSILON)
+                assert!(
+                    (result - (q1 + dot_sign * q2).normalize().unwrap()).norm()
+                        <= f32::EPSILON
+                )
             }
         }
     }
@@ -5057,10 +5216,22 @@ mod tests {
             (1.0f64 / 3.0).sqrt(),
             (1.0f64 / 3.0).sqrt(),
         ));
-        assert!((result.0.w - expected.0.w).abs() <= 2.0 * expected.0.w * f64::EPSILON);
-        assert!((result.0.x - expected.0.x).abs() <= 2.0 * expected.0.x * f64::EPSILON);
-        assert!((result.0.y - expected.0.y).abs() <= 2.0 * expected.0.y * f64::EPSILON);
-        assert!((result.0.z - expected.0.z).abs() <= 2.0 * expected.0.z * f64::EPSILON);
+        assert!(
+            (result.0.w - expected.0.w).abs()
+                <= 2.0 * expected.0.w * f64::EPSILON
+        );
+        assert!(
+            (result.0.x - expected.0.x).abs()
+                <= 2.0 * expected.0.x * f64::EPSILON
+        );
+        assert!(
+            (result.0.y - expected.0.y).abs()
+                <= 2.0 * expected.0.y * f64::EPSILON
+        );
+        assert!(
+            (result.0.z - expected.0.z).abs()
+                <= 2.0 * expected.0.z * f64::EPSILON
+        );
     }
 
     #[cfg(all(feature = "serde", any(feature = "std", feature = "libm")))]
@@ -5070,11 +5241,12 @@ mod tests {
         let q = Q64::new(1.0, 2.0, 3.0, 4.0).normalize().unwrap();
 
         // Serialize the quaternion to a JSON string
-        let serialized = serde_json::to_string(&q).expect("Failed to serialize quaternion");
+        let serialized =
+            serde_json::to_string(&q).expect("Failed to serialize quaternion");
 
         // Deserialize the JSON string back into a quaternion
-        let deserialized: UQ64 =
-            serde_json::from_str(&serialized).expect("Failed to deserialize quaternion");
+        let deserialized: UQ64 = serde_json::from_str(&serialized)
+            .expect("Failed to deserialize quaternion");
 
         // Assert that the deserialized quaternion is equal to the original
         assert_eq!(q, deserialized);
@@ -5087,11 +5259,12 @@ mod tests {
         let q = UQ64::K;
 
         // Serialize the quaternion to a JSON string
-        let serialized = serde_json::to_string(&q).expect("Failed to serialize quaternion");
+        let serialized =
+            serde_json::to_string(&q).expect("Failed to serialize quaternion");
 
         // Deserialize the JSON string back into a quaternion
-        let deserialized: UQ64 =
-            serde_json::from_str(&serialized).expect("Failed to deserialize quaternion");
+        let deserialized: UQ64 = serde_json::from_str(&serialized)
+            .expect("Failed to deserialize quaternion");
 
         // Assert that the deserialized quaternion is equal to the original
         assert_eq!(q, deserialized);
