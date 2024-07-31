@@ -9,10 +9,10 @@
 
 Quaternions for Rust.
 
-`num-quaternion` is a Rust library designed for robust, efficient and easy to
-use quaternion arithmetic and operations.
-[Quaternions](https://en.wikipedia.org/wiki/Quaternion) are used extensively in
-computer graphics, robotics, and physics for representing rotations and
+`num-quaternion` is a Rust library [designed for robust, efficient and easy to
+use](DESIGN_RATIONALE.md) quaternion arithmetic and operations.
+[Quaternions](https://en.wikipedia.org/wiki/Quaternion) are used extensively
+in computer graphics, robotics, and physics for representing rotations and
 orientations.
 
 ## Features
@@ -109,7 +109,8 @@ let interpolated = uq1.slerp(&uq2, 0.3);  // Perform SLERP with t=0.3
 Comprehensive documentation with examples can be found on
 [docs.rs](https://docs.rs/num-quaternion/latest/num-quaternion/).
 
-## Releases
+For detailed design principles and the error handling strategy see the
+[Design Rationale](DESIGN_RATIONALE.md).
 
 Detailed release notes are provided in [RELEASES.md](RELEASES.md).
 
