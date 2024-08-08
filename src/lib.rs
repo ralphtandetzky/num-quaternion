@@ -2267,9 +2267,24 @@ where
 
 impl<T> UnitQuaternion<T> {
     /// Returns the inner quaternion.
+    ///
+    /// This function does the same as
+    /// [`into_inner`](UnitQuaternion::into_inner). Client code can decide
+    /// which function to use based on the naming preference and context.
     #[inline]
     pub fn into_quaternion(self) -> Quaternion<T> {
         self.0
+    }
+
+    /// Returns the inner quaternion.
+    ///
+    /// This function does the same as
+    /// [`into_quaternion`](UnitQuaternion::into_quaternion). Client code can
+    /// decide which function to use based on the naming preference and
+    /// context.
+    #[inline]
+    pub fn into_inner(self) -> Quaternion<T> {
+        self.into_quaternion()
     }
 
     /// Returns a reference to the inner quaternion.
