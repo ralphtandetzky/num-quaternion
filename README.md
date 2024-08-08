@@ -9,8 +9,8 @@
 
 Quaternions for Rust.
 
-`num-quaternion` is a Rust library [designed for robust, efficient and easy to
-use](DESIGN_RATIONALE.md) quaternion arithmetic and operations.
+`num-quaternion` is a Rust library designed for robust, efficient and easy to
+use quaternion arithmetic and operations.
 [Quaternions](https://en.wikipedia.org/wiki/Quaternion) are used extensively
 in computer graphics, robotics, and physics for representing rotations and
 orientations.
