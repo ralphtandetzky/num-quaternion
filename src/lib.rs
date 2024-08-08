@@ -1282,14 +1282,30 @@ where
             Self::nan()
         }
     }
+}
 
-    fn is_finite(&self) -> bool {
+#[cfg(any(feature = "std", feature = "libm"))]
+impl<T> Quaternion<T>
+where
+    T: Float,
+{
+    /// Returns whether all components of the quaternion are finite.
+    ///
+    /// If a `Quaternion` has an infinite or `NaN` entry, the function returns
+    /// `false``, otherwise `true``.
+    pub fn is_finite(&self) -> bool {
         self.w.is_finite()
             && self.x.is_finite()
             && self.y.is_finite()
             && self.z.is_finite()
     }
+}
 
+#[cfg(any(feature = "std", feature = "libm"))]
+impl<T> Quaternion<T>
+where
+    T: Float + FloatConst,
+{
     /// Computes the natural logarithm of a quaternion.
     ///
     /// The function implements the following guarantees for extreme input
@@ -3921,6 +3937,54 @@ mod tests {
         assert!(result.x.is_nan());
         assert!(result.y.is_nan());
         assert!(result.z.is_nan());
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_is_finite_for_finite_values() {
+        // Test the is_finite method for finite values
+        let q = Q64::new(1.0, 2.0, 3.0, 4.0);
+        assert!(q.is_finite());
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_is_finite_for_zero() {
+        // Test the is_finite method for the zero quaternion
+        let q = Q32::zero();
+        assert!(q.is_finite());
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_is_finite_for_infinite_values() {
+        // Test the is_finite method for infinite values
+        let inf = f32::INFINITY;
+        assert!(!Q32::new(inf, 1.0, 1.0, 1.0).is_finite());
+        assert!(!Q32::new(1.0, inf, 1.0, 1.0).is_finite());
+        assert!(!Q32::new(1.0, 1.0, inf, 1.0).is_finite());
+        assert!(!Q32::new(1.0, 1.0, 1.0, inf).is_finite());
+        assert!(!Q32::new(-inf, 1.0, 1.0, 1.0).is_finite());
+        assert!(!Q32::new(1.0, -inf, 1.0, 1.0).is_finite());
+        assert!(!Q32::new(1.0, 1.0, -inf, 1.0).is_finite());
+        assert!(!Q32::new(1.0, 1.0, 1.0, -inf).is_finite());
+        assert!(!Q32::new(inf, -inf, inf, -inf).is_finite());
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_is_finite_for_nan_values() {
+        // Test the is_finite method for infinite values
+        let nan = f64::NAN;
+        assert!(!Q64::new(nan, 1.0, 1.0, 1.0).is_finite());
+        assert!(!Q64::new(1.0, nan, 1.0, 1.0).is_finite());
+        assert!(!Q64::new(1.0, 1.0, nan, 1.0).is_finite());
+        assert!(!Q64::new(1.0, 1.0, 1.0, nan).is_finite());
+        assert!(!Q64::new(-nan, 1.0, 1.0, 1.0).is_finite());
+        assert!(!Q64::new(1.0, -nan, 1.0, 1.0).is_finite());
+        assert!(!Q64::new(1.0, 1.0, -nan, 1.0).is_finite());
+        assert!(!Q64::new(1.0, 1.0, 1.0, -nan).is_finite());
+        assert!(!Q64::new(nan, -nan, nan, -nan).is_finite());
     }
 
     #[cfg(any(feature = "std", feature = "libm"))]
