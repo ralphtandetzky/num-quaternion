@@ -2891,6 +2891,7 @@ mod tests {
 
     #[test]
     fn test_new() {
+        // Test the new function
         let q = Quaternion::new(1.0, 2.0, 3.0, 4.0);
         assert_eq!(q.w, 1.0);
         assert_eq!(q.x, 2.0);
@@ -2900,6 +2901,7 @@ mod tests {
 
     #[test]
     fn test_zero_constant() {
+        // Test the zero function
         let q1 = Q32::ZERO;
         let q2 = Q32::default();
         assert_eq!(q1, q2);
@@ -2907,6 +2909,7 @@ mod tests {
 
     #[test]
     fn test_const_zero_trait() {
+        // Test the ConstZero trait
         let q3 = <Q64 as ConstZero>::ZERO;
         let q4 = Q64::default();
         assert_eq!(q3, q4);
@@ -2914,6 +2917,7 @@ mod tests {
 
     #[test]
     fn test_zero_trait() {
+        // Test the Zero trait's `zero` method
         let q1 = Q32::zero();
         let q2 = Q32::default();
         assert_eq!(q1, q2);
@@ -2922,6 +2926,7 @@ mod tests {
 
     #[test]
     fn test_zero_trait_set_zero() {
+        // Test the Zero trait's `set_zero` method
         let mut q = Quaternion::new(1.0, 2.0, 3.0, 4.0);
         q.set_zero();
         assert!(q.is_zero());
@@ -2929,37 +2934,44 @@ mod tests {
 
     #[test]
     fn test_one_constant() {
+        // Test the `ONE` constant
         assert_eq!(Q32::ONE, Q32::new(1.0, 0.0, 0.0, 0.0))
     }
 
     #[test]
     fn test_i_constant() {
+        // Test the `I` constant
         assert_eq!(Q64::I, Q64::new(0.0, 1.0, 0.0, 0.0))
     }
 
     #[test]
     fn test_j_constant() {
+        // Test the `J` constant
         assert_eq!(Q32::J, Q32::new(0.0, 0.0, 1.0, 0.0))
     }
 
     #[test]
     fn test_k_constant() {
+        // Test the `K` constant
         assert_eq!(Q64::K, Q64::new(0.0, 0.0, 0.0, 1.0))
     }
 
     #[test]
     fn test_const_one_trait() {
+        // Test the ConstOne trait
         assert_eq!(<Q32 as ConstOne>::ONE, Q32::new(1.0, 0.0, 0.0, 0.0))
     }
 
     #[test]
     fn test_one_trait_one() {
+        // Test the One trait's `one` method
         assert_eq!(<Q64 as One>::one(), Q64::ONE);
         assert!(Q64::ONE.is_one());
     }
 
     #[test]
     fn test_one_trait_set_one() {
+        // Test the One trait's `set_one` method
         let mut q = Q32::new(2.0, 3.0, 4.0, 5.0);
         q.set_one();
         assert!(q.is_one());
@@ -2967,21 +2979,25 @@ mod tests {
 
     #[test]
     fn test_i_func() {
+        // Test the `i` function
         assert_eq!(Q64::i(), Q64::new(0.0, 1.0, 0.0, 0.0));
     }
 
     #[test]
     fn test_j_func() {
+        // Test the `j` function
         assert_eq!(Q64::j(), Q64::new(0.0, 0.0, 1.0, 0.0));
     }
 
     #[test]
     fn test_k_func() {
+        // Test the `k` function
         assert_eq!(Q64::k(), Q64::new(0.0, 0.0, 0.0, 1.0));
     }
 
     #[test]
     fn test_norm_sqr() {
+        // Test the norm_sqr function
         assert_eq!(Q32::ZERO.norm_sqr(), 0.0);
         assert_eq!(Q64::ONE.norm_sqr(), 1.0);
         assert_eq!(Q32::I.norm_sqr(), 1.0);
@@ -2993,6 +3009,7 @@ mod tests {
 
     #[test]
     fn test_conj() {
+        // Test the conj function
         assert_eq!(Q64::ONE.conj(), Q64::ONE);
         assert_eq!(Q32::I.conj(), -Q32::I);
         assert_eq!(Q64::J.conj(), -Q64::J);
@@ -3009,6 +3026,7 @@ mod tests {
 
     #[test]
     fn test_inv_func() {
+        // Test the inv function
         assert_eq!(Q64::ONE.inv(), Q64::ONE);
         assert_eq!(Q32::I.inv(), -Q32::I);
         assert_eq!(Q64::J.inv(), -Q64::J);
@@ -3025,6 +3043,7 @@ mod tests {
 
     #[test]
     fn test_inv_trait_for_ref() {
+        // Test the inv trait for references
         assert_eq!(Inv::inv(&Q64::ONE), Q64::ONE);
         assert_eq!(Inv::inv(&Q32::I), -Q32::I);
         assert_eq!(Inv::inv(&Q64::J), -Q64::J);
@@ -3041,6 +3060,7 @@ mod tests {
 
     #[test]
     fn test_inv_trait_for_val() {
+        // Test the inv trait
         assert_eq!(Inv::inv(Q64::ONE), Q64::ONE);
         assert_eq!(Inv::inv(Q32::I), -Q32::I);
         assert_eq!(Inv::inv(Q64::J), -Q64::J);
@@ -3058,6 +3078,7 @@ mod tests {
     #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_norm_normal_values() {
+        // Test the norm function for normal floating point values
         let q = Q64::new(1.0, 2.0, 3.0, 4.0);
         assert_eq!(q.norm(), 30.0f64.sqrt());
     }
@@ -3065,6 +3086,7 @@ mod tests {
     #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_norm_zero_quaternion() {
+        // Test the norm function for a zero quaternion
         let q = Q32::new(0.0, 0.0, 0.0, 0.0);
         assert_eq!(q.norm(), 0.0, "Norm of zero quaternion should be 0");
     }
@@ -3083,6 +3105,7 @@ mod tests {
     #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_norm_infinite_values() {
+        // Test the norm function for infinite floating point values
         let inf = f32::INFINITY;
         assert_eq!(Q32::new(inf, 1.0, 1.0, 1.0).norm(), inf);
         assert_eq!(Q32::new(1.0, inf, 1.0, 1.0).norm(), inf);
@@ -3093,6 +3116,7 @@ mod tests {
     #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_norm_nan_values() {
+        // Test the norm function for NaN floating point values
         let nan = f32::NAN;
         assert!(Q32::new(nan, 1.0, 1.0, 1.0).norm().is_nan());
         assert!(Q32::new(1.0, nan, 1.0, 1.0).norm().is_nan());
@@ -3103,6 +3127,7 @@ mod tests {
     #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_fast_norm_normal_values() {
+        // Test the fast_norm function for normal floating point values
         let q = Q64 {
             w: 1.1,
             x: 2.7,
@@ -3119,6 +3144,7 @@ mod tests {
     #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_fast_norm_zero_quaternion() {
+        // Test the fast_norm function for a zero quaternion
         assert_eq!(
             Q32::zero().fast_norm(),
             0.0,
@@ -3129,6 +3155,7 @@ mod tests {
     #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_fast_norm_infinite_values() {
+        // Test the fast_norm function for infinite floating point values
         let inf = f32::INFINITY;
         assert_eq!(Q32::new(inf, 1.0, 1.0, 1.0).fast_norm(), inf);
         assert_eq!(Q32::new(1.0, inf, 1.0, 1.0).fast_norm(), inf);
@@ -3139,6 +3166,7 @@ mod tests {
     #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_fast_norm_nan_values() {
+        // Test the fast_norm function for NaN floating point values
         let nan = f32::NAN;
         assert!(Q32::new(nan, 1.0, 1.0, 1.0).fast_norm().is_nan());
         assert!(Q32::new(1.0, nan, 1.0, 1.0).fast_norm().is_nan());
@@ -3149,6 +3177,7 @@ mod tests {
     #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_fast_norm_for_norm_sqr_underflow() {
+        // Test the fast_norm function for underflowing norm_sqr
         let s = f64::MIN_POSITIVE;
         let q = Q64::new(s, s, s, s);
         assert_eq!(q.fast_norm(), 0.0);
@@ -3157,6 +3186,7 @@ mod tests {
     #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_fast_norm_for_norm_sqr_overflow() {
+        // Test the fast_norm function for overflowing norm_sqr
         let s = f32::MAX / 16.0;
         let q = Q32::new(s, s, s, s);
         assert_eq!(q.fast_norm(), f32::INFINITY);
@@ -3165,6 +3195,7 @@ mod tests {
     #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_normalize() {
+        // Test the normalize function
         assert_eq!(Q64::ONE.normalize().unwrap(), UQ64::ONE);
         assert_eq!(Q32::I.normalize().unwrap(), UQ32::I);
         assert_eq!(Q64::J.normalize().unwrap(), UQ64::J);
@@ -3215,6 +3246,7 @@ mod tests {
 
     #[test]
     fn test_from_underlying_type_val() {
+        // Test the From trait for values
         assert_eq!(Q64::from(-5.0), Q64::new(-5.0, 0.0, 0.0, 0.0));
         assert_eq!(Into::<Q32>::into(42.0), Q32::new(42.0, 0.0, 0.0, 0.0));
     }
@@ -3222,12 +3254,14 @@ mod tests {
     #[allow(clippy::needless_borrows_for_generic_args)]
     #[test]
     fn test_from_underlying_type_ref() {
+        // Test the From trait for references
         assert_eq!(Q64::from(&-5.0), Q64::new(-5.0, 0.0, 0.0, 0.0));
         assert_eq!(Into::<Q32>::into(&42.0), Q32::new(42.0, 0.0, 0.0, 0.0));
     }
 
     #[test]
     fn test_from_unit_quaternion() {
+        // Test the From trait for unit quaternions
         assert_eq!(Q32::from(UQ32::ONE), Q32::ONE);
         assert_eq!(Q64::from(UQ64::I), Q64::I);
         assert_eq!(Q32::from(UQ32::J), Q32::J);
@@ -3237,6 +3271,7 @@ mod tests {
     #[allow(clippy::needless_borrows_for_generic_args)]
     #[test]
     fn test_from_unit_quaternion_ref() {
+        // Test the From trait for references to unit quaternions
         assert_eq!(<&Q32 as From<&UQ32>>::from(&UQ32::ONE), &Q32::ONE);
         assert_eq!(<&Q64 as From<&UQ64>>::from(&UQ64::I), &Q64::I);
         assert_eq!(<&Q32 as From<&UQ32>>::from(&UQ32::J), &Q32::J);
@@ -3245,6 +3280,7 @@ mod tests {
 
     #[test]
     fn test_add_quaternion() {
+        // Test the addition of quaternions
         assert_eq!(Q32::ONE + Q32::J, Q32::new(1.0, 0.0, 1.0, 0.0));
         assert_eq!(
             Q64::new(1.0, 2.0, 3.0, 4.0) + Q64::new(1.0, 3.0, 10.0, -5.0),
@@ -3254,6 +3290,7 @@ mod tests {
 
     #[test]
     fn test_add_real() {
+        // Test the addition of a real number to a quaternion
         assert_eq!(Q32::I + 1.0, Q32::new(1.0, 1.0, 0.0, 0.0));
         assert_eq!(
             Q32::new(1.0, 2.0, 3.0, 4.0) + 42.0,
@@ -3263,6 +3300,7 @@ mod tests {
 
     #[test]
     fn test_sub_quaternion() {
+        // Test the subtraction of quaternions
         assert_eq!(Q32::ONE - Q32::J, Q32::new(1.0, 0.0, -1.0, 0.0));
         assert_eq!(
             Q64::new(1.0, 2.0, 3.0, 4.0) - Q64::new(1.0, 3.0, 10.0, -5.0),
@@ -3272,6 +3310,7 @@ mod tests {
 
     #[test]
     fn test_sub_real() {
+        // Test the subtraction of a real number from a quaternion
         assert_eq!(Q32::I - 1.0, Q32::new(-1.0, 1.0, 0.0, 0.0));
         assert_eq!(
             Q32::new(1.0, 2.0, 3.0, 4.0) - 42.0,
@@ -3281,6 +3320,7 @@ mod tests {
 
     #[test]
     fn test_mul_quaternion() {
+        // Test the multiplication of quaternions
         assert_eq!(Q32::ONE * Q32::ONE, Q32::ONE);
         assert_eq!(Q32::ONE * Q32::I, Q32::I);
         assert_eq!(Q32::ONE * Q32::J, Q32::J);
@@ -3305,6 +3345,7 @@ mod tests {
 
     #[test]
     fn test_mul_real() {
+        // Test the multiplication of a quaternion by a real number
         assert_eq!(Q32::I * 1.0, Q32::I);
         assert_eq!(
             Q32::new(1.0, 2.0, 3.0, 4.0) * 42.0,
@@ -3314,6 +3355,7 @@ mod tests {
 
     #[test]
     fn test_mul_quaternion_by_unit_quaternion() {
+        // Test the multiplication of a quaternion by a unit quaternion
         assert_eq!(Q32::I * UQ32::J, Q32::K);
         assert_eq!(Q64::J * UQ64::K, Q64::I);
         assert_eq!(
@@ -3324,6 +3366,7 @@ mod tests {
 
     #[test]
     fn test_div_quaternion() {
+        // Test the division of quaternions
         assert_eq!(Q32::ONE / Q32::ONE * Q32::ONE, Q32::ONE);
         assert_eq!(Q32::ONE / Q32::I * Q32::I, Q32::ONE);
         assert_eq!(Q32::ONE / Q32::J * Q32::J, Q32::ONE);
@@ -3347,6 +3390,7 @@ mod tests {
 
     #[test]
     fn test_div_real() {
+        // Test the division of a quaternion by a real number
         assert_eq!(Q32::I * 1.0, Q32::I);
         assert_eq!(
             Q32::new(1.0, 2.0, 3.0, 4.0) / 4.0,
@@ -3356,6 +3400,7 @@ mod tests {
 
     #[test]
     fn test_div_quaternion_by_unit_quaternion() {
+        // Test the division of a quaternion by a unit quaternion
         assert_eq!(Q32::I / UQ32::J, -Q32::K);
         assert_eq!(Q64::J / UQ64::K, -Q64::I);
         assert_eq!(
@@ -3366,6 +3411,7 @@ mod tests {
 
     #[test]
     fn test_add_assign() {
+        // Test the addition assignment operator
         let mut q = Q32::new(1.0, 2.0, 3.0, 4.0);
         q += 4.0;
         assert_eq!(q, Quaternion::new(5.0, 2.0, 3.0, 4.0));
@@ -3373,6 +3419,7 @@ mod tests {
 
     #[test]
     fn test_sub_assign() {
+        // Test the subtraction assignment operator
         let mut q = Q64::new(1.0, 2.0, 3.0, 4.0);
         q -= Q64::new(4.0, 8.0, 6.0, 1.0);
         assert_eq!(q, Quaternion::new(-3.0, -6.0, -3.0, 3.0));
@@ -3380,6 +3427,7 @@ mod tests {
 
     #[test]
     fn test_mul_assign() {
+        // Test the multiplication assignment operator
         let mut q = Q32::new(1.0, 2.0, 3.0, 4.0);
         q *= Q32::I;
         assert_eq!(q, Quaternion::new(-2.0, 1.0, 4.0, -3.0));
@@ -3387,6 +3435,7 @@ mod tests {
 
     #[test]
     fn test_div_assign() {
+        // Test the division assignment operator
         let mut q = Quaternion::new(1.0f32, 2.0f32, 3.0f32, 4.0f32);
         q /= 4.0f32;
         assert_eq!(q, Quaternion::new(0.25f32, 0.5f32, 0.75f32, 1.0f32));
@@ -3395,6 +3444,7 @@ mod tests {
     #[test]
     #[allow(clippy::op_ref)]
     fn test_add_with_ref() {
+        // Test the addition operator with references
         let lhs = Quaternion::new(1.0, 2.0, 3.0, 4.0);
         let rhs = Quaternion::new(5.0, 6.0, 7.0, 8.0);
         assert_eq!(lhs + rhs, &lhs + rhs);
@@ -3405,6 +3455,7 @@ mod tests {
     #[test]
     #[allow(clippy::op_ref)]
     fn test_sub_with_ref() {
+        // Test the subtraction operator with references
         let lhs = Quaternion::new(1.0, 2.0, 3.0, 4.0);
         let rhs = Quaternion::new(5.0, 6.0, 7.0, 8.0);
         assert_eq!(lhs - rhs, &lhs - rhs);
@@ -3415,6 +3466,7 @@ mod tests {
     #[test]
     #[allow(clippy::op_ref)]
     fn test_mul_with_ref() {
+        // Test the multiplication operator with references
         let lhs = Quaternion::new(1.0, 2.0, 3.0, 4.0);
         let rhs = Quaternion::new(5.0, 6.0, 7.0, 8.0);
         assert_eq!(lhs * rhs, &lhs * rhs);
@@ -3425,6 +3477,7 @@ mod tests {
     #[test]
     #[allow(clippy::op_ref)]
     fn test_div_with_ref() {
+        // Test the division operator with references
         let lhs = Quaternion::new(1.0, 2.0, 3.0, 4.0);
         let rhs = Quaternion::new(5.0, 6.0, 7.0, 8.0);
         assert_eq!(lhs / rhs, &lhs / rhs);
@@ -3436,6 +3489,8 @@ mod tests {
     #[cfg(any(feature = "std", feature = "libm"))]
     #[allow(clippy::op_ref)]
     fn test_add_unit_quaternion_with_ref() {
+        // Test the addition of a quaternion with a unit quaternion with
+        // references
         let lhs = Quaternion::new(1.0, 2.0, 3.0, 4.0);
         let rhs = Quaternion::new(5.0, 6.0, 7.0, 8.0).normalize().unwrap();
         assert_eq!(lhs + rhs, &lhs + rhs);
@@ -3447,6 +3502,8 @@ mod tests {
     #[cfg(any(feature = "std", feature = "libm"))]
     #[allow(clippy::op_ref)]
     fn test_sub_unit_quaternion_with_ref() {
+        // Test the subtraction of a quaternion with a unit quaternion with
+        // references
         let lhs = Quaternion::new(1.0, 2.0, 3.0, 4.0);
         let rhs = Quaternion::new(5.0, 6.0, 7.0, 8.0).normalize().unwrap();
         assert_eq!(lhs - rhs, &lhs - rhs);
@@ -3458,6 +3515,8 @@ mod tests {
     #[cfg(any(feature = "std", feature = "libm"))]
     #[allow(clippy::op_ref)]
     fn test_mul_unit_quaternion_with_ref() {
+        // Test the multiplication of a quaternion with a unit quaternion with
+        // references
         let lhs = Quaternion::new(1.0, 2.0, 3.0, 4.0);
         let rhs = Quaternion::new(5.0, 6.0, 7.0, 8.0).normalize().unwrap();
         assert_eq!(lhs * rhs, &lhs * rhs);
@@ -3469,6 +3528,8 @@ mod tests {
     #[cfg(any(feature = "std", feature = "libm"))]
     #[allow(clippy::op_ref)]
     fn test_div_unit_quaternion_with_ref() {
+        // Test the division of a quaternion by a unit quaternion with
+        // references
         let lhs = Quaternion::new(1.0, 2.0, 3.0, 4.0);
         let rhs = Quaternion::new(5.0, 6.0, 7.0, 8.0).normalize().unwrap();
         assert_eq!(lhs / rhs, &lhs / rhs);
@@ -3479,6 +3540,8 @@ mod tests {
     #[test]
     #[allow(clippy::op_ref)]
     fn test_add_real_with_ref() {
+        // Test the addition of a real number to a quaternion with
+        // references
         let lhs = Quaternion::new(1.0, 2.0, 3.0, 4.0);
         let rhs = 5.0;
         assert_eq!(lhs + rhs, &lhs + rhs);
@@ -3489,6 +3552,8 @@ mod tests {
     #[test]
     #[allow(clippy::op_ref)]
     fn test_sub_real_with_ref() {
+        // Test the subtraction of a real number from a quaternion with
+        // references
         let lhs = Quaternion::new(1.0, 2.0, 3.0, 4.0);
         let rhs = 5.0;
         assert_eq!(lhs - rhs, &lhs - rhs);
@@ -3499,6 +3564,8 @@ mod tests {
     #[test]
     #[allow(clippy::op_ref)]
     fn test_mul_real_with_ref() {
+        // Test the multiplication of a quaternion by a real number with
+        // references
         let lhs = Quaternion::new(1.0, 2.0, 3.0, 4.0);
         let rhs = 5.0;
         assert_eq!(lhs * rhs, &lhs * rhs);
@@ -3509,6 +3576,7 @@ mod tests {
     #[test]
     #[allow(clippy::op_ref)]
     fn test_div_real_with_ref() {
+        // Test the division of a quaternion by a real number with references
         let lhs = Quaternion::new(1.0, 2.0, 3.0, 4.0);
         let rhs = 5.0;
         assert_eq!(lhs / rhs, &lhs / rhs);
@@ -3518,6 +3586,7 @@ mod tests {
 
     #[test]
     fn test_add_lhs_real() {
+        // Test the addition of a real number to a quaternion
         assert_eq!(42.0 + Quaternion::I, Quaternion::new(42.0, 1.0, 0.0, 0.0));
         assert_eq!(
             1 + Quaternion::new(2, 4, 6, 8),
@@ -3527,6 +3596,7 @@ mod tests {
 
     #[test]
     fn test_sub_lhs_real() {
+        // Test the subtraction of a real number from a quaternion
         assert_eq!(42.0 - Quaternion::I, Quaternion::new(42.0, -1.0, 0.0, 0.0));
         assert_eq!(
             1 - Quaternion::new(2, 4, 6, 8),
@@ -3536,6 +3606,7 @@ mod tests {
 
     #[test]
     fn test_mul_lhs_real() {
+        // Test the multiplication of a quaternion by a real number
         assert_eq!(42.0 * Quaternion::I, Quaternion::new(0.0, 42.0, 0.0, 0.0));
         assert_eq!(
             2 * Quaternion::new(1, 2, 3, 4),
@@ -3545,6 +3616,7 @@ mod tests {
 
     #[test]
     fn test_div_lhs_real() {
+        // Test the division of a quaternion by a real number{
         assert_eq!(
             42.0f32 / Quaternion::I,
             Quaternion::new(0.0, -42.0, 0.0, 0.0)
@@ -3557,6 +3629,7 @@ mod tests {
 
     #[test]
     fn test_neg() {
+        // Test the negation operator
         assert_eq!(
             -Q64::new(1.0, -2.0, 3.0, -4.0),
             Q64::new(-1.0, 2.0, -3.0, 4.0)
@@ -3565,6 +3638,7 @@ mod tests {
 
     #[test]
     fn test_powu() {
+        // Test the power function for unsigned integer exponents
         for q in [
             Q32::ONE,
             Q32::ZERO,
@@ -3582,6 +3656,7 @@ mod tests {
 
     #[test]
     fn test_powi() {
+        // Test the power function for signed integer exponents
         for q in [
             Q32::ONE,
             Q32::I,
@@ -3604,18 +3679,21 @@ mod tests {
     #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_exp_zero_quaternion() {
+        // Test the exponential function for the zero quaternion
         assert_eq!(Q32::ZERO.exp(), Q32::ONE);
     }
 
     #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_exp_real_part_only() {
+        // Test the exponential function for quaternions with real part only
         assert_eq!(Q32::ONE.exp(), core::f32::consts::E.into())
     }
 
     #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_exp_imaginary_part_only() {
+        // Test the exponential function for quaternions with imaginary part only
         assert!(
             (Q64::I.exp() - Q64::new(1.0f64.cos(), 1.0f64.sin(), 0.0, 0.0))
                 .norm()
@@ -3626,6 +3704,7 @@ mod tests {
     #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_exp_complex_quaternion() {
+        // Test the exponential function for a complex quaternion
         let q = Q32::new(1.0, 1.0, 1.0, 1.0);
         let exp_q = q.exp();
         let expected_norm = 1.0f32.exp();
@@ -3646,6 +3725,7 @@ mod tests {
     #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_exp_negative_real_part() {
+        // Test the exponential function for quaternions with negative real part
         let q = Q64::new(-1000.0, 0.0, f64::INFINITY, f64::NAN);
         let exp_q = q.exp();
         assert_eq!(exp_q, Q64::zero());
@@ -3654,6 +3734,7 @@ mod tests {
     #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_exp_nan_input() {
+        // Test the exponential function for quaternions with NaN input
         let q = Q32::new(f32::NAN, 1.0, 1.0, 1.0);
         let exp_q = q.exp();
         assert!(exp_q.w.is_nan());
@@ -3665,6 +3746,7 @@ mod tests {
     #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_exp_large_imaginary_norm() {
+        // Test the exponential function for quaternions with large imaginary norm
         let q = Q32::new(1.0, 1e30, 1e30, 1e30);
         let exp_q = q.exp();
         assert!(exp_q.w.is_nan());
@@ -3676,6 +3758,7 @@ mod tests {
     #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_exp_infinite_real_part() {
+        // Test the exponential function for quaternions with infinite real part
         let inf = f64::INFINITY;
         let q = Quaternion::new(inf, 1.0, 1.0, 1.0);
         let exp_q = q.exp();
@@ -3688,6 +3771,8 @@ mod tests {
     #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_exp_infinite_imaginary_part() {
+        // Test the exponential function for quaternions with infinite
+        // imaginary part
         let q = Q32::new(1.0, f32::INFINITY, 0.0, 0.0);
         let exp_q = q.exp();
         assert!(exp_q.w.is_nan());
@@ -3699,6 +3784,7 @@ mod tests {
     #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_exp_small_imaginary_norm() {
+        // Test the exponential function for quaternions with small norm of the imaginary part
         let epsilon = f32::EPSILON;
         let q = Quaternion::new(0.5, epsilon, epsilon, epsilon);
         let exp_q = q.exp();
@@ -3715,6 +3801,8 @@ mod tests {
     #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_exp_infinite_result_angle_greater_than_90_degrees() {
+        // Test the exponential function for quaternions with an angle greater
+        // than 90 degrees
         let angle = f32::PI() * 0.75; // Angle > 90 degrees
         let q = Q32::new(f32::INFINITY, angle, 0.0, 0.0);
         let exp_q = q.exp();
@@ -3727,6 +3815,8 @@ mod tests {
     #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_exp_infinite_result_angle_greater_than_180_degrees() {
+        // Test the exponential function for quaternions with an angle greater
+        // than 180 degrees
         let angle = f64::PI() * 1.25; // Angle > 180 degrees
         let q = Q64::new(f64::INFINITY, 0.0, angle, 0.0);
         let exp_q = q.exp();
@@ -3739,12 +3829,16 @@ mod tests {
     #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_expf_zero_base_positive_real_quaternion() {
+        // Test the exponential function for a quaternion with a zero base and a
+        // positive real part
         assert_eq!(Q64::new(1.0, 0.0, 0.0, 0.0).expf(0.0), Q64::ZERO);
     }
 
     #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_expf_zero_base_negative_real_quaternion() {
+        // Test the exponential function for a quaternion with a zero base and a
+        // negative real part
         assert_eq!(
             Q32::new(-1.0, 0.0, 0.0, 0.0).expf(0.0),
             f32::INFINITY.into()
@@ -3754,6 +3848,8 @@ mod tests {
     #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_expf_infinity_base_positive_real_quaternion() {
+        // Test the exponential function for a quaternion with an infinite base
+        // and a positive real part
         let inf = f64::INFINITY;
         assert_eq!(Q64::new(1.0, 0.0, 0.0, 0.0).expf(inf), inf.into());
     }
@@ -3761,6 +3857,8 @@ mod tests {
     #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_expf_infinity_base_negative_real_quaternion() {
+        // Test the exponential function for a quaternion with an infinite base
+        // and a negative real part
         assert_eq!(
             Q32::new(-1.0, 0.0, 0.0, 0.0).expf(f32::INFINITY),
             0.0f32.into()
@@ -3770,6 +3868,7 @@ mod tests {
     #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_expf_negative_base() {
+        // Test the expf power function for negative exponent and positive base
         let q = Q64::new(1.0, 0.0, 0.0, 0.0).expf(-1.0);
         assert!(q.w.is_nan());
         assert!(q.x.is_nan());
@@ -3780,6 +3879,7 @@ mod tests {
     #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_expf_nan_base() {
+        // Test the expf power function for a NaN base
         let q = Q32::new(1.0, 0.0, 0.0, 0.0).expf(f32::NAN);
         assert!(q.w.is_nan());
         assert!(q.x.is_nan());
@@ -3790,6 +3890,7 @@ mod tests {
     #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_expf_finite_positive_base() {
+        // Test the expf power function for a finite positive base
         let q = Q64::new(1.0, 2.0, 3.0, 4.0);
         let base = 2.0;
         let result = q.expf(base);
@@ -3800,6 +3901,7 @@ mod tests {
     #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_expf_nan_quaternion_component() {
+        // Test the expf power function for a base with a NaN component
         let q = Q64::new(f64::NAN, 1.0, 1.0, 1.0).expf(3.0);
         assert!(q.w.is_nan());
         assert!(q.x.is_nan());
