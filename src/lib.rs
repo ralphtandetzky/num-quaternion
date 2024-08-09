@@ -2833,6 +2833,7 @@ where
 
 #[cfg(test)]
 mod tests {
+    use core::borrow::Borrow;
     #[cfg(feature = "std")]
     use core::hash::Hash;
     #[cfg(feature = "std")]
@@ -4840,6 +4841,46 @@ mod tests {
     #[test]
     fn test_unit_quaternion_k_func() {
         assert_eq!(UQ32::k().into_quaternion(), Q32::k());
+    }
+
+    #[test]
+    fn test_into_quaternion() {
+        // Test that the conversion from a unit quaternion to a quaternion
+        // is correct.
+        assert_eq!(UQ32::ONE.into_quaternion(), Q32::ONE);
+        assert_eq!(UQ32::I.into_quaternion(), Q32::I);
+        assert_eq!(UQ32::J.into_quaternion(), Q32::J);
+        assert_eq!(UQ32::K.into_quaternion(), Q32::K);
+    }
+
+    #[test]
+    fn test_into_inner() {
+        // Test that the conversion from a unit quaternion to a quaternion
+        // is correct.
+        assert_eq!(UQ32::ONE.into_inner(), Q32::ONE);
+        assert_eq!(UQ32::I.into_inner(), Q32::I);
+        assert_eq!(UQ32::J.into_inner(), Q32::J);
+        assert_eq!(UQ32::K.into_inner(), Q32::K);
+    }
+
+    #[test]
+    fn test_as_quaternion() {
+        // Test that the conversion from a unit quaternion to a quaternion
+        // is correct.
+        assert_eq!(UQ32::ONE.as_quaternion(), &Q32::ONE);
+        assert_eq!(UQ32::I.as_quaternion(), &Q32::I);
+        assert_eq!(UQ32::J.as_quaternion(), &Q32::J);
+        assert_eq!(UQ32::K.as_quaternion(), &Q32::K);
+    }
+
+    #[test]
+    fn test_borrow() {
+        // Test that the conversion from a unit quaternion to a quaternion
+        // is correct.
+        assert_eq!(<UQ32 as Borrow<Q32>>::borrow(&UQ32::ONE), &Q32::ONE);
+        assert_eq!(<UQ32 as Borrow<Q32>>::borrow(&UQ32::I), &Q32::I);
+        assert_eq!(<UQ32 as Borrow<Q32>>::borrow(&UQ32::J), &Q32::J);
+        assert_eq!(<UQ32 as Borrow<Q32>>::borrow(&UQ32::K), &Q32::K);
     }
 
     #[test]
