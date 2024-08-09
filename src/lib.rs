@@ -1322,6 +1322,16 @@ where
             && self.y.is_finite()
             && self.z.is_finite()
     }
+
+    /// Returns whether any component of the quaternion is `NaN`.
+    pub fn has_nan(&self) -> bool {
+        self.w.is_nan() || self.x.is_nan() || self.y.is_nan() || self.z.is_nan()
+    }
+
+    /// Returns whether all components of a quaternion are `NaN`.
+    pub fn is_all_nan(&self) -> bool {
+        self.w.is_nan() && self.x.is_nan() && self.y.is_nan() && self.z.is_nan()
+    }
 }
 
 #[cfg(any(feature = "std", feature = "libm"))]
