@@ -535,7 +535,13 @@ where
             T::nan()
         }
     }
+}
 
+#[cfg(any(feature = "std", feature = "libm"))]
+impl<T> Quaternion<T>
+where
+    T: Float,
+{
     /// Calculates |self| without branching.
     ///
     /// This function returns the same result as [`norm`](Self::norm), if
@@ -561,7 +567,13 @@ where
     pub fn fast_norm(self) -> T {
         self.norm_sqr().sqrt()
     }
+}
 
+#[cfg(any(feature = "std", feature = "libm"))]
+impl<T> Quaternion<T>
+where
+    T: Float,
+{
     /// Normalizes the quaternion to length $1$.
     ///
     /// The sign of the real part will be the same as the sign of the input.
@@ -1136,7 +1148,13 @@ where
             }
         }
     }
+}
 
+#[cfg(any(feature = "std", feature = "libm"))]
+impl<T> Quaternion<T>
+where
+    T: Float + FloatConst,
+{
     /// Raises a real value (`base`) to a quaternion (`self`) power.
     ///
     /// Given a quaternion $q$ and a real value $t$, this function computes
@@ -1196,7 +1214,13 @@ where
             (self * base.ln()).exp()
         }
     }
+}
 
+#[cfg(any(feature = "std", feature = "libm"))]
+impl<T> Quaternion<T>
+where
+    T: Float + FloatConst,
+{
     /// Raises a quaternion (`self`) to a real value (`exponent`) power.
     ///
     /// Given a quaternion $q$ and a real value $t$, this function computes
@@ -1453,7 +1477,13 @@ where
             }
         }
     }
+}
 
+#[cfg(any(feature = "std", feature = "libm"))]
+impl<T> Quaternion<T>
+where
+    T: Float + FloatConst,
+{
     // Computes the square root of a quaternion.
     ///
     /// Given the input quaternion $c$, this function returns the quaternion
