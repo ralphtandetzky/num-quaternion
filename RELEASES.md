@@ -1,5 +1,14 @@
 # Releases in Reverse Chronological Order
 
+## Release 0.2.22 (2024-08-10)
+
+- Improved documentation.
+- Added `to_inner` method for `UnitQuaternion<T>`.
+- Made `is_finite` method public.
+- Improved existing tests and added more tests.
+
+**Contributors**: @ralphtandetzky
+
 ## Release 0.2.21 (2024-08-01)
 
 - Updated minimum required Rust compiler version to 1.61.
