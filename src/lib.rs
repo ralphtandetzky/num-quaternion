@@ -3094,7 +3094,8 @@ mod tests {
     #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_norm_subnormal_values() {
-        let s = f64::MIN_POSITIVE;
+        // Test the norm function for subnormal floating point values
+        let s = f64::MIN_POSITIVE * 0.25;
         let q = Q64::new(s, s, s, s);
         assert!(
             (q.norm() - 2.0 * s).abs() <= 2.0 * s * f64::EPSILON,
