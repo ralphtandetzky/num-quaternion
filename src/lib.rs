@@ -3231,8 +3231,15 @@ mod tests {
 
     #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
-    fn test_normalize_zero_infinity_nan() {
+    fn test_normalize_zero() {
+        // Test the normalize function for zero
         assert_eq!(Q64::ZERO.normalize(), None);
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_normalize_infinity() {
+        // Test the normalize function for infinite quaternions
         assert_eq!(Q64::new(f64::INFINITY, 0.0, 0.0, 0.0).normalize(), None);
         assert_eq!(
             Q64::new(0.0, f64::NEG_INFINITY, 0.0, 0.0).normalize(),
@@ -3243,10 +3250,23 @@ mod tests {
             None
         );
         assert_eq!(Q64::new(0.0, 0.0, 0.0, f64::INFINITY).normalize(), None);
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_normalize_nan() {
+        // Test the normalize function for NaN quaternions
         assert_eq!(Q64::new(f64::NAN, 0.0, 0.0, 0.0).normalize(), None);
         assert_eq!(Q64::new(0.0, f64::NAN, 0.0, 0.0).normalize(), None);
         assert_eq!(Q64::new(0.0, 0.0, f64::NAN, 0.0).normalize(), None);
         assert_eq!(Q64::new(0.0, 0.0, 0.0, f64::NAN).normalize(), None);
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_normalize_infinity_and_nan() {
+        // Test the normalize function for quaternions with infinite and NaN
+        // values
         assert_eq!(
             Q64::new(f64::INFINITY, f64::NAN, 1.0, 0.0).normalize(),
             None
