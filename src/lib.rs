@@ -1292,7 +1292,7 @@ where
     /// Returns whether all components of the quaternion are finite.
     ///
     /// If a `Quaternion` has an infinite or `NaN` entry, the function returns
-    /// `false``, otherwise `true``.
+    /// `false`, otherwise `true`.
     pub fn is_finite(&self) -> bool {
         self.w.is_finite()
             && self.x.is_finite()
@@ -1377,7 +1377,7 @@ where
                         // The angle of `self` to the positive real axis is
                         // pi minus the angle from the negative real axis.
                         // The angle from the negative real axis
-                        // can be approximated by `norm_im / self.w.abs()``
+                        // can be approximated by `norm_im / self.w.abs()`
                         // which is equal to `-norm_im / self.w`. This the
                         // angle from the positive real axis is
                         // `pi + norm_im / self.w`. We obtain the imaginary
