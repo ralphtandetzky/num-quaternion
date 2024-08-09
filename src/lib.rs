@@ -1324,6 +1324,16 @@ where
             && self.y.is_finite()
             && self.z.is_finite()
     }
+
+    /// Returns whether any component of the quaternion is `NaN`.
+    pub fn has_nan(&self) -> bool {
+        self.w.is_nan() || self.x.is_nan() || self.y.is_nan() || self.z.is_nan()
+    }
+
+    /// Returns whether all components of a quaternion are `NaN`.
+    pub fn is_all_nan(&self) -> bool {
+        self.w.is_nan() && self.x.is_nan() && self.y.is_nan() && self.z.is_nan()
+    }
 }
 
 #[cfg(any(feature = "std", feature = "libm"))]
@@ -4167,6 +4177,48 @@ mod tests {
         assert!(!Q64::new(1.0, 1.0, -nan, 1.0).is_finite());
         assert!(!Q64::new(1.0, 1.0, 1.0, -nan).is_finite());
         assert!(!Q64::new(nan, -nan, nan, -nan).is_finite());
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_has_nan() {
+        // Test the has_nan method for nan values
+        let nan = f64::NAN;
+        let inf = f64::INFINITY;
+        assert!(!Q64::new(0.0, 0.0, 0.0, 0.0).has_nan());
+        assert!(!Q64::new(1.0, 1.0, 1.0, 1.0).has_nan());
+        assert!(!Q64::new(inf, inf, inf, inf).has_nan());
+        assert!(Q64::new(nan, 1.0, 1.0, 1.0).has_nan());
+        assert!(Q64::new(1.0, nan, 1.0, 1.0).has_nan());
+        assert!(Q64::new(1.0, 1.0, nan, 1.0).has_nan());
+        assert!(Q64::new(1.0, 1.0, 1.0, nan).has_nan());
+        assert!(Q64::new(-nan, 1.0, 1.0, 1.0).has_nan());
+        assert!(Q64::new(1.0, -nan, 1.0, 1.0).has_nan());
+        assert!(Q64::new(1.0, 1.0, -nan, 1.0).has_nan());
+        assert!(Q64::new(1.0, 1.0, 1.0, -nan).has_nan());
+        assert!(Q64::new(nan, -nan, nan, -nan).has_nan());
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_is_all_nan() {
+        // Test the is_all_nan method for nan values
+        let nan = f64::NAN;
+        let inf = f64::INFINITY;
+        assert!(!Q64::new(0.0, 0.0, 0.0, 0.0).is_all_nan());
+        assert!(!Q64::new(1.0, 1.0, 1.0, 1.0).is_all_nan());
+        assert!(!Q64::new(inf, inf, inf, inf).is_all_nan());
+        assert!(!Q64::new(nan, 1.0, 1.0, 1.0).is_all_nan());
+        assert!(!Q64::new(1.0, nan, 1.0, 1.0).is_all_nan());
+        assert!(!Q64::new(1.0, 1.0, nan, 1.0).is_all_nan());
+        assert!(!Q64::new(1.0, 1.0, 1.0, nan).is_all_nan());
+        assert!(!Q64::new(-nan, 1.0, 1.0, 1.0).is_all_nan());
+        assert!(!Q64::new(1.0, -nan, 1.0, 1.0).is_all_nan());
+        assert!(!Q64::new(1.0, 1.0, -nan, 1.0).is_all_nan());
+        assert!(!Q64::new(1.0, 1.0, 1.0, -nan).is_all_nan());
+        assert!(Q64::new(nan, nan, nan, nan).is_all_nan());
+        assert!(Q64::new(-nan, -nan, -nan, -nan).is_all_nan());
+        assert!(Q64::new(nan, -nan, nan, -nan).is_all_nan());
     }
 
     #[cfg(any(feature = "std", feature = "libm"))]
