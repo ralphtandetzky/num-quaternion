@@ -3974,7 +3974,7 @@ mod tests {
     #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_is_finite_for_nan_values() {
-        // Test the is_finite method for infinite values
+        // Test the is_finite method for nan values
         let nan = f64::NAN;
         assert!(!Q64::new(nan, 1.0, 1.0, 1.0).is_finite());
         assert!(!Q64::new(1.0, nan, 1.0, 1.0).is_finite());
