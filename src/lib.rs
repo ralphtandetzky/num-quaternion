@@ -3105,6 +3105,18 @@ mod tests {
 
     #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
+    fn test_norm_large_values() {
+        // Test the norm function for large floating point values
+        let s = f64::MAX * 0.50;
+        let q = Q64::new(s, s, s, s);
+        assert!(
+            (q.norm() - 2.0 * s).abs() <= 2.0 * s * f64::EPSILON,
+            "Norm of large values is computed correctly"
+        );
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
     fn test_norm_infinite_values() {
         // Test the norm function for infinite floating point values
         let inf = f32::INFINITY;
