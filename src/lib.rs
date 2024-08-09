@@ -4044,6 +4044,48 @@ mod tests {
 
     #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
+    fn test_has_nan() {
+        // Test the has_nan method for nan values
+        let nan = f64::NAN;
+        let inf = f64::INFINITY;
+        assert!(!Q64::new(0.0, 0.0, 0.0, 0.0).has_nan());
+        assert!(!Q64::new(1.0, 1.0, 1.0, 1.0).has_nan());
+        assert!(!Q64::new(inf, inf, inf, inf).has_nan());
+        assert!(Q64::new(nan, 1.0, 1.0, 1.0).has_nan());
+        assert!(Q64::new(1.0, nan, 1.0, 1.0).has_nan());
+        assert!(Q64::new(1.0, 1.0, nan, 1.0).has_nan());
+        assert!(Q64::new(1.0, 1.0, 1.0, nan).has_nan());
+        assert!(Q64::new(-nan, 1.0, 1.0, 1.0).has_nan());
+        assert!(Q64::new(1.0, -nan, 1.0, 1.0).has_nan());
+        assert!(Q64::new(1.0, 1.0, -nan, 1.0).has_nan());
+        assert!(Q64::new(1.0, 1.0, 1.0, -nan).has_nan());
+        assert!(Q64::new(nan, -nan, nan, -nan).has_nan());
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_is_all_nan() {
+        // Test the is_all_nan method for nan values
+        let nan = f64::NAN;
+        let inf = f64::INFINITY;
+        assert!(!Q64::new(0.0, 0.0, 0.0, 0.0).is_all_nan());
+        assert!(!Q64::new(1.0, 1.0, 1.0, 1.0).is_all_nan());
+        assert!(!Q64::new(inf, inf, inf, inf).is_all_nan());
+        assert!(!Q64::new(nan, 1.0, 1.0, 1.0).is_all_nan());
+        assert!(!Q64::new(1.0, nan, 1.0, 1.0).is_all_nan());
+        assert!(!Q64::new(1.0, 1.0, nan, 1.0).is_all_nan());
+        assert!(!Q64::new(1.0, 1.0, 1.0, nan).is_all_nan());
+        assert!(!Q64::new(-nan, 1.0, 1.0, 1.0).is_all_nan());
+        assert!(!Q64::new(1.0, -nan, 1.0, 1.0).is_all_nan());
+        assert!(!Q64::new(1.0, 1.0, -nan, 1.0).is_all_nan());
+        assert!(!Q64::new(1.0, 1.0, 1.0, -nan).is_all_nan());
+        assert!(Q64::new(nan, nan, nan, nan).is_all_nan());
+        assert!(Q64::new(-nan, -nan, -nan, -nan).is_all_nan());
+        assert!(Q64::new(nan, -nan, nan, -nan).is_all_nan());
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
     fn test_ln_normal_case() {
         // Test a normal quaternion
         let q = Quaternion::new(1.0, 2.0, 3.0, 4.0);
