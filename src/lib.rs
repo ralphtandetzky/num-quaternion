@@ -578,9 +578,11 @@ where
     ///
     /// The sign of the real part will be the same as the sign of the input.
     /// If the input quaternion
-    ///   * is zero, or
-    ///   * has infinite length, or
-    ///   * has a `NaN` value,
+    ///
+    /// * is zero, or
+    /// * has infinite length, or
+    /// * has a `NaN` value,
+    ///
     /// then `None` will be returned.
     #[inline]
     pub fn normalize(self) -> Option<UnitQuaternion<T>> {
