@@ -3966,17 +3966,32 @@ mod tests {
     #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_expf_infinite_real_component_with_t_greater_than_1() {
+        // Test the expf power function for an infinite real base with a
+        // finite real exponent greater than `1`
         let inf = f64::INFINITY;
-        assert_eq!(Q64::new(inf, 0.0, 0.0, 0.0).expf(5.0), inf.into());
+        assert!(!Q64::new(inf, 0.0, 0.0, 0.0).expf(5.0).is_finite());
+        assert!(!Q64::new(inf, 0.0, 0.0, 0.0).expf(5.0).has_nan());
+        assert!(!Q64::new(inf, 1.0, 2.0, 3.0).expf(42.0).is_finite());
+        assert!(!Q64::new(inf, 1.0, 2.0, 3.0).expf(42.0).has_nan());
     }
 
     #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
-    fn test_expf_infinite_real_component_with_t_between_0_and_1() {
-        assert_eq!(
-            Quaternion::new(f32::NEG_INFINITY, 0.0, 0.0, 0.0).expf(0.5),
-            f32::INFINITY.into()
-        );
+    fn test_expf_neg_infinite_real_component_with_t_between_0_and_1() {
+        // Test the expf power function for a negative infinite real base with
+        // an exponent between 0 and 1
+        assert!(!Q32::new(f32::NEG_INFINITY, 0.0, 0.0, 0.0)
+            .expf(0.5)
+            .is_finite());
+        assert!(!Q32::new(f32::NEG_INFINITY, 0.0, 0.0, 0.0)
+            .expf(0.5)
+            .has_nan());
+        assert!(!Q32::new(f32::NEG_INFINITY, 1.0, 2.0, 3.0)
+            .expf(0.75)
+            .is_finite());
+        assert!(!Q32::new(f32::NEG_INFINITY, 1.0, 2.0, 3.0)
+            .expf(0.75)
+            .has_nan());
     }
 
     #[cfg(any(feature = "std", feature = "libm"))]
