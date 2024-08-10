@@ -4520,14 +4520,6 @@ mod tests {
         assert!((sqrt_q * sqrt_q - q).norm() <= 16.0 * q.norm() * f64::EPSILON);
     }
 
-    /// Computes the hash value of `val` using the default hasher.
-    #[cfg(feature = "std")]
-    fn compute_hash(val: impl Hash) -> u64 {
-        let mut hasher = DefaultHasher::new();
-        val.hash(&mut hasher);
-        hasher.finish()
-    }
-
     #[cfg(feature = "serde")]
     #[test]
     fn test_serde_quaternion() {
@@ -4546,9 +4538,14 @@ mod tests {
         assert_eq!(q, deserialized);
     }
 
-    // We test if the hash value of a unit quaternion is equal to the hash
-    // value of the inner quaternion. This is required because `UnitQuaternion`
-    // implements both `Hash` and `Borrow<Quaternion>`.
+    /// Computes the hash value of `val` using the default hasher.
+    #[cfg(feature = "std")]
+    fn compute_hash(val: impl Hash) -> u64 {
+        let mut hasher = DefaultHasher::new();
+        val.hash(&mut hasher);
+        hasher.finish()
+    }
+
     #[cfg(feature = "std")]
     #[test]
     fn test_hash_of_unit_quaternion_equals_hash_of_inner_quaternion() {
