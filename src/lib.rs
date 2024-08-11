@@ -551,11 +551,11 @@ where
     /// In all other cases, there's no guarantee on the precision of the
     /// result:
     ///
-    ///  * If |self|² overflows, then $\infty$ is returned.
-    ///  * If |self|² underflows to zero, then zero will be returned.
-    ///  * If |self|² is a subnormal number (very small floating point value
-    ///    with reduced relative precision), then the result is the square
-    ///    root of that.
+    /// * If |self|² overflows, then $\infty$ is returned.
+    /// * If |self|² underflows to zero, then zero will be returned.
+    /// * If |self|² is a subnormal number (very small floating point value
+    ///   with reduced relative precision), then the result is the square
+    ///   root of that.
     ///
     /// In other words, this function can be imprecise for very large and very
     /// small floating point numbers, but it is generally faster than
