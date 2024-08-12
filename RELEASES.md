@@ -1,5 +1,12 @@
 # Releases in Reverse Chronological Order
 
+## Release 0.2.23 (2024-08-12)
+
+- Added `has_nan` and `is_all_nan` methods for `Quaternion<T>`.
+- Improved documentation and tests.
+
+**Contributors**: @ralphtandetzky
+
 ## Release 0.2.22 (2024-08-10)
 
 - Improved documentation.
