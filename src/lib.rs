@@ -1139,7 +1139,9 @@ where
                     )
                 } else {
                     // Angle is super large or NaN
-                    assert!(sqr_angle.is_infinite() || sqr_angle.is_nan());
+                    debug_assert!(
+                        sqr_angle.is_infinite() || sqr_angle.is_nan()
+                    );
                     Self::nan()
                 }
             }
