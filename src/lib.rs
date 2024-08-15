@@ -4379,6 +4379,74 @@ mod tests {
 
     #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
+    fn test_ln_negative_real_part_tiny_imaginary_part() {
+        // Test a quaternion with a tiny imaginary part
+
+        use core::f32;
+        let q = Q32::new(-2.0, 346.0 * f32::EPSILON, 0.0, 0.0);
+        let ln_q = q.ln();
+        let expected =
+            Q32::new(2.0f32.ln(), f32::consts::PI + q.x / q.w, 0.0, 0.0);
+        assert!((ln_q - expected).norm() <= 8.0 * f32::EPSILON);
+
+        let q = Q32::new(-3.0, f32::MIN_POSITIVE / 64.0, 0.0, 0.0);
+        let ln_q = q.ln();
+        let expected = Q32::new(3.0f32.ln(), f32::consts::PI, 0.0, 0.0);
+        assert_eq!(ln_q, expected);
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_ln_tiny_real_part_and_tiny_imageinary_part() {
+        // Test a quaternion with a tiny real and imaginary part
+
+        use core::f32;
+        let w = f32::MIN_POSITIVE.sqrt();
+        let q = Q32::new(w, 0.0, w / 2.0, 0.0);
+        let ln_q = q.ln();
+        let expected = Q32::new(
+            (1.25 * f32::MIN_POSITIVE).ln() / 2.0,
+            0.0,
+            0.5f32.atan(),
+            0.0,
+        );
+        assert_eq!(ln_q, expected);
+
+        let w = f32::MIN_POSITIVE;
+        let q = Q32::new(w, w, w, w);
+        let ln_q = q.ln();
+        let expected = Q32::new(
+            (2.0 * f32::MIN_POSITIVE).ln(),
+            f32::consts::PI / 27.0f32.sqrt(),
+            f32::consts::PI / 27.0f32.sqrt(),
+            f32::consts::PI / 27.0f32.sqrt(),
+        );
+        assert!(
+            (ln_q - expected).norm() <= expected.norm() * 2.0 * f32::EPSILON
+        );
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_ln_very_large_inputs() {
+        // Test the logarithm of very large inputs
+
+        use core::f64;
+        let q = Q64::new(f64::MAX, 0.0, 0.0, f64::MAX);
+        let ln_q = q.ln();
+        let expected = Q64::new(
+            f64::MAX.ln() + 2.0f64.ln() / 2.0,
+            0.0,
+            0.0,
+            f64::consts::PI / 4.0,
+        );
+        assert!(
+            (ln_q - expected).norm() <= expected.norm() * 2.0 * f64::EPSILON
+        );
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
     fn test_sqrt_normal() {
         // Test the square root of a normal quaternion
         let q = Q64::new(1.0, 2.0, 3.0, 4.0);
