@@ -1392,24 +1392,10 @@ where
                     {
                         // We're on the negative real axis.
                         Self::new(w, T::PI().copysign(self.x), self.y, self.z)
-                    } else {
+                    } else if sqr_norm_im.is_normal() {
                         // We're close the the negative real axis. Compute the
                         // norm of the imaginary part.
-                        let norm_im = if sqr_norm_im.is_normal() {
-                            // In this case we get maximum precision by using
-                            // `sqr_norm_im`.
-                            sqr_norm_im.sqrt()
-                        } else {
-                            // Otherwise, using `sqr_norm_im` is imprecise.
-                            // We magnify the imaginary part first, so we can
-                            // get around this problem.
-                            let f = T::min_positive_value().sqrt();
-                            let xf = self.x / f;
-                            let yf = self.y / f;
-                            let zf = self.z / f;
-                            let sqr_sum = xf * xf + yf * yf + zf * zf;
-                            sqr_sum.sqrt() * f
-                        };
+                        let norm_im = sqr_norm_im.sqrt();
 
                         // The angle of `self` to the positive real axis is
                         // pi minus the angle from the negative real axis.
@@ -1425,6 +1411,25 @@ where
                         let f = T::PI() / norm_im + self.w.recip();
 
                         Self::new(w, f * self.x, f * self.y, f * self.z)
+                    } else {
+                        // The imaginary part is so small, that the norm of the
+                        // resulting imaginary part differs from `pi` by way
+                        // less than half an ulp. Therefore, it's sufficient to
+                        // normalize the imaginary part and multiply it by
+                        // `pi`.
+                        let f = T::min_positive_value().sqrt();
+                        let xf = self.x / f;
+                        let yf = self.y / f;
+                        let zf = self.z / f;
+                        let sqr_sum = xf * xf + yf * yf + zf * zf;
+                        let im_norm_div_f = sqr_sum.sqrt();
+                        let pi_div_f = T::PI() / f;
+                        Self::new(
+                            w,
+                            self.x / im_norm_div_f * pi_div_f,
+                            self.y / im_norm_div_f * pi_div_f,
+                            self.z / im_norm_div_f * pi_div_f,
+                        )
                     }
                 } else {
                     // The most natural case: We're far enough from the real
