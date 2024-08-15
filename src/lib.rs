@@ -4142,6 +4142,10 @@ mod tests {
         let result = q.powf(t);
         assert_eq!(result, Quaternion::zero());
 
+        let q = Quaternion::new(0.25, 0.25, 0.25, 0.25);
+        let result = q.powf(t);
+        assert_eq!(result, Quaternion::zero());
+
         let q = Quaternion::new(1.0, 0.0, 0.0, 0.0);
         let result = q.powf(t);
         assert!(result.w.is_nan());
@@ -4160,9 +4164,17 @@ mod tests {
         let result = q.powf(t);
         assert_eq!(result, Quaternion::zero());
 
+        let q = Quaternion::new(1.0, 0.0, 0.0, 1.0);
+        let result = q.powf(t);
+        assert_eq!(result, Quaternion::zero());
+
         let q = Quaternion::new(0.5, 0.0, 0.0, 0.0);
         let result = q.powf(t);
         assert_eq!(result, f64::INFINITY.into());
+
+        let q = Quaternion::new(0.25, 0.25, 0.25, 0.25);
+        let result = q.powf(t);
+        assert!(result.is_all_nan());
 
         let q = Quaternion::new(1.0, 0.0, 0.0, 0.0);
         let result = q.powf(t);
