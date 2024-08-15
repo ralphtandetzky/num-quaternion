@@ -2,9 +2,6 @@
 
 set -e
 
-CRATE=num-quaternion
-MSRV=1.61  # minimum supported rust version
-
 # Install cargo tarpaulin if not already installed
 cargo install cargo-tarpaulin
 
