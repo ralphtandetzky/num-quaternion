@@ -1,5 +1,13 @@
 # Releases in Reverse Chronological Order
 
+## Release 0.2.24 (2024-08-18)
+
+- Fixed edge case in `Quaternion::ln`.
+- Added scripts for test coverage.
+- Improved test coverage.
+
+**Contributors**: @ralphtandetzky
+
 ## Release 0.2.23 (2024-08-12)
 
 - Added `has_nan` and `is_all_nan` methods for `Quaternion<T>`.
