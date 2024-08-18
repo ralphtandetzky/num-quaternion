@@ -4411,7 +4411,7 @@ mod tests {
 
     #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
-    fn test_ln_tiny_real_part_and_tiny_imageinary_part() {
+    fn test_ln_tiny_real_part_and_tiny_imaginary_part() {
         // Test a quaternion with a tiny real and imaginary part
 
         use core::f32;
