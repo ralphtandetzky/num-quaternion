@@ -1392,24 +1392,10 @@ where
                     {
                         // We're on the negative real axis.
                         Self::new(w, T::PI().copysign(self.x), self.y, self.z)
-                    } else {
+                    } else if sqr_norm_im.is_normal() {
                         // We're close the the negative real axis. Compute the
                         // norm of the imaginary part.
-                        let norm_im = if sqr_norm_im.is_normal() {
-                            // In this case we get maximum precision by using
-                            // `sqr_norm_im`.
-                            sqr_norm_im.sqrt()
-                        } else {
-                            // Otherwise, using `sqr_norm_im` is imprecise.
-                            // We magnify the imaginary part first, so we can
-                            // get around this problem.
-                            let f = T::min_positive_value().sqrt();
-                            let xf = self.x / f;
-                            let yf = self.y / f;
-                            let zf = self.z / f;
-                            let sqr_sum = xf * xf + yf * yf + zf * zf;
-                            sqr_sum.sqrt() * f
-                        };
+                        let norm_im = sqr_norm_im.sqrt();
 
                         // The angle of `self` to the positive real axis is
                         // pi minus the angle from the negative real axis.
@@ -1425,6 +1411,34 @@ where
                         let f = T::PI() / norm_im + self.w.recip();
 
                         Self::new(w, f * self.x, f * self.y, f * self.z)
+                    } else {
+                        // The imaginary part is so small, that the norm of the
+                        // resulting imaginary part differs from `pi` by way
+                        // less than half an ulp. Therefore, it's sufficient to
+                        // normalize the imaginary part and multiply it by
+                        // `pi`.
+                        let f = T::min_positive_value().sqrt();
+                        let xf = self.x / f;
+                        let yf = self.y / f;
+                        let zf = self.z / f;
+                        let sqr_sum = xf * xf + yf * yf + zf * zf;
+                        let im_norm_div_f = sqr_sum.sqrt();
+                        let pi_div_f = T::PI() / f;
+                        // We could try to reduce the number of divisions by
+                        // computing `pi_div_f / im_norm_div_f` and then
+                        // multiplying the imaginary part by this value.
+                        // However, this reduces numerical accuracy, if the
+                        // pi times the norm of the imaginary part is
+                        // subnormal. We could also introduce another branch
+                        // here, but this would make the code more complex
+                        // and extend the worst case latency. Therefore, we
+                        // keep the divisions like that.
+                        Self::new(
+                            w,
+                            self.x * pi_div_f / im_norm_div_f,
+                            self.y * pi_div_f / im_norm_div_f,
+                            self.z * pi_div_f / im_norm_div_f,
+                        )
                     }
                 } else {
                     // The most natural case: We're far enough from the real
@@ -4375,6 +4389,74 @@ mod tests {
         assert!((ln_q.y - expected.y).abs() <= 4.0f32 * f32::EPSILON);
         assert_eq!(ln_q.z, 0.0);
         assert!(ln_q.z.is_negative());
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_ln_negative_real_part_tiny_imaginary_part() {
+        // Test a quaternion with a tiny imaginary part
+
+        use core::f32;
+        let q = Q32::new(-2.0, 346.0 * f32::EPSILON, 0.0, 0.0);
+        let ln_q = q.ln();
+        let expected =
+            Q32::new(2.0f32.ln(), f32::consts::PI + q.x / q.w, 0.0, 0.0);
+        assert!((ln_q - expected).norm() <= 8.0 * f32::EPSILON);
+
+        let q = Q32::new(-3.0, f32::MIN_POSITIVE / 64.0, 0.0, 0.0);
+        let ln_q = q.ln();
+        let expected = Q32::new(3.0f32.ln(), f32::consts::PI, 0.0, 0.0);
+        assert_eq!(ln_q, expected);
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_ln_tiny_real_part_and_tiny_imaginary_part() {
+        // Test a quaternion with a tiny real and imaginary part
+
+        use core::f32;
+        let w = f32::MIN_POSITIVE.sqrt();
+        let q = Q32::new(w, 0.0, w / 2.0, 0.0);
+        let ln_q = q.ln();
+        let expected = Q32::new(
+            (1.25 * f32::MIN_POSITIVE).ln() / 2.0,
+            0.0,
+            0.5f32.atan(),
+            0.0,
+        );
+        assert_eq!(ln_q, expected);
+
+        let w = f32::MIN_POSITIVE;
+        let q = Q32::new(w, w, w, w);
+        let ln_q = q.ln();
+        let expected = Q32::new(
+            (2.0 * f32::MIN_POSITIVE).ln(),
+            f32::consts::PI / 27.0f32.sqrt(),
+            f32::consts::PI / 27.0f32.sqrt(),
+            f32::consts::PI / 27.0f32.sqrt(),
+        );
+        assert!(
+            (ln_q - expected).norm() <= expected.norm() * 2.0 * f32::EPSILON
+        );
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_ln_very_large_inputs() {
+        // Test the logarithm of very large inputs
+
+        use core::f64;
+        let q = Q64::new(f64::MAX, 0.0, 0.0, f64::MAX);
+        let ln_q = q.ln();
+        let expected = Q64::new(
+            f64::MAX.ln() + 2.0f64.ln() / 2.0,
+            0.0,
+            0.0,
+            f64::consts::PI / 4.0,
+        );
+        assert!(
+            (ln_q - expected).norm() <= expected.norm() * 2.0 * f64::EPSILON
+        );
     }
 
     #[cfg(any(feature = "std", feature = "libm"))]
