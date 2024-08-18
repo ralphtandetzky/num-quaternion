@@ -1426,9 +1426,9 @@ where
                         let pi_div_f = T::PI() / f;
                         Self::new(
                             w,
-                            self.x / im_norm_div_f * pi_div_f,
-                            self.y / im_norm_div_f * pi_div_f,
-                            self.z / im_norm_div_f * pi_div_f,
+                            self.x * pi_div_f / im_norm_div_f,
+                            self.y * pi_div_f / im_norm_div_f,
+                            self.z * pi_div_f / im_norm_div_f,
                         )
                     }
                 } else {
