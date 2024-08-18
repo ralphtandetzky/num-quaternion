@@ -1424,6 +1424,15 @@ where
                         let sqr_sum = xf * xf + yf * yf + zf * zf;
                         let im_norm_div_f = sqr_sum.sqrt();
                         let pi_div_f = T::PI() / f;
+                        // We could try to reduce the number of divisions by
+                        // computing `pi_div_f / im_norm_div_f` and then
+                        // multiplying the imaginary part by this value.
+                        // However, this reduces numerical accuracy, if the
+                        // pi times the norm of the imaginary part is
+                        // subnormal. We could also introduce another branch
+                        // here, but this would make the code more complex
+                        // and extend the worst case latency. Therefore, we
+                        // keep the divisions like that.
                         Self::new(
                             w,
                             self.x * pi_div_f / im_norm_div_f,
