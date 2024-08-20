@@ -4616,6 +4616,29 @@ mod tests {
         assert!((sqrt_q * sqrt_q - q).norm() <= 16.0 * q.norm() * f64::EPSILON);
     }
 
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_sqrt_negative_real_part_subnormal_imaginary_part() {
+        // Test the square root of a quaternion with a negative real part and
+        // subnormal imaginary parts
+        let q = Q32::new(-1.0, f32::MIN_POSITIVE / 64.0, 0.0, 0.0);
+        let sqrt_q = q.sqrt();
+        let expected = Q32::new(q.x / 2.0, 1.0, 0.0, 0.0);
+        assert_eq!(sqrt_q, expected);
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_sqrt_for_overflowing_norm_sqr_of_input() {
+        // Test the square root of a quaternion with an overflowing norm_sqr
+        let n = f64::MAX / 2.0;
+        let q = Q64::new(-n, n, n, n);
+        let sqrt_q = q.sqrt();
+        let sqrt_n = f64::MAX.sqrt() / 2.0;
+        let expected = Q64::new(sqrt_n, sqrt_n, sqrt_n, sqrt_n);
+        assert!((sqrt_q - expected).norm() <= expected.norm() * f64::EPSILON);
+    }
+
     #[cfg(feature = "serde")]
     #[test]
     fn test_serde_quaternion() {
