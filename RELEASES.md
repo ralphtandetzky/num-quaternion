@@ -1,5 +1,12 @@
 # Releases in Reverse Chronological Order
 
+## Release 0.2.25 (2024-08-21)
+
+- Fix bug in gimbal lock case of `UnitQuaternion::to_euler_angles`.
+- Improved test coverage.
+
+**Contributors**: @ralphtandetzky
+
 ## Release 0.2.24 (2024-08-18)
 
 - Fixed edge case in `Quaternion::ln`.
