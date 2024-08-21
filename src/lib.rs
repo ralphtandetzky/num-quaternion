@@ -1843,17 +1843,17 @@ where
         // Check for gimbal lock, which occurs when sin_pitch is close to 1 or -1
         if sin_pitch.abs() >= one - epsilon {
             // Gimbal lock case
-            let pitch = if sin_pitch >= one - epsilon {
-                half_pi // 90 degrees
+            if sin_pitch >= one - epsilon {
+                let pitch = half_pi; // 90 degrees
+                let roll = T::zero();
+                let yaw = -two * T::atan2(x, w);
+                EulerAngles { roll, pitch, yaw }
             } else {
-                -half_pi // -90 degrees
-            };
-
-            // In the gimbal lock case, roll and yaw are dependent
-            let roll = T::zero();
-            let yaw =
-                T::atan2(two * (x * y + w * z), one - two * (y * y + z * z));
-            EulerAngles { roll, pitch, yaw }
+                let pitch = -half_pi; // -90 degrees
+                let roll = T::zero();
+                let yaw = two * T::atan2(x, w);
+                EulerAngles { roll, pitch, yaw }
+            }
         } else {
             // General case
             let pitch = sin_pitch.asin();
