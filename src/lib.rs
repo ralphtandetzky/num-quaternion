@@ -4814,6 +4814,32 @@ mod tests {
 
     #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
+    fn test_from_rotation_vector_infinite() {
+        // Test `from_rotation_vector` for a vector with infinite components.
+        let inf = f32::INFINITY;
+        assert!(UQ32::from_rotation_vector(&[inf, 0.0, 0.0])
+            .into_inner()
+            .is_all_nan());
+        assert!(UQ32::from_rotation_vector(&[inf, inf, inf])
+            .into_inner()
+            .is_all_nan());
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_from_rotation_vector_nan_input() {
+        // Test `from_rotation_vector` for a vector with infinite components.
+        let nan = f32::NAN;
+        assert!(UQ32::from_rotation_vector(&[nan, 0.0, 0.0])
+            .into_inner()
+            .is_all_nan());
+        assert!(UQ32::from_rotation_vector(&[nan, nan, nan])
+            .into_inner()
+            .is_all_nan());
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
     fn test_to_rotation_vector_zero_rotation() {
         // Quaternion representing no rotation (identity quaternion)
         assert_eq!(UQ32::ONE.to_rotation_vector(), [0.0, 0.0, 0.0]);
