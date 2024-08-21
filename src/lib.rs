@@ -4829,11 +4829,11 @@ mod tests {
     #[test]
     fn test_from_rotation_vector_nan_input() {
         // Test `from_rotation_vector` for a vector with infinite components.
-        let nan = f32::NAN;
-        assert!(UQ32::from_rotation_vector(&[nan, 0.0, 0.0])
+        let nan = f64::NAN;
+        assert!(UQ64::from_rotation_vector(&[nan, 0.0, 0.0])
             .into_inner()
             .is_all_nan());
-        assert!(UQ32::from_rotation_vector(&[nan, nan, nan])
+        assert!(UQ64::from_rotation_vector(&[nan, nan, nan])
             .into_inner()
             .is_all_nan());
     }
