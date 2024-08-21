@@ -4752,13 +4752,17 @@ mod tests {
     fn test_to_euler_angles() {
         // Test the conversion from quaternions to Euler angles
         let test_data = [
-            Q64::new(1.0, 0.0, 0.0, 0.0),
-            Q64::new(0.0, 1.0, 0.0, 0.0),
-            Q64::new(0.0, 0.0, 1.0, 0.0),
-            Q64::new(0.0, 0.0, 0.0, 1.0),
-            Q64::new(1.0, 1.0, 1.0, 1.0),
-            Q64::new(1.0, -2.0, 3.0, -4.0),
-            Q64::new(4.0, 3.0, 2.0, 1.0),
+            Q64::new(1.0, 0.0, 0.0, 0.0),   // identity
+            Q64::new(0.0, 1.0, 0.0, 0.0),   // 180 degree x axis
+            Q64::new(0.0, 0.0, 1.0, 0.0),   // 180 degree y axis
+            Q64::new(0.0, 0.0, 0.0, 1.0),   // 180 degree z axis
+            Q64::new(1.0, 1.0, 1.0, 1.0),   // 120 degree xyz
+            Q64::new(1.0, -2.0, 3.0, -4.0), // arbitrary
+            Q64::new(4.0, 3.0, 2.0, 1.0),   // arbitrary
+            Q64::new(1.0, 0.0, 1.0, 0.0),   // gimbal lock 1
+            Q64::new(1.0, 1.0, 1.0, -1.0),  // gimbal lock 2
+            Q64::new(1.0, 0.0, -1.0, 0.0),  // gimbal lock 3
+            Q64::new(1.0, 1.0, -1.0, 1.0),  // gimbal lock 4
         ];
         for q in test_data.into_iter().map(|q| q.normalize().unwrap()) {
             let EulerAngles { roll, pitch, yaw } = q.to_euler_angles();
