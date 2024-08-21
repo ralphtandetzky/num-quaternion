@@ -1843,17 +1843,17 @@ where
         // Check for gimbal lock, which occurs when sin_pitch is close to 1 or -1
         if sin_pitch.abs() >= one - epsilon {
             // Gimbal lock case
-            let pitch = if sin_pitch >= one - epsilon {
-                half_pi // 90 degrees
+            if sin_pitch >= one - epsilon {
+                let pitch = half_pi; // 90 degrees
+                let roll = T::zero();
+                let yaw = -two * T::atan2(x, w);
+                EulerAngles { roll, pitch, yaw }
             } else {
-                -half_pi // -90 degrees
-            };
-
-            // In the gimbal lock case, roll and yaw are dependent
-            let roll = T::zero();
-            let yaw =
-                T::atan2(two * (x * y + w * z), one - two * (y * y + z * z));
-            EulerAngles { roll, pitch, yaw }
+                let pitch = -half_pi; // -90 degrees
+                let roll = T::zero();
+                let yaw = two * T::atan2(x, w);
+                EulerAngles { roll, pitch, yaw }
+            }
         } else {
             // General case
             let pitch = sin_pitch.asin();
@@ -4752,13 +4752,17 @@ mod tests {
     fn test_to_euler_angles() {
         // Test the conversion from quaternions to Euler angles
         let test_data = [
-            Q64::new(1.0, 0.0, 0.0, 0.0),
-            Q64::new(0.0, 1.0, 0.0, 0.0),
-            Q64::new(0.0, 0.0, 1.0, 0.0),
-            Q64::new(0.0, 0.0, 0.0, 1.0),
-            Q64::new(1.0, 1.0, 1.0, 1.0),
-            Q64::new(1.0, -2.0, 3.0, -4.0),
-            Q64::new(4.0, 3.0, 2.0, 1.0),
+            Q64::new(1.0, 0.0, 0.0, 0.0),   // identity
+            Q64::new(0.0, 1.0, 0.0, 0.0),   // 180 degree x axis
+            Q64::new(0.0, 0.0, 1.0, 0.0),   // 180 degree y axis
+            Q64::new(0.0, 0.0, 0.0, 1.0),   // 180 degree z axis
+            Q64::new(1.0, 1.0, 1.0, 1.0),   // 120 degree xyz
+            Q64::new(1.0, -2.0, 3.0, -4.0), // arbitrary
+            Q64::new(4.0, 3.0, 2.0, 1.0),   // arbitrary
+            Q64::new(1.0, 0.0, 1.0, 0.0),   // gimbal lock 1
+            Q64::new(1.0, 1.0, 1.0, -1.0),  // gimbal lock 2
+            Q64::new(1.0, 0.0, -1.0, 0.0),  // gimbal lock 3
+            Q64::new(1.0, 1.0, -1.0, 1.0),  // gimbal lock 4
         ];
         for q in test_data.into_iter().map(|q| q.normalize().unwrap()) {
             let EulerAngles { roll, pitch, yaw } = q.to_euler_angles();
