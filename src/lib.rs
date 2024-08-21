@@ -1876,6 +1876,10 @@ where
     ///
     /// This function is the inverse of
     /// [`to_rotation_vector`](UnitQuaternion::to_rotation_vector).
+    ///
+    /// The results of this function may not be accurate, if the input has a
+    /// very large norm. If the input vector is not finite (i. e. it contains
+    /// an infinite or `NaN` component), then the result is filled with `NaN`.
     pub fn from_rotation_vector(v: &[T; 3]) -> Self {
         let sqr_norm = v[0] * v[0] + v[1] * v[1] + v[2] * v[2];
         let two = T::one() + T::one();
