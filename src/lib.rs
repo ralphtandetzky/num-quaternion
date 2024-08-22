@@ -1876,6 +1876,10 @@ where
     ///
     /// This function is the inverse of
     /// [`to_rotation_vector`](UnitQuaternion::to_rotation_vector).
+    ///
+    /// The results of this function may not be accurate, if the input has a
+    /// very large norm. If the input vector is not finite (i. e. it contains
+    /// an infinite or `NaN` component), then the result is filled with `NaN`.
     pub fn from_rotation_vector(v: &[T; 3]) -> Self {
         let sqr_norm = v[0] * v[0] + v[1] * v[1] + v[2] * v[2];
         let two = T::one() + T::one();
@@ -4806,6 +4810,32 @@ mod tests {
             .norm()
                 < 4.0 * f64::EPSILON
         );
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_from_rotation_vector_infinite() {
+        // Test `from_rotation_vector` for a vector with infinite components.
+        let inf = f32::INFINITY;
+        assert!(UQ32::from_rotation_vector(&[inf, 0.0, 0.0])
+            .into_inner()
+            .is_all_nan());
+        assert!(UQ32::from_rotation_vector(&[inf, inf, inf])
+            .into_inner()
+            .is_all_nan());
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_from_rotation_vector_nan_input() {
+        // Test `from_rotation_vector` for a vector with infinite components.
+        let nan = f64::NAN;
+        assert!(UQ64::from_rotation_vector(&[nan, 0.0, 0.0])
+            .into_inner()
+            .is_all_nan());
+        assert!(UQ64::from_rotation_vector(&[nan, nan, nan])
+            .into_inner()
+            .is_all_nan());
     }
 
     #[cfg(any(feature = "std", feature = "libm"))]
