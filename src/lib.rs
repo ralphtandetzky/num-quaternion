@@ -4910,6 +4910,7 @@ mod tests {
         // Here we first compute the rotation vector and then
         // check if `from_rotation_vector` restores the original
         // quaternion appropriately.
+        let min_pos = f64::MIN_POSITIVE;
         for q in [
             [1.0, 0.0, 0.0, 0.0],
             [0.0, 0.0, 0.0, 1.0],
@@ -4921,13 +4922,10 @@ mod tests {
             [1.0, 0.0, 1.0e-10, 2.0e-10],
             [-1.0, 0.0, 0.0, 0.0],
             [1.0, f64::EPSILON, 0.0, 0.0],
-            [1.0, 0.0, 0.0, f64::MIN_POSITIVE],
-            [
-                -1.0,
-                3.0 * f64::MIN_POSITIVE,
-                2.0 * f64::MIN_POSITIVE,
-                f64::MIN_POSITIVE,
-            ],
+            [1.0, 0.0, 0.0, min_pos],
+            [-1.0, 3.0 * min_pos, 2.0 * min_pos, min_pos],
+            [1.0, 0.1, 0.0, 0.0],
+            [-1.0, 0.0, 0.1, 0.0],
         ]
         .into_iter()
         .map(|[w, x, y, z]| Q64::new(w, x, y, z).normalize().unwrap())
