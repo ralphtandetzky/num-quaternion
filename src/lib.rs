@@ -2894,7 +2894,7 @@ where
 }
 
 #[cfg(all(feature = "rand", any(feature = "std", feature = "libm")))]
-/// A uniform random distribution of unit quaterstdnions.
+/// A uniform random distribution of unit quaternions.
 ///
 /// To sample from this distribution, call the method
 /// [`sample`](rand_distr::Distribution::sample).
