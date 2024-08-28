@@ -2893,6 +2893,34 @@ where
     }
 }
 
+#[cfg(all(feature = "rand", any(feature = "std", feature = "libm")))]
+/// A uniform random distribution of unit quaternions.
+///
+/// To sample from this distribution, call the method
+/// [`sample`](rand_distr::Distribution::sample).
+pub struct UniformUnitQuaternion;
+
+#[cfg(all(feature = "rand", any(feature = "std", feature = "libm")))]
+impl<T> rand_distr::Distribution<UnitQuaternion<T>> for UniformUnitQuaternion
+where
+    T: Float,
+    rand_distr::StandardNormal: rand_distr::Distribution<T>,
+{
+    fn sample<R: rand::Rng + ?Sized>(&self, rng: &mut R) -> UnitQuaternion<T> {
+        loop {
+            let s = rand_distr::StandardNormal;
+            let w = s.sample(rng);
+            let x = s.sample(rng);
+            let y = s.sample(rng);
+            let z = s.sample(rng);
+            let q = Quaternion::new(w, x, y, z);
+            if let Some(q) = q.normalize() {
+                return q;
+            }
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use core::borrow::Borrow;
@@ -5914,5 +5942,69 @@ mod tests {
 
         // Assert that the deserialized quaternion is equal to the original
         assert_eq!(q, deserialized);
+    }
+
+    #[cfg(all(feature = "rand", any(feature = "std", feature = "libm")))]
+    fn make_seeded_rng() -> impl rand::Rng {
+        use rand::SeedableRng;
+        rand::rngs::SmallRng::seed_from_u64(0x7F0829AE4D31C6B5)
+    }
+
+    #[cfg(all(feature = "rand", any(feature = "std", feature = "libm")))]
+    #[test]
+    fn test_unit_quaternion_sample_six_sigma() {
+        // Test that the sample distribution of unit quaternions is uniform
+        use rand_distr::Distribution;
+        let dist = crate::UniformUnitQuaternion;
+        let num_iters = 1_000_000;
+        let mut sum = Q64::zero();
+        let rng = make_seeded_rng();
+        for q in dist.sample_iter(rng).take(num_iters) {
+            sum += q;
+        }
+
+        let sum_stddev = (num_iters as f64).sqrt();
+        // The statistical probability of failure is 1.973e-9, unless there is
+        // a bug.
+        assert!(sum.norm() < 6.0 * sum_stddev);
+    }
+
+    #[cfg(all(feature = "rand", any(feature = "std", feature = "libm")))]
+    #[test]
+    fn test_unit_quaternion_sample_half_planes() {
+        // Test that the sample distribution of unit quaternions is uniform
+        use rand_distr::Distribution;
+        let dist = crate::UniformUnitQuaternion;
+        let num_iters = 1_000_000;
+        let mut rng = make_seeded_rng();
+        const NUM_DIRS: usize = 10;
+        let dirs: [UQ64; NUM_DIRS] = [
+            UQ64::ONE,
+            UQ64::I,
+            UQ64::J,
+            UQ64::K,
+            Q64::new(1.0, 2.0, 3.0, 4.0).normalize().unwrap(),
+            Q64::new(4.0, -3.0, 2.0, -1.0).normalize().unwrap(),
+            dist.sample(&mut rng),
+            dist.sample(&mut rng),
+            dist.sample(&mut rng),
+            dist.sample(&mut rng),
+        ];
+        let mut counters = [0; NUM_DIRS];
+        for q in dist.sample_iter(rng).take(num_iters) {
+            for (dir, counter) in dirs.iter().zip(counters.iter_mut()) {
+                if q.dot(*dir) > 0.0 {
+                    *counter += 1;
+                }
+            }
+        }
+
+        let six_sigma = 3 * (num_iters as f64).sqrt() as i32;
+        let expected_count = num_iters as i32 / 2;
+        // The statistical probability of failure of the following loop is
+        // 1.973e-8, unless there is a bug.
+        for counter in counters {
+            assert!((counter - expected_count).abs() < six_sigma);
+        }
     }
 }

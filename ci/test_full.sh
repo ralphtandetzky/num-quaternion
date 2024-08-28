@@ -27,7 +27,7 @@ if ! check_version $MSRV ; then
   exit 1
 fi
 
-FEATURES=(libm serde unstable)
+FEATURES=(libm rand serde unstable)
 echo "Testing supported features: ${FEATURES[*]}"
 
 cargo generate-lockfile
