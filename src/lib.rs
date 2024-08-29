@@ -2894,14 +2894,8 @@ where
 }
 
 #[cfg(all(feature = "rand", any(feature = "std", feature = "libm")))]
-/// A uniform random distribution of unit quaternions.
-///
-/// To sample from this distribution, call the method
-/// [`sample`](rand_distr::Distribution::sample).
-pub struct UniformUnitQuaternion;
-
-#[cfg(all(feature = "rand", any(feature = "std", feature = "libm")))]
-impl<T> rand_distr::Distribution<UnitQuaternion<T>> for UniformUnitQuaternion
+impl<T> rand::distributions::Distribution<UnitQuaternion<T>>
+    for rand::distributions::Standard
 where
     T: Float,
     rand_distr::StandardNormal: rand_distr::Distribution<T>,
@@ -5954,12 +5948,13 @@ mod tests {
     #[test]
     fn test_unit_quaternion_sample_six_sigma() {
         // Test that the sample distribution of unit quaternions is uniform
-        use rand_distr::Distribution;
-        let dist = crate::UniformUnitQuaternion;
+        use rand::distributions::{Distribution, Standard};
         let num_iters = 1_000_000;
         let mut sum = Q64::zero();
         let rng = make_seeded_rng();
-        for q in dist.sample_iter(rng).take(num_iters) {
+        for q in
+            Distribution::<UQ64>::sample_iter(Standard, rng).take(num_iters)
+        {
             sum += q;
         }
 
@@ -5973,8 +5968,10 @@ mod tests {
     #[test]
     fn test_unit_quaternion_sample_half_planes() {
         // Test that the sample distribution of unit quaternions is uniform
-        use rand_distr::Distribution;
-        let dist = crate::UniformUnitQuaternion;
+        use rand::{
+            distributions::{Distribution, Standard},
+            Rng,
+        };
         let num_iters = 1_000_000;
         let mut rng = make_seeded_rng();
         const NUM_DIRS: usize = 10;
@@ -5985,13 +5982,15 @@ mod tests {
             UQ64::K,
             Q64::new(1.0, 2.0, 3.0, 4.0).normalize().unwrap(),
             Q64::new(4.0, -3.0, 2.0, -1.0).normalize().unwrap(),
-            dist.sample(&mut rng),
-            dist.sample(&mut rng),
-            dist.sample(&mut rng),
-            dist.sample(&mut rng),
+            rng.gen(),
+            rng.gen(),
+            rng.gen(),
+            rng.gen(),
         ];
         let mut counters = [0; NUM_DIRS];
-        for q in dist.sample_iter(rng).take(num_iters) {
+        for q in
+            Distribution::<UQ64>::sample_iter(Standard, rng).take(num_iters)
+        {
             for (dir, counter) in dirs.iter().zip(counters.iter_mut()) {
                 if q.dot(*dir) > 0.0 {
                     *counter += 1;
