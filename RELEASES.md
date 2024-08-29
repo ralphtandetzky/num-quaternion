@@ -1,5 +1,13 @@
 # Releases in Reverse Chronological Order
 
+## Release 0.2.26 (2024-08-29)
+
+- Added `rand` feature to crate.
+- Implemented sampling `UnitQuaternion<T>` from a uniform distribution.
+- Increased test coverage.
+
+**Contributors**: @ralphtandetzky
+
 ## Release 0.2.25 (2024-08-21)
 
 - Fix bug in gimbal lock case of `UnitQuaternion::to_euler_angles`.
