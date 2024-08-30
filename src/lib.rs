@@ -5148,6 +5148,23 @@ mod tests {
         }
     }
 
+    #[cfg(all(feature = "rand", any(feature = "std", feature = "libm")))]
+    #[test]
+    fn test_to_rotation_from_rotation() {
+        // Test the conversion from a unit quaternion to a 3x3 matrix and back
+        // in a randomized way.
+        use rand::Rng;
+        let mut rng = make_seeded_rng();
+        for _ in 0..1000 {
+            let q = rng.gen::<UQ32>();
+            let mat = q.to_rotation_matrix3x3();
+            let restored_q = UQ32::from_rotation_matrix3x3(&mat);
+            assert!(restored_q.0.w >= 0.0);
+            let expected = if q.0.w >= 0.0 { q } else { -q };
+            assert!((restored_q - expected).norm() <= 4.0 * f32::EPSILON);
+        }
+    }
+
     #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_zero_vector_a() {
