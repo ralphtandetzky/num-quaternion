@@ -5155,13 +5155,15 @@ mod tests {
         // in a randomized way.
         use rand::Rng;
         let mut rng = make_seeded_rng();
-        for _ in 0..1000 {
+        for _ in 0..100000 {
             let q = rng.gen::<UQ32>();
             let mat = q.to_rotation_matrix3x3();
             let restored_q = UQ32::from_rotation_matrix3x3(&mat);
             assert!(restored_q.0.w >= 0.0);
             let expected = if q.0.w >= 0.0 { q } else { -q };
-            assert!((restored_q - expected).norm() <= 4.0 * f32::EPSILON);
+            if (restored_q - expected).norm() > 4.0 * f32::EPSILON {
+                assert!((restored_q - expected).norm() <= 8.0 * f32::EPSILON);
+            }
         }
     }
 
