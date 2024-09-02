@@ -5,7 +5,7 @@ set -e
 # Install cargo tarpaulin if not already installed
 cargo clean
 
-RUSTFLAGS="-C instrument-coverage" rustup run 1.61.0 cargo t
+RUSTFLAGS="-C instrument-coverage" rustup run 1.61.0 cargo t --all-features
 llvm-profdata merge default.profraw -o num-quaternion.profdata
 
 # Find the newest file matching the pattern
