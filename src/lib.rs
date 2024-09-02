@@ -5190,7 +5190,7 @@ mod tests {
         assert_eq!(q.as_quaternion().w, 0.0);
     }
 
-    #[cfg(any(feature = "std", feature = "libm"))]
+    #[cfg(all(feature = "rand", any(feature = "std", feature = "libm")))]
     #[test]
     fn test_opposite_vectors_randomized() {
         // Test `from_two_vectors` for the case where the vectors are opposite
