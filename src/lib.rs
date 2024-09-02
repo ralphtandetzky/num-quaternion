@@ -5192,6 +5192,22 @@ mod tests {
 
     #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
+    fn test_opposite_vectors_randomized() {
+        // Test `from_two_vectors` for the case where the vectors are opposite
+        // in a randomized way.
+        use rand::Rng;
+        let mut rng = make_seeded_rng();
+        let mut gen_coord = move || rng.gen::<f32>() * 2.0 - 1.0;
+        for _ in 0..10000 {
+            let a = [gen_coord(), gen_coord(), gen_coord()];
+            let b = [-a[0], -a[1], -a[2]];
+            let q = UnitQuaternion::from_two_vectors(&a, &b);
+            assert!(q.as_quaternion().w.abs() <= f32::EPSILON);
+        }
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
     fn test_perpendicular_vectors() {
         // Test `from_two_vectors` for the case where the vectors are
         // perpendicular
@@ -5256,6 +5272,28 @@ mod tests {
             dir[2] * angle,
         ]);
         assert!((q - expected).norm() <= 2.0 * f64::EPSILON);
+    }
+
+    #[cfg(all(feature = "rand", any(feature = "std", feature = "libm")))]
+    #[test]
+    fn test_from_to_vectors_randomized() {
+        // Test `from_two_vectors` in a randomized way.
+        use rand::Rng;
+        let mut rng = make_seeded_rng();
+        let mut gen_coord = move || rng.gen::<f32>() * 2.0 - 1.0;
+        for _ in 0..100000 {
+            let a = [gen_coord(), gen_coord(), gen_coord()];
+            let b = [gen_coord(), gen_coord(), gen_coord()];
+            let q = UQ32::from_two_vectors(&a, &b);
+            let rotated_a = q.rotate_vector(a);
+            let dot =
+                rotated_a[0] * b[0] + rotated_a[1] * b[1] + rotated_a[2] * b[2];
+            let b_norm_sqr = b[0] * b[0] + b[1] * b[1] + b[2] * b[2];
+            let a_norm_sqr = a[0] * a[0] + a[1] * a[1] + a[2] * a[2];
+            let expected = (a_norm_sqr * b_norm_sqr).sqrt();
+            let cos_angle = dot / expected;
+            assert!((cos_angle - 1.0).abs() <= 8.0 * f32::EPSILON);
+        }
     }
 
     #[test]
