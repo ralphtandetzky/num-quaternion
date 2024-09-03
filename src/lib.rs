@@ -5415,7 +5415,7 @@ mod tests {
     fn test_unit_quaternion_inv_func() {
         // Test the inverse of unit quaternions
         assert_eq!(
-            Q32::new(1.0, 2.0, 3.0, 4.0).normalize().unwrap().inv(),
+            UQ32::inv(&Q32::new(1.0, 2.0, 3.0, 4.0).normalize().unwrap()),
             Q32::new(1.0, 2.0, 3.0, 4.0).normalize().unwrap().conj()
         )
     }
