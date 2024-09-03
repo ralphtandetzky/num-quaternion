@@ -4773,6 +4773,25 @@ mod tests {
         );
     }
 
+    #[cfg(all(
+        feature = "unstable",
+        feature = "rand",
+        any(feature = "std", feature = "libm")
+    ))]
+    #[test]
+    fn test_from_euler_angles_struct() {
+        // Test the conversion from Euler angles to quaternions using the
+        // function `from_euler_angles_struct`.
+        let angles = EulerAngles {
+            roll: 1.0,
+            pitch: 2.0,
+            yaw: 3.0,
+        };
+        let q = UQ64::from_euler_angles_struct(angles);
+        let expected = UQ64::from_euler_angles(1.0, 2.0, 3.0);
+        assert_eq!(q, expected);
+    }
+
     #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_to_euler_angles() {
