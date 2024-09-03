@@ -3329,6 +3329,18 @@ mod tests {
         );
     }
 
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_normalize_subnormal() {
+        // Test the normalize function for subnormal quaternions
+        let s = f64::MIN_POSITIVE / 4.0;
+        let q = Q64::new(s, s, s, s);
+        assert_eq!(
+            q.normalize().unwrap().into_inner(),
+            Q64::new(0.5, 0.5, 0.5, 0.5)
+        );
+    }
+
     #[test]
     fn test_from_underlying_type_val() {
         // Test the From trait for values
