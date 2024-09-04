@@ -1,5 +1,11 @@
 # Releases in Reverse Chronological Order
 
+## Release 0.2.27 (2024-09-04)
+
+- Reached 100% test coverage.
+
+**Contributors**: @ralphtandetzky
+
 ## Release 0.2.26 (2024-08-29)
 
 - Added `rand` feature to crate.
