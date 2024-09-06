@@ -1,10 +1,10 @@
-use core::ops::{
-    Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign,
+use {
+    crate::{Quaternion, UnitQuaternion, Q32, Q64, UQ32, UQ64},
+    core::ops::{
+        Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign,
+    },
+    num_traits::{Inv, Num, Zero},
 };
-
-use num_traits::{Inv, Num, Zero};
-
-use crate::{Quaternion, UnitQuaternion, Q32, Q64, UQ32, UQ64};
 
 impl<T> Add<Quaternion<T>> for Quaternion<T>
 where
@@ -562,11 +562,7 @@ impl_op_with_ref!(impl<T> Div::div for UnitQuaternion<T>, T);
 #[cfg(test)]
 mod tests {
 
-    use crate::Quaternion;
-    use crate::Q32;
-    use crate::Q64;
-    use crate::UQ32;
-    use crate::UQ64;
+    use crate::{Quaternion, Q32, Q64, UQ32, UQ64};
 
     #[test]
     fn test_add_quaternion() {

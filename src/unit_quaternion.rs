@@ -1,11 +1,11 @@
-use core::{
-    borrow::Borrow,
-    ops::{Add, Mul, Neg, Sub},
+use {
+    crate::Quaternion,
+    core::{
+        borrow::Borrow,
+        ops::{Add, Mul, Neg, Sub},
+    },
+    num_traits::{ConstOne, ConstZero, Inv, Num, One, Zero},
 };
-
-use num_traits::{ConstOne, ConstZero, Inv, Num, One, Zero};
-
-use crate::Quaternion;
 
 #[cfg(any(feature = "std", feature = "libm"))]
 use {
@@ -1042,28 +1042,23 @@ where
 
 #[cfg(test)]
 mod tests {
-    use core::borrow::Borrow;
-    #[cfg(feature = "std")]
-    use core::hash::Hash;
-    #[cfg(feature = "std")]
-    use core::hash::Hasher;
-    #[cfg(feature = "std")]
-    use std::collections::hash_map::DefaultHasher;
+    use {
+        crate::{Quaternion, UnitQuaternion, Q32, UQ32, UQ64},
+        core::borrow::Borrow,
+        num_traits::{ConstOne, One},
+    };
 
-    use num_traits::ConstOne;
+    #[cfg(feature = "std")]
+    use {
+        core::hash::{Hash, Hasher},
+        std::collections::hash_map::DefaultHasher,
+    };
+
     #[cfg(any(feature = "std", feature = "libm"))]
-    use num_traits::Inv;
-    use num_traits::One;
+    use {crate::Q64, num_traits::Inv};
 
     #[cfg(any(feature = "std", feature = "libm", feature = "serde"))]
     use crate::EulerAngles;
-    use crate::Quaternion;
-    use crate::UnitQuaternion;
-    use crate::Q32;
-    #[cfg(any(feature = "std", feature = "libm"))]
-    use crate::Q64;
-    use crate::UQ32;
-    use crate::UQ64;
 
     /// Computes the hash value of `val` using the default hasher.
     #[cfg(feature = "std")]

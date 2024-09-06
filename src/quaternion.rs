@@ -1,8 +1,8 @@
-use core::ops::{Add, Mul, Neg};
-
-use num_traits::{ConstOne, ConstZero, Inv, Num, One, Zero};
-
-use crate::UnitQuaternion;
+use {
+    crate::UnitQuaternion,
+    core::ops::{Add, Mul, Neg},
+    num_traits::{ConstOne, ConstZero, Inv, Num, One, Zero},
+};
 
 #[cfg(any(feature = "std", feature = "libm"))]
 use {
@@ -1194,19 +1194,13 @@ where
 #[cfg(test)]
 mod tests {
 
-    use num_traits::ConstOne;
-    use num_traits::ConstZero;
+    use {
+        crate::{Quaternion, Q32, Q64, UQ32, UQ64},
+        num_traits::{ConstOne, ConstZero, Inv, One, Zero},
+    };
+
     #[cfg(any(feature = "std", feature = "libm"))]
     use num_traits::FloatConst;
-    use num_traits::Inv;
-    use num_traits::One;
-    use num_traits::Zero;
-
-    use crate::Quaternion;
-    use crate::Q32;
-    use crate::Q64;
-    use crate::UQ32;
-    use crate::UQ64;
 
     #[test]
     fn test_new() {

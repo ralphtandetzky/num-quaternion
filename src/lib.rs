@@ -161,11 +161,10 @@
 extern crate std;
 
 mod arithmetics;
-
 mod quaternion;
-pub use crate::quaternion::{Quaternion, Q32, Q64};
-
 mod unit_quaternion;
-pub use unit_quaternion::{
-    EulerAngles, ReadMat3x3, UnitQuaternion, UQ32, UQ64,
+
+pub use {
+    quaternion::{Quaternion, Q32, Q64},
+    unit_quaternion::{EulerAngles, ReadMat3x3, UnitQuaternion, UQ32, UQ64},
 };
