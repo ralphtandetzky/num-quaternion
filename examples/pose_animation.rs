@@ -50,8 +50,8 @@ fn main() {
         y: 0.0,
         z: 1.0,
     };
-    println!("Initial pose: roll = {:4.2}, pitch = {:4.2}, yaw = {:4.2}, x = {}, y = {:.1}, z = {:.1}", pose1.roll, pose1.pitch, pose1.yaw, pose1.x, pose1.y, pose1.z);
-    println!("Final pose:   roll = {:4.2}, pitch = {:4.2}, yaw = {:4.2}, x = {}, y = {:.1}, z = {:.1}", pose2.roll, pose2.pitch, pose2.yaw, pose2.x, pose2.y, pose2.z);
+    println!("Initial pose: roll = {:4.3}, pitch = {:4.3}, yaw = {:4.3}, x = {}, y = {:.1}, z = {:.1}", pose1.roll, pose1.pitch, pose1.yaw, pose1.x, pose1.y, pose1.z);
+    println!("Final pose:   roll = {:4.3}, pitch = {:4.3}, yaw = {:4.3}, x = {}, y = {:.1}, z = {:.1}", pose2.roll, pose2.pitch, pose2.yaw, pose2.x, pose2.y, pose2.z);
 
     // Compute intermediate poses
     println!("Intermediate poses:");
@@ -59,7 +59,7 @@ fn main() {
         let t = i as f32 / 10.0;
         let pose = pose1.interpolate(&pose2, t);
         println!(
-            "     t = {:.1}, roll = {:4.2}, pitch = {:4.2}, yaw = {:4.2}, x = {}, y = {:.1}, z = {:.1}",
+            "     t = {:.1}, roll = {:4.3}, pitch = {:4.3}, yaw = {:4.3}, x = {}, y = {:.1}, z = {:.1}",
             t, pose.roll, pose.pitch, pose.yaw, pose.x, pose.y, pose.z
         );
     }
