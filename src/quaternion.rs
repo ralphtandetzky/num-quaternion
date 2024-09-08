@@ -551,7 +551,8 @@ where
     /// # use num_quaternion::Quaternion;
     /// # fn test() -> Option<()> {
     /// let q = Quaternion::new(1.0f32, 2.0, 2.0, 4.0);
-    /// assert_eq!(q.normalize()?.into_quaternion(), Quaternion::new(0.2, 0.4, 0.4, 0.8));
+    /// assert_eq!(q.normalize()?.into_quaternion(),
+    ///         Quaternion::new(0.2f32, 0.4, 0.4, 0.8));
     /// # Some(())
     /// # }
     /// # assert!(test().is_some());
