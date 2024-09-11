@@ -83,6 +83,13 @@ pub type Q64 = Quaternion<f64>;
 
 impl<T> Quaternion<T> {
     /// Create a new quaternion $a + bi + cj + dk$.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use num_quaternion::Quaternion;
+    /// let q = Quaternion::new(1.0f32, 2.0, 3.0, 4.0);
+    /// ```
     #[inline]
     pub const fn new(w: T, x: T, y: T, z: T) -> Self {
         Self { w, x, y, z }
@@ -94,6 +101,17 @@ where
     T: ConstZero,
 {
     /// A constant zero `Quaternion`.
+    ///
+    /// This is the additive identity element of the quaternion space.
+    /// See also [`Quaternion::zero`].
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use num_quaternion::Quaternion;
+    /// let q = Quaternion::ZERO;
+    /// assert_eq!(q, Quaternion::new(0.0f32, 0.0, 0.0, 0.0));
+    /// ```
     pub const ZERO: Self = Self::new(T::ZERO, T::ZERO, T::ZERO, T::ZERO);
 }
 
@@ -137,21 +155,53 @@ where
     /// A constant `Quaternion` of value $1$.
     ///
     /// See also [`Quaternion::one`].
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use num_quaternion::Quaternion;
+    /// let q = Quaternion::ONE;
+    /// assert_eq!(q, Quaternion::new(1.0f32, 0.0, 0.0, 0.0));
+    /// ```
     pub const ONE: Self = Self::new(T::ONE, T::ZERO, T::ZERO, T::ZERO);
 
     /// A constant `Quaternion` of value $i$.
     ///
     /// See also [`Quaternion::i`].
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use num_quaternion::Quaternion;
+    /// let q = Quaternion::I;
+    /// assert_eq!(q, Quaternion::new(0.0f32, 1.0, 0.0, 0.0));
+    /// ```
     pub const I: Self = Self::new(T::ZERO, T::ONE, T::ZERO, T::ZERO);
 
     /// A constant `Quaternion` of value $j$.
     ///
     /// See also [`Quaternion::j`].
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use num_quaternion::Quaternion;
+    /// let q = Quaternion::J;
+    /// assert_eq!(q, Quaternion::new(0.0f32, 0.0, 1.0, 0.0));
+    /// ```
     pub const J: Self = Self::new(T::ZERO, T::ZERO, T::ONE, T::ZERO);
 
     /// A constant `Quaternion` of value $k$.
     ///
     /// See also [`Quaternion::k`].
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use num_quaternion::Quaternion;
+    /// let q = Quaternion::K;
+    /// assert_eq!(q, Quaternion::new(0.0f32, 0.0, 0.0, 1.0));
+    /// ```
     pub const K: Self = Self::new(T::ZERO, T::ZERO, T::ZERO, T::ONE);
 }
 
@@ -195,6 +245,14 @@ where
     /// Returns the imaginary unit $i$.
     ///
     /// See also [`Quaternion::I`].
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use num_quaternion::Quaternion;
+    /// let q = Quaternion::i();
+    /// assert_eq!(q, Quaternion::new(0.0f32, 1.0, 0.0, 0.0));
+    /// ```
     #[inline]
     pub fn i() -> Self {
         Self::new(T::zero(), T::one(), T::zero(), T::zero())
@@ -203,6 +261,14 @@ where
     /// Returns the imaginary unit $j$.
     ///
     /// See also [`Quaternion::J`].
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use num_quaternion::Quaternion;
+    /// let q = Quaternion::j();
+    /// assert_eq!(q, Quaternion::new(0.0f32, 0.0, 1.0, 0.0));
+    /// ```
     #[inline]
     pub fn j() -> Self {
         Self::new(T::zero(), T::zero(), T::one(), T::zero())
@@ -211,6 +277,14 @@ where
     /// Returns the imaginary unit $k$.
     ///
     /// See also [`Quaternion::K`].
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use num_quaternion::Quaternion;
+    /// let q = Quaternion::k();
+    /// assert_eq!(q, Quaternion::new(0.0f32, 0.0, 0.0, 1.0));
+    /// ```
     #[inline]
     pub fn k() -> Self {
         Self::new(T::zero(), T::zero(), T::zero(), T::one())
@@ -223,6 +297,17 @@ where
     T: Float,
 {
     /// Returns a quaternion filled with `NaN` values.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use num_quaternion::Q32;
+    /// let q = Q32::nan();
+    /// assert!(q.w.is_nan());
+    /// assert!(q.x.is_nan());
+    /// assert!(q.y.is_nan());
+    /// assert!(q.z.is_nan());
+    /// ```
     #[inline]
     pub fn nan() -> Self {
         let nan = T::nan();
@@ -244,6 +329,14 @@ where
     /// Furthermore, `T` only needs to support addition and multiplication
     /// and therefore, this function works for more types than
     /// [`norm`](Quaternion::norm()).
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use num_quaternion::Quaternion;
+    /// let q = Quaternion::new(1.0f32, 2.0, 3.0, 4.0);
+    /// assert_eq!(q.norm_sqr(), 30.0);
+    /// ```
     #[inline]
     pub fn norm_sqr(&self) -> T {
         (self.w.clone() * self.w.clone() + self.y.clone() * self.y.clone())
@@ -257,6 +350,14 @@ where
     T: Clone + Neg<Output = T>,
 {
     /// Returns the conjugate quaternion, i. e. the imaginary part is negated.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use num_quaternion::Quaternion;
+    /// let q = Quaternion::new(1.0f32, 2.0, 3.0, 4.0);
+    /// assert_eq!(q.conj(), Quaternion::new(1.0, -2.0, -3.0, -4.0));
+    /// ```
     #[inline]
     pub fn conj(&self) -> Self {
         Self::new(
@@ -273,6 +374,14 @@ where
     for<'a> &'a Self: Inv<Output = Quaternion<T>>,
 {
     /// Returns the multiplicative inverse `1/self`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use num_quaternion::Quaternion;
+    /// let q = Quaternion::new(1.0f32, 2.0, 3.0, 4.0);
+    /// assert_eq!(q.inv(), Quaternion::new(
+    ///     1.0 / 30.0, -1.0 / 15.0, -0.1, -2.0 / 15.0));
     #[inline]
     pub fn inv(&self) -> Self {
         Inv::inv(self)
@@ -323,6 +432,14 @@ where
     /// If any of the components of the input quaternion is `NaN`, then `NaN`
     /// is returned. Otherwise, if any of the components is infinite, then
     /// a positive infinite value is returned.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use num_quaternion::Quaternion;
+    /// let q = Quaternion::new(1.0f32, 2.0, 3.0, 4.0);
+    /// assert_eq!(q.norm(), 30.0f32.sqrt());
+    /// ```
     #[inline]
     pub fn norm(self) -> T {
         let Self { w, x, y, z } = self;
@@ -398,6 +515,14 @@ where
     /// are interested in maximum speed of your code, feel free to use this
     /// function. If you need to be precise results for the whole range of the
     /// floating point type `T`, stay with [`norm`](Self::norm).
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use num_quaternion::Quaternion;
+    /// let q = Quaternion::new(1.0f32, 2.0, 3.0, 4.0);
+    /// assert_eq!(q.fast_norm(), q.norm());
+    /// ```
     #[inline]
     pub fn fast_norm(self) -> T {
         self.norm_sqr().sqrt()
@@ -419,6 +544,19 @@ where
     /// * has a `NaN` value,
     ///
     /// then `None` will be returned.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use num_quaternion::Quaternion;
+    /// # fn test() -> Option<()> {
+    /// let q = Quaternion::new(1.0f32, 2.0, 2.0, 4.0);
+    /// assert_eq!(q.normalize()?.into_quaternion(),
+    ///         Quaternion::new(0.2f32, 0.4, 0.4, 0.8));
+    /// # Some(())
+    /// # }
+    /// # assert!(test().is_some());
+    /// ```
     #[inline]
     pub fn normalize(self) -> Option<UnitQuaternion<T>> {
         UnitQuaternion::normalize(self)
@@ -465,6 +603,16 @@ where
 {
     /// Computes the dot product of two quaternions interpreted as
     /// 4D real vectors.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use num_quaternion::Quaternion;
+    /// let q1 = Quaternion::new(1.0f32, 2.0, 3.0, 4.0);
+    /// let q2 = Quaternion::new(0.0f32, 0.0, 1.0, 1.0);
+    /// let d = q1.dot(q2);
+    /// assert_eq!(d, 7.0);
+    /// ```
     #[inline]
     pub fn dot(self, other: Self) -> T {
         self.w * other.w
@@ -478,6 +626,15 @@ where
     T: Num + Clone,
 {
     /// Raises `self` to an unsigned integer power `n`, i. e. $q^n$.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use num_quaternion::Quaternion;
+    /// let q = Quaternion::new(1.0f32, 2.0, 3.0, 4.0);
+    /// let q_sqr = q.powu(2);
+    /// assert_eq!(q_sqr, q * q);
+    /// ```
     pub fn powu(&self, mut n: u32) -> Self {
         if n == 0 {
             Self::one()
@@ -512,6 +669,15 @@ where
     /// Raises `self` to a signed integer power `n`, i. e. $q^n$
     ///
     /// For $n=0$ the result is exactly $1$.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use num_quaternion::Quaternion;
+    /// let q = Quaternion::new(1.0f32, 2.0, 3.0, 4.0);
+    /// let q_sqr = q.powi(2);
+    /// assert_eq!(q_sqr, q * q);
+    /// ```
     #[inline]
     pub fn powi(&self, n: i32) -> Self {
         if n >= 0 {
@@ -553,6 +719,14 @@ where
     /// 5. **Finite Norm**: For finite norms, the method ensures a very small
     ///    relative error in all components, depending on the accuracy of the
     ///    underlying floating point function implementations.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use num_quaternion::Quaternion;
+    /// let q = Quaternion::new(1.0f32, 2.0, 3.0, 4.0);
+    /// let exp_q = q.exp();
+    /// ```
     pub fn exp(self) -> Self {
         let one = T::one();
         let two = one + one;
@@ -697,6 +871,14 @@ where
     /// may not be returned to indicate inaccuracy. This can occur when
     /// $\|\Im(q) \ln t\|$ is on the order of $1/\varepsilon$, where
     /// $\varepsilon$ is the machine precision of the floating point type used.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use num_quaternion::Quaternion;
+    /// let q = Quaternion::new(1.0f32, 2.0, 3.0, 4.0);
+    /// let exp_q = q.expf(2.0);
+    /// ```
     #[inline]
     pub fn expf(self, base: T) -> Self {
         if (base.is_infinite()
@@ -763,6 +945,14 @@ where
     /// may not be returned to indicate inaccuracy. This can occur when
     /// $\|t \Im(\ln q)\|$ is on the order of $1/\varepsilon$, where
     /// $\varepsilon$ is the machine precision of the floating point type used.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use num_quaternion::Quaternion;
+    /// let q = Quaternion::new(1.0f32, 2.0, 3.0, 4.0);
+    /// let exp_q = q.powf(2.0);
+    /// ```
     #[inline]
     pub fn powf(self, exponent: T) -> Self {
         if exponent.is_finite() {
@@ -817,6 +1007,14 @@ where
     ///
     /// If a `Quaternion` has an infinite or `NaN` entry, the function returns
     /// `false`, otherwise `true`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use num_quaternion::Quaternion;
+    /// let q = Quaternion::new(1.0f32, 2.0, 3.0, 4.0);
+    /// assert!(q.is_finite());
+    /// ```
     pub fn is_finite(&self) -> bool {
         self.w.is_finite()
             && self.x.is_finite()
@@ -825,11 +1023,27 @@ where
     }
 
     /// Returns whether any component of the quaternion is `NaN`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use num_quaternion::Quaternion;
+    /// let q = Quaternion::new(1.0f32, 2.0, 3.0, 4.0);
+    /// assert!(!q.has_nan());
+    /// ```
     pub fn has_nan(&self) -> bool {
         self.w.is_nan() || self.x.is_nan() || self.y.is_nan() || self.z.is_nan()
     }
 
     /// Returns whether all components of a quaternion are `NaN`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use num_quaternion::Q64;
+    /// let q = Q64::nan();
+    /// assert!(q.is_all_nan());
+    /// ```
     pub fn is_all_nan(&self) -> bool {
         self.w.is_nan() && self.x.is_nan() && self.y.is_nan() && self.z.is_nan()
     }
@@ -862,6 +1076,14 @@ where
     ///     - $f(+\infty) := 1$,
     ///     - $f(-\infty) :=-1$, and
     ///     - $f(s) := 0$ for finite values of $s$.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use num_quaternion::Quaternion;
+    /// let q = Quaternion::new(1.0f32, 2.0, 3.0, 4.0);
+    /// let ln_q = q.ln();
+    /// ```
     pub fn ln(self) -> Self {
         // The square norm of the imaginary part.
         let sqr_norm_im = self.x * self.x + self.y * self.y + self.z * self.z;
@@ -1034,6 +1256,14 @@ where
     /// - If the real part is $-\infty$ and the imaginary part is finite, then
     ///   the result is $\pm\infty i$ with the sign of the coefficient of $i$
     ///   from the input.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use num_quaternion::Quaternion;
+    /// let q = Quaternion::new(1.0f32, 2.0, 3.0, 4.0);
+    /// let sqrt_q = q.sqrt();
+    /// ```
     pub fn sqrt(self) -> Self {
         let zero = T::zero();
         let one = T::one();
