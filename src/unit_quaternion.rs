@@ -663,6 +663,21 @@ impl<T> UnitQuaternion<T>
 where
     T: Zero + One,
 {
+    /// Returns the identity quaternion $1$.
+    ///
+    /// See also [`UnitQuaternion::ONE`], [`Quaternion::ONE`].
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use num_quaternion::{Q32, UQ32};
+    /// assert_eq!(UQ32::one().into_inner(), Q32::one());
+    /// ```
+    #[inline]
+    pub fn one() -> Self {
+        Self(Quaternion::new(T::one(), T::zero(), T::zero(), T::zero()))
+    }
+
     /// Returns the imaginary unit $i$.
     ///
     /// See also [`UnitQuaternion::I`], [`Quaternion::i`].
@@ -1765,6 +1780,12 @@ mod tests {
         let mut uq = UQ32::I;
         uq.set_one();
         assert!(uq.is_one());
+    }
+
+    #[test]
+    fn test_one_func() {
+        // Test the `one` method of the `UnitQuaternion` struct
+        assert_eq!(UQ32::one().into_quaternion(), Q32::ONE);
     }
 
     #[test]

@@ -242,6 +242,22 @@ impl<T> Quaternion<T>
 where
     T: Zero + One,
 {
+    /// Returns the real unit $1$.
+    ///
+    /// See also [`Quaternion::ONE`].
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use num_quaternion::Quaternion;
+    /// let q = Quaternion::one();
+    /// assert_eq!(q, Quaternion::new(1.0f32, 0.0, 0.0, 0.0));
+    /// ```
+    #[inline]
+    pub fn one() -> Self {
+        Self::new(T::one(), T::zero(), T::zero(), T::zero())
+    }
+
     /// Returns the imaginary unit $i$.
     ///
     /// See also [`Quaternion::I`].
@@ -1518,6 +1534,12 @@ mod tests {
         let mut q = Q32::new(2.0, 3.0, 4.0, 5.0);
         q.set_one();
         assert!(q.is_one());
+    }
+
+    #[test]
+    fn test_one_func() {
+        // Test the `one` function
+        assert_eq!(Q32::one(), Q32::new(1.0, 0.0, 0.0, 0.0));
     }
 
     #[test]
