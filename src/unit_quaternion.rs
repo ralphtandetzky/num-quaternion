@@ -118,6 +118,13 @@ where
     T: Float,
 {
     /// Creates a new Quaternion from roll, pitch and yaw angles.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use num_quaternion::UnitQuaternion;
+    /// let uq = UnitQuaternion::from_euler_angles(1.5, 1.0, 3.0);
+    /// ```
     pub fn from_euler_angles(roll: T, pitch: T, yaw: T) -> Self {
         let half = T::one() / (T::one() + T::one());
         let (sr, cr) = (roll * half).sin_cos();
@@ -135,6 +142,14 @@ where
     ///
     /// *Note.* The reason that this function is marked as `unstable` is that I'm not 100%
     /// confident about the naming of the function.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use num_quaternion::UnitQuaternion;
+    /// let angles = EulerAngles { roll: 1.5, pitch: 1.0, yaw: 3.0 };
+    /// let uq = UnitQuaternion::from_euler_angles_struct(angles);
+    /// ```
     #[cfg(feature = "unstable")]
     pub fn from_euler_angles_struct(angles: EulerAngles<T>) -> Self {
         let EulerAngles { roll, pitch, yaw } = angles;
@@ -148,6 +163,14 @@ where
     T: Float + FloatConst,
 {
     /// Converts the UnitQuaternion to roll, pitch, and yaw angles.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use num_quaternion::UnitQuaternion;
+    /// let uq = UnitQuaternion::from_euler_angles(1.5, 1.0, 3.0);
+    /// let angles = uq.to_euler_angles();
+    /// ```
     pub fn to_euler_angles(&self) -> EulerAngles<T> {
         let &Self(Quaternion { w, x, y, z }) = self;
 
@@ -199,6 +222,14 @@ where
     /// The results of this function may not be accurate, if the input has a
     /// very large norm. If the input vector is not finite (i. e. it contains
     /// an infinite or `NaN` component), then the result is filled with `NaN`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use num_quaternion::UnitQuaternion;
+    /// let v = [1.0, 0.0, 0.0];
+    /// let uq = UnitQuaternion::from_rotation_vector(&v);
+    /// ```
     pub fn from_rotation_vector(v: &[T; 3]) -> Self {
         let sqr_norm = v[0] * v[0] + v[1] * v[1] + v[2] * v[2];
         let two = T::one() + T::one();
@@ -233,6 +264,14 @@ where
     ///
     /// This function is the inverse of
     /// [`from_rotation_vector`](UnitQuaternion::from_rotation_vector).
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use num_quaternion::UnitQuaternion;
+    /// let uq = UnitQuaternion::from_euler_angles(1.5, 1.0, 3.0);
+    /// let v = uq.to_rotation_vector();
+    /// ```
     pub fn to_rotation_vector(&self) -> [T; 3] {
         let q = self.as_quaternion();
         let one = T::one();
@@ -314,6 +353,14 @@ where
     /// general advice is: Use [`rotate_vector`](UnitQuaternion::rotate_vector),
     /// if you want to rotate a single vector. Perform the matrix
     /// multiplication, if more than one vector needs to be rotated.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use num_quaternion::UnitQuaternion;
+    /// let uq = UnitQuaternion::from_euler_angles(1.5, 1.0, 3.0);
+    /// let matrix = uq.to_rotation_matrix3x3();
+    /// ```
     #[inline]
     pub fn to_rotation_matrix3x3(self) -> [T; 9] {
         let two = T::one() + T::one();
@@ -384,6 +431,16 @@ where
     /// The quaternion solution with non-negative real part is returned. This
     /// function reverses the method
     /// [`to_rotation_matrix3x3`](UnitQuaternion::to_rotation_matrix3x3).
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use num_quaternion::UnitQuaternion;
+    /// let matrix = [[0.0, 1.0, 0.0],
+    ///               [0.0, 0.0, 1.0],
+    ///               [1.0, 0.0, 0.0]];
+    /// let uq = UnitQuaternion::from_rotation_matrix3x3(&matrix);
+    /// ```
     pub fn from_rotation_matrix3x3(
         mat: &impl ReadMat3x3<T>,
     ) -> UnitQuaternion<T> {
@@ -489,6 +546,19 @@ where
     /// directions, there are multiple solutions to the problem, and one will
     /// be returned. If one (or both) of the input vectors is the zero vector,
     /// the unit quaternion $1$ is returned.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use num_quaternion::UQ64;
+    /// let a = [1.0, 0.0, 0.0];
+    /// let b = [0.0, 1.0, 0.0];
+    /// let uq = UQ64::from_two_vectors(&a, &b);
+    /// let angles = uq.to_euler_angles();
+    /// assert!((angles.yaw - std::f64::consts::FRAC_PI_2).abs() < 1e-10);
+    /// assert!((angles.pitch).abs() < 1e-10);
+    /// assert!((angles.roll).abs() < 1e-10);
+    /// ```
     pub fn from_two_vectors(a: &[T; 3], b: &[T; 3]) -> UnitQuaternion<T> {
         // Normalize vectors `a` and `b`. Let alpha be the angle between `a`
         // and `b`. We aim to compute the quaternion
@@ -585,6 +655,19 @@ where
     /// * has a `NaN` value,
     ///
     /// then `None` will be returned.
+    ///
+    /// Note, that it may be more natural to use the method
+    /// [`Quaternion::normalize`] instead of this function. Both functions are
+    /// equivalent, but the method is more idiomatic in most cases.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use num_quaternion::UnitQuaternion;
+    /// let q = UnitQuaternion::from_euler_angles(1.5, 1.0, 3.0);
+    /// let normalized = UnitQuaternion::normalize(q.into_inner());
+    /// assert_eq!(normalized, Some(q));
+    /// ```
     #[inline]
     pub fn normalize(q: Quaternion<T>) -> Option<Self> {
         let norm = q.norm();
@@ -614,21 +697,49 @@ where
     /// A constant `UnitQuaternion` of value $1$.
     ///
     /// See also [`UnitQuaternion::one`], [`Quaternion::ONE`].
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use num_quaternion::UQ32;
+    /// assert_eq!(UQ32::ONE, UQ32::one());
+    /// ``````
     pub const ONE: Self = Self(Quaternion::ONE);
 
     /// A constant `UnitQuaternion` of value $i$.
     ///
     /// See also [`UnitQuaternion::i`], [`Quaternion::I`].
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use num_quaternion::UQ32;
+    /// assert_eq!(UQ32::I, UQ32::i());
+    /// ```
     pub const I: Self = Self(Quaternion::I);
 
     /// A constant `UnitQuaternion` of value $j$.
     ///
     /// See also [`UnitQuaternion::j`], [`Quaternion::J`].
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use num_quaternion::UQ32;
+    /// assert_eq!(UQ32::J, UQ32::j());
+    /// ```
     pub const J: Self = Self(Quaternion::J);
 
     /// A constant `UnitQuaternion` of value $k$.
     ///
     /// See also [`UnitQuaternion::k`], [`Quaternion::K`].
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use num_quaternion::UQ32;
+    /// assert_eq!(UQ32::K, UQ32::k());
+    /// ```
     pub const K: Self = Self(Quaternion::K);
 }
 
@@ -681,6 +792,13 @@ where
     /// Returns the imaginary unit $i$.
     ///
     /// See also [`UnitQuaternion::I`], [`Quaternion::i`].
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use num_quaternion::{Q32, UQ32};
+    /// assert_eq!(UQ32::i().into_inner(), Q32::new(0.0, 1.0, 0.0, 0.0));
+    /// ```
     #[inline]
     pub fn i() -> Self {
         Self(Quaternion::i())
@@ -689,6 +807,13 @@ where
     /// Returns the imaginary unit $j$.
     ///
     /// See also [`UnitQuaternion::J`], [`Quaternion::j`].
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use num_quaternion::{Q32, UQ32};
+    /// assert_eq!(UQ32::j().into_inner(), Q32::new(0.0, 0.0, 1.0, 0.0));
+    /// ```
     #[inline]
     pub fn j() -> Self {
         Self(Quaternion::j())
@@ -697,6 +822,13 @@ where
     /// Returns the imaginary unit $k$.
     ///
     /// See also [`UnitQuaternion::K`], [`Quaternion::k`].
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use num_quaternion::{Q32, UQ32};
+    /// assert_eq!(UQ32::k().into_inner(), Q32::new(0.0, 0.0, 0.0, 1.0));
+    /// ```
     #[inline]
     pub fn k() -> Self {
         Self(Quaternion::k())
@@ -709,6 +841,14 @@ impl<T> UnitQuaternion<T> {
     /// This function does the same as
     /// [`into_inner`](UnitQuaternion::into_inner). Client code can decide
     /// which function to use based on the naming preference and context.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use num_quaternion::UnitQuaternion;
+    /// let uq = UnitQuaternion::from_euler_angles(1.5, 1.0, 3.0);
+    /// let q = uq.into_quaternion();
+    /// ```
     #[inline]
     pub fn into_quaternion(self) -> Quaternion<T> {
         self.0
@@ -720,12 +860,28 @@ impl<T> UnitQuaternion<T> {
     /// [`into_quaternion`](UnitQuaternion::into_quaternion). Client code can
     /// decide which function to use based on the naming preference and
     /// context.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use num_quaternion::UnitQuaternion;
+    /// let uq = UnitQuaternion::from_euler_angles(1.5, 1.0, 3.0);
+    /// let q = uq.into_inner();
+    /// ```
     #[inline]
     pub fn into_inner(self) -> Quaternion<T> {
         self.into_quaternion()
     }
 
     /// Returns a reference to the inner quaternion.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use num_quaternion::UnitQuaternion;
+    /// let uq = UnitQuaternion::from_euler_angles(1.5, 1.0, 3.0);
+    /// let q = uq.as_quaternion();
+    /// ```
     #[inline]
     pub fn as_quaternion(&self) -> &Quaternion<T> {
         &self.0
@@ -743,6 +899,14 @@ where
     T: Clone + Neg<Output = T>,
 {
     /// Returns the conjugate quaternion, i. e. the imaginary part is negated.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use num_quaternion::UnitQuaternion;
+    /// let uq = UnitQuaternion::from_euler_angles(1.5, 1.0, 3.0);
+    /// let conj = uq.conj();
+    /// ```
     #[inline]
     pub fn conj(&self) -> Self {
         Self(self.0.conj())
@@ -756,6 +920,16 @@ where
     /// Returns the multiplicative inverse `1/self`.
     ///
     /// This is the same as the conjugate of `self`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use num_quaternion::UnitQuaternion;
+    /// let uq = UnitQuaternion::from_euler_angles(1.5, 1.0, 3.0);
+    /// let inv = uq.inv();
+    /// let conj = uq.conj();
+    /// assert_eq!(inv, conj);
+    /// ```
     #[inline]
     pub fn inv(&self) -> Self {
         self.conj()
@@ -815,6 +989,15 @@ where
 {
     /// Computes the dot product of two unit quaternions interpreted as
     /// 4D real vectors.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use num_quaternion::UnitQuaternion;
+    /// let uq1 = UnitQuaternion::from_euler_angles(1.5, 1.0, 3.0);
+    /// let uq2 = UnitQuaternion::from_euler_angles(0.5, 2.0, 1.0);
+    /// let dot = uq1.dot(uq2);
+    /// ```
     #[inline]
     pub fn dot(self, other: Self) -> T {
         self.0.dot(other.0)
@@ -831,6 +1014,20 @@ where
     /// By many multiplications of unit quaternions, round off errors can lead
     /// to norms which are deviating from $1$ significantly. This function
     /// fixes that inaccuracy.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the norm of the quaternion is too inaccurate to be
+    /// renormalized.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use num_quaternion::UnitQuaternion;
+    /// let uq = UnitQuaternion::from_euler_angles(1.5, 1.0, 3.0);
+    /// let adjusted = uq.adjust_norm();
+    /// assert!((adjusted - uq).norm() < 1e-10);
+    /// ```
     #[inline]
     pub fn adjust_norm(self) -> Self {
         // TODO: Optimize for norms which are close to 1.
@@ -850,6 +1047,14 @@ where
     /// quaternion with real part zero), the mapping $v \mapsto q^*vq$
     /// is a 3D rotation in the space of pure quaternions. This function
     /// performs this 3D rotation efficiently.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use num_quaternion::UnitQuaternion;
+    /// let uq = UnitQuaternion::from_euler_angles(1.5, 1.0, 3.0);
+    /// let rotated = uq.rotate_vector([1.0, 0.0, 0.0]);
+    /// ```
     pub fn rotate_vector(self, vector: [T; 3]) -> [T; 3] {
         let q = self.into_quaternion();
         let [vx, vy, vz] = vector;
@@ -877,6 +1082,15 @@ where
     ///
     /// `t` should be in the range [0, 1], where 0 returns `self` and 1 returns
     /// `other` or `-other`, whichever is closer to `self`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use num_quaternion::UnitQuaternion;
+    /// let uq1 = UnitQuaternion::from_euler_angles(1.5, 1.0, 3.0);
+    /// let uq2 = UnitQuaternion::from_euler_angles(0.5, 2.0, 1.0);
+    /// let uq = uq1.slerp(&uq2, 0.5);
+    /// ```
     pub fn slerp(&self, other: &Self, t: T) -> Self {
         let one = T::one();
         let dot = self.dot(*other);
@@ -931,6 +1145,15 @@ where
     ///
     /// In any case, the three imaginary parts of the result have the same sign
     /// as the three imaginary parts of the input.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use num_quaternion::UnitQuaternion;
+    /// let uq = UnitQuaternion::from_euler_angles(1.5, 1.0, 3.0);
+    /// let sqrt = uq.sqrt();
+    /// assert!((sqrt * sqrt - uq).norm() < 1e-10);
+    /// ```
     pub fn sqrt(self) -> Self {
         let zero = T::zero();
         let one = T::one();
