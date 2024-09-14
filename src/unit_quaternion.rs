@@ -704,7 +704,7 @@ where
     /// ```
     /// # use num_quaternion::UQ32;
     /// assert_eq!(UQ32::ONE, UQ32::one());
-    /// ``````
+    /// ```
     pub const ONE: Self = Self(Quaternion::ONE);
 
     /// A constant `UnitQuaternion` of value $i$.
@@ -1058,7 +1058,8 @@ where
     /// ```
     /// # use num_quaternion::UQ64;
     /// let uq = UQ64::I;
-    /// let rotated = uq.rotate_vector([1.0, 0.0, 0.0]);
+    /// let rotated = uq.rotate_vector([1.0, 2.0, 3.0]);
+    /// assert_eq!(rotated, [1.0, -2.0, -3.0]);
     /// ```
     pub fn rotate_vector(self, vector: [T; 3]) -> [T; 3] {
         let q = self.into_quaternion();
