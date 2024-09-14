@@ -147,6 +147,7 @@ where
     ///
     /// ```
     /// # use num_quaternion::UnitQuaternion;
+    /// # use num_quaternion::EulerAngles;
     /// let angles = EulerAngles { roll: 1.5, pitch: 1.0, yaw: 3.0 };
     /// let uq = UnitQuaternion::from_euler_angles_struct(angles);
     /// ```
@@ -357,8 +358,8 @@ where
     /// # Example
     ///
     /// ```
-    /// # use num_quaternion::UnitQuaternion;
-    /// let uq = UnitQuaternion::from_euler_angles(1.5, 1.0, 3.0);
+    /// # use num_quaternion::UQ64;
+    /// let uq = UQ64::I;
     /// let matrix = uq.to_rotation_matrix3x3();
     /// ```
     #[inline]
@@ -845,9 +846,10 @@ impl<T> UnitQuaternion<T> {
     /// # Example
     ///
     /// ```
-    /// # use num_quaternion::UnitQuaternion;
-    /// let uq = UnitQuaternion::from_euler_angles(1.5, 1.0, 3.0);
+    /// # use num_quaternion::{Q64, UQ64};
+    /// let uq = UQ64::I;
     /// let q = uq.into_quaternion();
+    /// assert_eq!(q, Q64::I);
     /// ```
     #[inline]
     pub fn into_quaternion(self) -> Quaternion<T> {
@@ -864,9 +866,10 @@ impl<T> UnitQuaternion<T> {
     /// # Example
     ///
     /// ```
-    /// # use num_quaternion::UnitQuaternion;
-    /// let uq = UnitQuaternion::from_euler_angles(1.5, 1.0, 3.0);
+    /// # use num_quaternion::{Q64, UQ64};
+    /// let uq = UQ64::I;
     /// let q = uq.into_inner();
+    /// assert_eq!(q, Q64::I);
     /// ```
     #[inline]
     pub fn into_inner(self) -> Quaternion<T> {
@@ -878,9 +881,10 @@ impl<T> UnitQuaternion<T> {
     /// # Example
     ///
     /// ```
-    /// # use num_quaternion::UnitQuaternion;
-    /// let uq = UnitQuaternion::from_euler_angles(1.5, 1.0, 3.0);
+    /// # use num_quaternion::{Q64, UQ64};
+    /// let uq = UQ64::I;
     /// let q = uq.as_quaternion();
+    /// assert_eq!(q, &Q64::I);
     /// ```
     #[inline]
     pub fn as_quaternion(&self) -> &Quaternion<T> {
@@ -903,9 +907,10 @@ where
     /// # Example
     ///
     /// ```
-    /// # use num_quaternion::UnitQuaternion;
-    /// let uq = UnitQuaternion::from_euler_angles(1.5, 1.0, 3.0);
+    /// # use num_quaternion::UQ64;
+    /// let uq = UQ64::I;
     /// let conj = uq.conj();
+    /// assert_eq!(conj, -uq);
     /// ```
     #[inline]
     pub fn conj(&self) -> Self {
@@ -924,11 +929,10 @@ where
     /// # Example
     ///
     /// ```
-    /// # use num_quaternion::UnitQuaternion;
-    /// let uq = UnitQuaternion::from_euler_angles(1.5, 1.0, 3.0);
+    /// # use num_quaternion::UQ32;
+    /// let uq = UQ32::I;
     /// let inv = uq.inv();
-    /// let conj = uq.conj();
-    /// assert_eq!(inv, conj);
+    /// assert_eq!(inv, -UQ32::I);
     /// ```
     #[inline]
     pub fn inv(&self) -> Self {
@@ -993,10 +997,11 @@ where
     /// # Example
     ///
     /// ```
-    /// # use num_quaternion::UnitQuaternion;
-    /// let uq1 = UnitQuaternion::from_euler_angles(1.5, 1.0, 3.0);
-    /// let uq2 = UnitQuaternion::from_euler_angles(0.5, 2.0, 1.0);
+    /// # use num_quaternion::UQ32;
+    /// let uq1 = UQ32::I;
+    /// let uq2 = UQ32::J;
     /// let dot = uq1.dot(uq2);
+    /// assert_eq!(dot, 0.0);
     /// ```
     #[inline]
     pub fn dot(self, other: Self) -> T {
@@ -1051,8 +1056,8 @@ where
     /// # Example
     ///
     /// ```
-    /// # use num_quaternion::UnitQuaternion;
-    /// let uq = UnitQuaternion::from_euler_angles(1.5, 1.0, 3.0);
+    /// # use num_quaternion::UQ64;
+    /// let uq = UQ64::I;
     /// let rotated = uq.rotate_vector([1.0, 0.0, 0.0]);
     /// ```
     pub fn rotate_vector(self, vector: [T; 3]) -> [T; 3] {
