@@ -3,7 +3,7 @@
 ## Release 0.2.29 (2024-09-15)
 
 - Added `pose_animation` example.
-- Added examples Rustdoc examples for all methods.
+- Added Rustdoc code examples for all methods.
 
 ## Release 0.2.28 (2024-09-07)
 
