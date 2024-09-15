@@ -1,5 +1,10 @@
 # Releases in Reverse Chronological Order
 
+## Release 0.2.29 (2024-09-15)
+
+- Added `pose_animation` example.
+- Added Rustdoc code examples for all methods.
+
 ## Release 0.2.28 (2024-09-07)
 
 - Split `lib.rs` into new modules `quaternion`, `unit_quaternion`, and `arithmetics`.
