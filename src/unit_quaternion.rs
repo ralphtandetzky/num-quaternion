@@ -26,12 +26,14 @@ use {
 /// $1$ and $q$ interpreted as 4D vectors.
 ///
 /// You can create a `UnitQuaternion` by normalizing a `Quaternion` using the
-/// [`Quaternion::normalize`](Quaternion::normalize) method. Alternatively, you can use
-/// [`from_euler_angles`](UnitQuaternion::from_euler_angles) or
-/// [`from_rotation_vector`](UnitQuaternion::from_rotation_vector) to obtain
-/// one. The inverse functions
-/// [`to_euler_angles`](UnitQuaternion::to_euler_angles) and
-/// [`to_rotation_vector`](UnitQuaternion::to_rotation_vector) are also
+/// [`Quaternion::normalize`](Quaternion::normalize) method. Alternatively, you
+/// can use [`from_euler_angles`](UnitQuaternion::from_euler_angles),
+/// [`from_rotation_vector`](UnitQuaternion::from_rotation_vector), or
+/// [`from_rotation_matrix3x3`](UnitQuaternion::from_rotation_matrix3x3) to
+/// obtain one. The inverse functions
+/// [`to_euler_angles`](UnitQuaternion::to_euler_angles),
+/// [`to_rotation_vector`](UnitQuaternion::to_rotation_vector), and
+/// [`to_rotation_matrix3x3`](UnitQuaternion::to_rotation_matrix3x3) are also
 /// provided.
 ///
 /// [`UnitQuaternion`] offers the same arithmetic operations as [`Quaternion`].
