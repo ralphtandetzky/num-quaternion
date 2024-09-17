@@ -5,9 +5,13 @@
 - Added `pose_animation` example.
 - Added Rustdoc code examples for all methods.
 
+**Contributors**: @ralphtandetzky
+
 ## Release 0.2.28 (2024-09-07)
 
 - Split `lib.rs` into new modules `quaternion`, `unit_quaternion`, and `arithmetics`.
+
+**Contributors**: @ralphtandetzky
 
 ## Release 0.2.27 (2024-09-04)
 

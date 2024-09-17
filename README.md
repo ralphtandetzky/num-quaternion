@@ -25,6 +25,7 @@ orientations.
   and more.
 - **Interpolation**: Spherical linear interpolation (SLERP) for smooth
   rotations.
+- **Interoperability**: Works with the `serde` and the `rand` crates.
 - **Comprehensive Documentation**: Detailed documentation with examples to
   help you get started quickly.
 
@@ -50,6 +51,10 @@ Then, include it in your crate:
 ```rust
 use num_quaternion::{Quaternion, UnitQuaternion, Q32, Q64, UQ32, UQ64};
 ```
+
+To serialize or deserialize `Quaternion`s with `serde`, or to randomly sample
+`UnitQuaternion`s using the `rand` crate, enable the respective `serde` or
+`rand` feature.
 
 ## Usage
 
