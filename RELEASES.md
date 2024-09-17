@@ -1,5 +1,20 @@
 # Releases in Reverse Chronological Order
 
+# Version 1.x
+
+## Release 1.0.0 (2024-09-10)
+
+- Improved and updated high-level documentation.
+  [Issue #106](https://github.com/ralphtandetzky/num-quaternion/issues/106)
+
+**Note**: There have been no breaking API changes in this release. The major
+version update only signals the maturity and stability of the crate. (There
+have not been any breaking changes since version 0.2.0, in fact.)
+
+**Contributors**: @ralphtandetzky
+
+# Version 0.x
+
 ## Release 0.2.29 (2024-09-15)
 
 - Added `pose_animation` example.
