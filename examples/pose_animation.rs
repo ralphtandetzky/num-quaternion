@@ -1,8 +1,11 @@
-//! This example program computes intermediate values between two poses.
-//! It clearly demonstrates that spherical linear interpolation (slerp) is
-//! different from linear interpolation of individual euler angles.
-//!
-//!
+//! This example program computes intermediate values between two poses. It
+//! clearly demonstrates that spherical linear interpolation (slerp) is
+//! different from linear interpolation of individual euler angles. Slerp
+//! takes the shortest path between two orientations, while linear interpolation
+//! of euler angles can exhibit gimbal lock and other artifacts. If you're
+//! interested in some details, go watch [Quaternions and 3d rotation, explained
+//! interactively from 3Blue1Brown](https://www.youtube.com/watch?v=zjMuIxRvygQ)
+//! and explore some of the links given in the video description.
 
 use num_quaternion::UQ32;
 
