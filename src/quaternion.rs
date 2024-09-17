@@ -38,11 +38,22 @@ use {
 ///
 /// `Quaternion`s support the usual arithmetic operations of addition,
 /// subtraction, multiplication, and division. You can compute the
-/// norm with [`norm`](Quaternion::norm) and its square with
-/// [`norm_sqr`](Quaternion::norm_sqr). Quaternion conjugation is done by the
-/// member function [`conj`](Quaternion::conj). You can normalize a
-/// quaternion by calling [`normalize`](Quaternion::normalize), which returns
-/// a [`UnitQuaternion`].
+/// norm with [`norm`](Quaternion::norm) or [`fast_norm`](Quaternion::fast_norm)
+/// and its square with [`norm_sqr`](Quaternion::norm_sqr). Quaternion
+/// conjugation is done by the member function [`conj`](Quaternion::conj).
+/// You can normalize a quaternion by calling
+/// [`normalize`](Quaternion::normalize), which returns a [`UnitQuaternion`].
+///
+/// Furthermore, the following functions are supported:
+///
+/// - [`dot`](Quaternion::dot): Computes the dot product of two quaternions.
+/// - [`exp`](Quaternion::exp): Computes the exponential of a quaternion.
+/// - [`expf`](Quaternion::expf): Raises a real value to a quaternion power.
+/// - [`inv`](Quaternion::inv): Computes the multiplicative inverse.
+/// - [`ln`](Quaternion::ln): Computes the natural logarithm of a quaternion.
+/// - [`powf`](Quaternion::powf): Raises a quaternion to a real power.
+/// - [`powi`](Quaternion::powi): Raises a quaternion to a signed integer power.
+/// - [`powu`](Quaternion::powu): Raises a quaternion to an unsigned integer power.
 ///
 /// To work with rotations, please use [`UnitQuaternion`]s.
 ///

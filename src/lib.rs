@@ -15,6 +15,7 @@
 //!   and more.
 //! - **Interpolation**: Spherical linear interpolation (SLERP) for smooth
 //!   rotations.
+//! - **Interoperability**: Works with the `serde` and the `rand` crates.
 //! - **Comprehensive Documentation**: Detailed documentation with examples to
 //!   help you get started quickly.
 //!
@@ -128,6 +129,11 @@
 //!   data structures where possible. Useful for easy integration with
 //!   serialization frameworks, enabling data storage and communication
 //!   functionalities.
+//!
+//! - `rand`: Implements the `Distribution` trait for `UnitQuaternion`. This
+//!   feature allows you to randomly sample unit quaternions using the `rand`
+//!   crate.
+//!
 //!
 //! # Design Rationale and Error Handling
 //!
