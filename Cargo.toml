@@ -18,6 +18,10 @@ rust-version = "1.61.0"
 features = ["std", "libm", "serde", "unstable"]
 rustdoc-args = ["--html-in-header", "katex.html"]
 
+[[bench]]
+name = "norm"
+harness = false
+
 [[example]]
 name = "pose_animation"
 required-features = ["std"]
@@ -44,6 +48,9 @@ features = ["small_rng"]  # Needed only for testing. TODO: Move tests outside li
 optional = true
 version = "0.4"
 default-features = false
+
+[dev-dependencies.criterion]
+version = "0.5.1"
 
 [dev-dependencies.serde_json]
 version = "1.0"
