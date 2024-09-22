@@ -44,13 +44,22 @@ version = "0.8"
 default-features = false
 features = ["small_rng"]  # Needed only for testing. TODO: Move tests outside lib.rs and make this a development dependency
 
+[dev-dependencies.criterion]
+version = "0.5"
+
+[dev-dependencies.nalgebra]
+version = "0.33"
+
+[dev-dependencies.quaternion]
+version = "1.0"
+
+[dev-dependencies.quaternion-core]
+version = "0.5"
+
 [dependencies.rand_distr]
 optional = true
 version = "0.4"
 default-features = false
-
-[dev-dependencies.criterion]
-version = "0.5.1"
 
 [dev-dependencies.serde_json]
 version = "1.0"
