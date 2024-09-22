@@ -97,6 +97,16 @@ pub fn bench_norm(c: &mut Criterion) {
             })
         });
     }
+
+    {
+        let mut group = c.benchmark_group("micromath");
+        group.bench_function("Quaternion::norm", |b| {
+            b.iter(|| {
+                black_box(micromath::Quaternion::new(1.0f32, 2.0, 3.0, 4.0))
+                    .norm()
+            })
+        });
+    }
 }
 
 criterion_group! {

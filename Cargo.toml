@@ -47,6 +47,10 @@ features = ["small_rng"]  # Needed only for testing. TODO: Move tests outside li
 [dev-dependencies.criterion]
 version = "0.5"
 
+[dev-dependencies.micromath]
+version = "2.1"
+features = ["quaternion", "vector"]
+
 [dev-dependencies.nalgebra]
 version = "0.33"
 
