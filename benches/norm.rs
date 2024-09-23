@@ -103,7 +103,7 @@ pub fn bench_norm(c: &mut Criterion) {
         group.bench_function("Quaternion::norm", |b| {
             b.iter(|| {
                 black_box(micromath::Quaternion::new(1.0f32, 2.0, 3.0, 4.0))
-                    .norm()
+                    .magnitude()
             })
         });
     }
