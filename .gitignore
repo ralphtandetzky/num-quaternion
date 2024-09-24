@@ -1,6 +1,11 @@
 # Please keep in alphabetical order
 
+bazel-bin
+bazel-c++
+bazel-out
+bazel-testlogs
 Cargo.lock
+MODULE.bazel.lock
 *.profdata
 *.profraw
 /target
