@@ -5,6 +5,7 @@ cc_binary(
     srcs = ["norm.cpp"],
     deps = [
         "@boost.qvm//:boost.qvm",
+        "@eigen//:eigen",
         "@google_benchmark//:benchmark",
     ],
 )
