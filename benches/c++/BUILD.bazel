@@ -2,7 +2,7 @@ load("@rules_cc//cc:defs.bzl", "cc_binary")
 
 cc_binary(
     name = "norm",
-    srcs = ["norm.cpp"],
+    srcs = ["norm_runtime.cpp"],
     deps = [
         "@boost.qvm//:boost.qvm",
         "@eigen//:eigen",
