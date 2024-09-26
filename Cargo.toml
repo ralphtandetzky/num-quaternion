@@ -23,6 +23,12 @@ name = "norm_runtime"
 harness = false
 
 [[example]]
+name = "benchmark_norm_accuracy"
+bench = true
+harneess = false
+required-features = ["std", "rand"]
+
+[[example]]
 name = "pose_animation"
 required-features = ["std"]
 
