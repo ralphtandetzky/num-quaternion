@@ -469,8 +469,7 @@ where
     /// ```
     #[inline]
     pub fn norm(self) -> T {
-        let Self { w, x, y, z } = self;
-        let norm_sqr = w * w + x * x + y * y + z * z;
+        let norm_sqr = self.norm_sqr();
         if norm_sqr.is_normal() {
             // The most likely case first: everything is normal.
             norm_sqr.sqrt()
