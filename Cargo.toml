@@ -24,8 +24,6 @@ harness = false
 
 [[example]]
 name = "benchmark_norm_accuracy"
-bench = true
-harneess = false
 required-features = ["std", "rand"]
 
 [[example]]
