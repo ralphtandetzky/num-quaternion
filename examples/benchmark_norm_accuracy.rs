@@ -54,8 +54,11 @@ fn main() {
         (f32::MIN_POSITIVE, "MIN_POS"),
         (f32::MAX / 2.0, "MAX / 2"),
     ];
-    println!("Scale           | Implementation                 | RMS rel. error in epsilons");
-    println!("================|================================|===========================");
+    println!(
+        "{:^15} | {:^30} | {:^29}",
+        "Scale", "Implementation", "RMS rel. error in epsilons"
+    );
+    println!("{0:=<15}=|={0:=<30}=|={0:=<29}", "");
 
     for (scale, scale_name) in scales.into_iter() {
         for (norm_impl, impl_name) in norm_funcs {
@@ -77,11 +80,10 @@ fn main() {
             }
             let mean_sqr_error = sum_sqr_error / NUM_SAMPLES as f64;
             let rms_error = mean_sqr_error.sqrt();
+            let rms_error_in_eps = rms_error / f32::EPSILON as f64;
             println!(
-                "{:15} | {:30} | {:.4}",
-                scale_name,
-                impl_name,
-                rms_error / f32::EPSILON as f64
+                "{:^15} | {:30} | {:>26.4}",
+                scale_name, impl_name, rms_error_in_eps
             );
         }
     }
