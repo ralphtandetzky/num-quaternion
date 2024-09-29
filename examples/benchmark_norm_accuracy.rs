@@ -1,5 +1,6 @@
 use rand::Rng;
 use rand::SeedableRng;
+use std::io::{self, Write};
 
 const NUM_SAMPLES: usize = 1000000;
 
@@ -49,19 +50,25 @@ fn main() {
     ];
 
     let scales = [
-        (1.0, "1.0"),
-        (f32::MIN_POSITIVE.sqrt(), "sqrt(MIN_POS)"),
-        (f32::MIN_POSITIVE, "MIN_POS"),
-        (f32::MAX / 2.0, "MAX / 2"),
+        1.0,
+        f32::MIN_POSITIVE.sqrt(),
+        f32::MIN_POSITIVE,
+        f32::MAX / 2.0,
     ];
-    println!(
-        "{:^15} | {:^30} | {:^29}",
-        "Scale", "Implementation", "RMS rel. error in epsilons"
-    );
-    println!("{0:=<15}=|={0:=<30}=|={0:=<29}", "");
 
-    for (scale, scale_name) in scales.into_iter() {
-        for (norm_impl, impl_name) in norm_funcs {
+    println!(
+        "Benchmarking the relative accuracy of quaternion norm implementations"
+    );
+    println!("for different scales of the input quaternion.\n");
+    println!(
+        "{:28} | {:^13} | {:^13} | {:^13} | {:^13}",
+        "Implementation \\ Scale", "1.0", "sqrt(MIN_POS)", "MIN_POS", "MAX / 2"
+    );
+    print!("{0:=<28}=|={0:=<13}=|={0:=<13}=|={0:=<13}=|={0:=<13}", "");
+
+    for (norm_impl, impl_name) in norm_funcs {
+        print!("\n{:28}", impl_name);
+        for scale in scales.into_iter() {
             let mut rng =
                 rand::rngs::SmallRng::seed_from_u64(0x7F0829AE4D31C6B5);
             let mut sum_sqr_error = 0.0;
@@ -81,10 +88,30 @@ fn main() {
             let mean_sqr_error = sum_sqr_error / NUM_SAMPLES as f64;
             let rms_error = mean_sqr_error.sqrt();
             let rms_error_in_eps = rms_error / f32::EPSILON as f64;
-            println!(
-                "{:^15} | {:30} | {:>26.4}",
-                scale_name, impl_name, rms_error_in_eps
-            );
+            let formatted_rms_error =
+                if rms_error_in_eps <= 1.0 / f32::EPSILON as f64 {
+                    format!("{:.4}", rms_error_in_eps)
+                } else {
+                    format!("{:.4e}", rms_error_in_eps)
+                };
+            let color_code = if rms_error_in_eps < 0.3 {
+                "92" // green
+            } else if rms_error_in_eps < 1.0 {
+                "93" // yellow
+            } else {
+                "91" // red
+            };
+            print!(" | \x1b[{}m{:>13}\x1b[0m", color_code, formatted_rms_error);
+            io::stdout().flush().unwrap();
         }
     }
+    println!("\n\nThe columns of the table determine the scale of the input quaternion.");
+    println!("The rows of the table determine the implementation of the quaternion norm.");
+    println!("The values in the table are the relative RMS error of the quaternion norm.");
+    println!("\nThe column `1.0` is for quaternions with all components in the range [-1.0, 1.0].");
+    println!("The column `sqrt(MIN_POS)` is for quaternions with all components in the range ");
+    println!("[sqrt(MIN_POS), sqrt(MIN_POS)], where `MIN_POS` is the minimal positive normal ");
+    println!("floating point value for IEEE 754 floating point values of 32-bit width.");
+    println!("Similarly for `MIN_POS` and `MAX / 2`, where `MAX` is the maximal finite value ");
+    println!("for IEEE 754 floating point values of 32-bit width.");
 }
