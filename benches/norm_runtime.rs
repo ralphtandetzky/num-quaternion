@@ -111,7 +111,7 @@ pub fn bench_norm(c: &mut Criterion) {
 
 criterion_group! {
     name = benches;
-    config = Criterion::default().significance_level(0.1).sample_size(1000);
+    config = Criterion::default().significance_level(0.01).sample_size(2000);
     targets = bench_norm
 }
 
