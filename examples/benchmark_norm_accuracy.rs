@@ -2,7 +2,7 @@ use rand::Rng;
 use rand::SeedableRng;
 use std::io::{self, Write};
 
-const NUM_SAMPLES: usize = 1000000;
+const NUM_SAMPLES: usize = 10000000;
 
 fn norm_num_quaternion_f32(w: f32, x: f32, y: f32, z: f32) -> f32 {
     num_quaternion::Q32::new(w, x, y, z).norm()
@@ -39,15 +39,39 @@ fn norm_micromath_f32(w: f32, x: f32, y: f32, z: f32) -> f32 {
 fn main() {
     type NormFunc = fn(f32, f32, f32, f32) -> f32;
     let norm_funcs: [(NormFunc, &'static str); 8] = [
-        (norm_num_quaternion_f32, "norm_num_quaternion_f32"),
-        (norm_num_quaternion_fast_f32, "norm_num_quaternion_fast_f32"),
-        (norm_manual_f32, "norm_manual_f32"),
-        (norm_manual_fast_f32, "norm_manual_fast_f32"),
-        (norm_quaternion_f32, "norm_quaternion_f32"),
-        (norm_quaternion_core_f32, "norm_quaternion_core_f32"),
-        (norm_nalgebra_f32, "norm_nalgebra_f32"),
-        (norm_micromath_f32, "norm_micromath_f32"),
+        (norm_num_quaternion_f32, "num_quaternion::Q32::norm"),
+        (
+            norm_num_quaternion_fast_f32,
+            "num_quaternion::Q32::fast_norm",
+        ),
+        (norm_manual_f32, "hypot implementation"),
+        (norm_manual_fast_f32, "sqrt(a² + b² + c² + d²)"),
+        (norm_quaternion_f32, "quaternion::len"),
+        (norm_quaternion_core_f32, "quaternion_core::norm"),
+        (norm_nalgebra_f32, "nalgebra::...::Quaternion::norm"),
+        (norm_micromath_f32, "micromath::Quaternion::magnitude"),
     ];
+    let func_space =
+        norm_funcs.iter().map(|(_, name)| name.len()).max().unwrap();
+    let col_width = 13;
+
+    println!(
+        "Benchmarking the relative accuracy of quaternion norm implementations for different scales of the"
+    );
+    println!("input quaternion.\n");
+    println!(
+        "{1:func_space$} | {2:^0$} | {3:^0$} | {4:^0$} | {5:^0$}",
+        col_width,
+        "Implementation \\ Scale",
+        "1.0",
+        "sqrt(MIN_POS)",
+        "MIN_POS",
+        "MAX / 2"
+    );
+    print!(
+        "{1:=<func_space$}=|={1:=<0$}=|={1:=<0$}=|={1:=<0$}=|={1:=<0$}",
+        col_width, ""
+    );
 
     let scales = [
         1.0,
@@ -56,18 +80,8 @@ fn main() {
         f32::MAX / 2.0,
     ];
 
-    println!(
-        "Benchmarking the relative accuracy of quaternion norm implementations"
-    );
-    println!("for different scales of the input quaternion.\n");
-    println!(
-        "{:28} | {:^13} | {:^13} | {:^13} | {:^13}",
-        "Implementation \\ Scale", "1.0", "sqrt(MIN_POS)", "MIN_POS", "MAX / 2"
-    );
-    print!("{0:=<28}=|={0:=<13}=|={0:=<13}=|={0:=<13}=|={0:=<13}", "");
-
     for (norm_impl, impl_name) in norm_funcs {
-        print!("\n{:28}", impl_name);
+        print!("\n{:func_space$}", impl_name);
         for scale in scales.into_iter() {
             let mut rng =
                 rand::rngs::SmallRng::seed_from_u64(0x7F0829AE4D31C6B5);
@@ -101,17 +115,17 @@ fn main() {
             } else {
                 "91" // red
             };
-            print!(" | \x1b[{}m{:>13}\x1b[0m", color_code, formatted_rms_error);
+            print!(
+                " | \x1b[{color_code}m{formatted_rms_error:>col_width$}\x1b[0m"
+            );
             io::stdout().flush().unwrap();
         }
     }
     println!("\n\nThe columns of the table determine the scale of the input quaternion.");
     println!("The rows of the table determine the implementation of the quaternion norm.");
     println!("The values in the table are the relative RMS error of the quaternion norm.");
-    println!("\nThe column `1.0` is for quaternions with all components in the range [-1.0, 1.0].");
-    println!("The column `sqrt(MIN_POS)` is for quaternions with all components in the range ");
-    println!("[sqrt(MIN_POS), sqrt(MIN_POS)], where `MIN_POS` is the minimal positive normal ");
-    println!("floating point value for IEEE 754 floating point values of 32-bit width.");
-    println!("Similarly for `MIN_POS` and `MAX / 2`, where `MAX` is the maximal finite value ");
-    println!("for IEEE 754 floating point values of 32-bit width.");
+    println!("\nThe column `1.0` is for quaternions with all components uniformly sampled from the range [-1.0, 1.0].");
+    println!("The column `sqrt(MIN_POS)` is for quaternions with all components in the range [sqrt(MIN_POS), sqrt(MIN_POS)],");
+    println!("where `MIN_POS` is the minimal positive normal 32-bit IEEE-754 floating point value. Similarly for `MIN_POS`");
+    println!("and `MAX / 2`, where `MAX` is the maximal finite `f32` value.");
 }
