@@ -71,9 +71,9 @@ guarantee correct numbers up to the last digit displayed here.
 
 The implementations of
 
-  * `num_quaternion::Q32::fast_norm`,
-  * `quaternion::len`,
-  * `nalgebra::geometry::Quaternion::norm`
+* `num_quaternion::Q32::fast_norm`,
+* `quaternion::len`,
+* `nalgebra::geometry::Quaternion::norm`
 
 are all extremely similar to `sqrt(a² + b² + c² + d²)`. This family of
 functions has the simplest implementation and the fastest run-times (around
@@ -123,8 +123,8 @@ The `hypot()` function is very accurate for all valid inputs and thus the
 implementations using it are very accurate for all inputs. These
 implementations are
 
-  * Our manual implementation and
-  * `quaternion_core::norm`.
+* Our manual implementation and
+* `quaternion_core::norm`.
 
 The `num_quaternion::Q32::norm` implementation outperforms both of these
 with the following trick: It computes the norm square `a² + b² + c² + d²`
@@ -146,9 +146,9 @@ not due to statistical noise here. The number of measurements is large enough
 to guarantee that even the last displayed digits of the rms error are accurate.
 We can see there that in that range,
 
-  * `num_quaternion::Q32::norm`,
-  * `num_quaternion::Q32::fast_norm`, and
-  * `nalgebra::geometry::Quaternion::norm`
+* `num_quaternion::Q32::norm`,
+* `num_quaternion::Q32::fast_norm`, and
+* `nalgebra::geometry::Quaternion::norm`
 
 produce exactly the same result which is the best result of the investigated
 algorithms. This is because in that range, they use exactly the same
@@ -161,8 +161,8 @@ better in modern hardware which leads to less latency of the computation.
 
 If you only care about speed, then
 
-  * `num_quaternion::Q32::fast_norm`, and
-  * `nalgebra::geometry::Quaternion::norm`
+* `num_quaternion::Q32::fast_norm`, and
+* `nalgebra::geometry::Quaternion::norm`
 
 are your best choice. These algorithms also provide very good accuracy, if
 the resulting norm is in the range from `2.65 * 10^-23` up to `1.84 * 10^19`
