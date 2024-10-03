@@ -181,6 +181,7 @@ a 32-bit floating point quaternion implementation that works correctly for
 all inputs and is really fast, `num_quaternion::Q32::norm` is the best pick.
 
 Of course, there are other factors that are important for the decision as
-well. For example, if you are already using `nalgebra` as a library, I
-will have a hard time convincing you to add another dependency to your
-project just to use a really awesome quaternion norm implementation. 😜
+well. For example, if you are already using the `nalgebra` crate, I will
+have a hard time convincing you to add another dependency to your project
+just to use a really awesome quaternion norm implementation. But I'd
+appreciate if you use `num_quaternion` anyways. 😜
