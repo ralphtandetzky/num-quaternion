@@ -7,37 +7,37 @@ pub fn bench_norm(c: &mut Criterion) {
         group.bench_function("Q32::norm", |b| {
             b.iter(|| black_box(Q32::new(1.0, 2.0, 3.0, 4.0)).norm())
         });
-        group.bench_function("Q32::fast_norm: ", |b| {
+        group.bench_function("Q32::fast_norm", |b| {
             b.iter(|| black_box(Q32::new(1.0, 2.0, 3.0, 4.0)).fast_norm())
         });
         group.bench_function("Q64::norm", |b| {
             b.iter(|| black_box(Q64::new(1.0, 2.0, 3.0, 4.0)).norm())
         });
-        group.bench_function("Q64::fast_norm: ", |b| {
+        group.bench_function("Q64::fast_norm", |b| {
             b.iter(|| black_box(Q64::new(1.0, 2.0, 3.0, 4.0)).fast_norm())
         });
     }
     {
         let mut group = c.benchmark_group("Manual implementation");
-        group.bench_function("f32 norm: ", |b| {
+        group.bench_function("f32 norm", |b| {
             b.iter(|| {
                 let q = black_box(Q32::new(1.0, 2.0, 3.0, 4.0));
                 q.w.hypot(q.x).hypot(q.y.hypot(q.z))
             })
         });
-        group.bench_function("f32 fast norm: ", |b| {
+        group.bench_function("f32 fast norm", |b| {
             b.iter(|| {
                 let q = black_box(Q32::new(1.0, 2.0, 3.0, 4.0));
                 (q.w * q.w + q.x * q.x + q.y * q.y + q.z * q.z).sqrt()
             })
         });
-        group.bench_function("f64 norm: ", |b| {
+        group.bench_function("f64 norm", |b| {
             b.iter(|| {
                 let q = black_box(Q64::new(1.0, 2.0, 3.0, 4.0));
                 q.w.hypot(q.x).hypot(q.y.hypot(q.z))
             })
         });
-        group.bench_function("f64 fast norm: ", |b| {
+        group.bench_function("f64 fast norm", |b| {
             b.iter(|| {
                 let q = black_box(Q64::new(1.0, 2.0, 3.0, 4.0));
                 (q.w * q.w + q.x * q.x + q.y * q.y + q.z * q.z).sqrt()
