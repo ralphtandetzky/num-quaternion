@@ -1,10 +1,13 @@
 #include <Eigen/Geometry>
 #include <boost/qvm/quat.hpp>
 #include <boost/qvm/quat_operations.hpp>
+#include <cfloat>
 #include <cmath>
 #include <iomanip>
 #include <iostream>
 #include <random>
+#include <ranges>
+#include <string>
 
 const size_t NUM_SAMPLES = 10000000;
 
@@ -28,30 +31,23 @@ float norm_eigen(float w, float x, float y, float z) {
 
 using NormFunc = float (*)(float, float, float, float);
 
-size_t utf8_length(const char *str) {
-  size_t length = 0;
-  size_t i = 0;
-  while (str[i] != '\0') {
-    if ((str[i] & 0xC0) != 0x80) {
-      ++length;
-    }
-    ++i;
-  }
-  return length;
+size_t utf8_length(const std::string_view str) {
+  return std::ranges::count_if(str,
+                               [](const char c) { return (c & 0xC0) != 0x80; });
 }
 
 int main() {
-  NormFunc norm_funcs[] = {norm_boost_qvm, norm_manual, norm_manual_fast,
-                           norm_eigen};
+  constexpr std::array<std::pair<NormFunc, std::string_view>, 4> norm_funcs = {
+      {{norm_boost_qvm, "boost::qvm::mag"},
+       {norm_manual, "hypot implementation"},
+       {norm_manual_fast, "sqrt(a² + b² + c² + d²)"},
+       {norm_eigen, "Eigen::Quaternionf::norm"}}};
 
-  const char *norm_func_names[] = {"boost::qvm::mag", "hypot implementation",
-                                   "sqrt(a² + b² + c² + d²)",
-                                   "Eigen::Quaternionf::norm"};
+  const size_t func_space = std::ranges::max(
+      std::ranges::views::transform(norm_funcs, [](const auto &pair) {
+        return utf8_length(pair.second.data());
+      }));
 
-  size_t func_space = 0;
-  for (const char *name : norm_func_names) {
-    func_space = std::max(func_space, utf8_length(name));
-  }
   size_t col_width = 13;
 
   std::cout << "Benchmarking the relative accuracy of quaternion norm "
@@ -69,37 +65,35 @@ int main() {
             << "=|=" << std::string(col_width, '=')
             << "=|=" << std::string(col_width, '=') << "\n";
 
-  float scales[] = {1.0f, std::sqrt(std::numeric_limits<float>::min()),
-                    std::numeric_limits<float>::min(),
-                    std::numeric_limits<float>::max() / 2.0f};
+  const float scales[] = {1.0f, std::sqrt(FLT_MIN), FLT_MIN, FLT_MAX / 2.0f};
 
-  for (size_t i = 0; i < sizeof(norm_funcs) / sizeof(NormFunc); ++i) {
-    std::cout << std::setw(func_space + std::strlen(norm_func_names[i]) -
-                           utf8_length(norm_func_names[i]))
-              << norm_func_names[i];
-    for (float scale : scales) {
+  for (const auto &[norm_func, func_name] : norm_funcs) {
+    std::cout << std::setw(func_space + func_name.length() -
+                           utf8_length(func_name))
+              << func_name;
+    for (const float scale : scales) {
       std::mt19937 rng(0x7F0829AE4D31C6B5);
       std::uniform_real_distribution<float> dist(-scale, scale);
       double sum_sqr_error = 0.0;
       for (size_t j = 0; j < NUM_SAMPLES; ++j) {
-        float w = dist(rng);
-        float x = dist(rng);
-        float y = dist(rng);
-        float z = dist(rng);
-        float norm_f32 = norm_funcs[i](w, x, y, z);
-        double norm_f64 =
+        const float w = dist(rng);
+        const float x = dist(rng);
+        const float y = dist(rng);
+        const float z = dist(rng);
+        const float norm_f32 = norm_func(w, x, y, z);
+        const double norm_f64 =
             std::sqrt(static_cast<double>(w) * w + static_cast<double>(x) * x +
                       static_cast<double>(y) * y + static_cast<double>(z) * z);
         sum_sqr_error += std::pow(norm_f32 / norm_f64 - 1.0, 2);
       }
-      double mean_sqr_error = sum_sqr_error / NUM_SAMPLES;
-      double rms_error = std::sqrt(mean_sqr_error);
-      double rms_error_in_eps =
+      const double mean_sqr_error = sum_sqr_error / NUM_SAMPLES;
+      const double rms_error = std::sqrt(mean_sqr_error);
+      const double rms_error_in_eps =
           rms_error / std::numeric_limits<float>::epsilon();
-      // std::string formatted_rms_error = std::to_string(rms_error_in_eps);
-      const char *color_code = (rms_error_in_eps < 0.3)   ? "92"
-                               : (rms_error_in_eps < 1.0) ? "93"
-                                                          : "91";
+      using namespace std::literals::string_view_literals;
+      const auto color_code = (rms_error_in_eps < 0.3)   ? "92"sv
+                              : (rms_error_in_eps < 1.0) ? "93"sv
+                                                         : "91"sv;
       std::cout << " | \x1b[" << color_code << "m" << std::setw(col_width)
                 << rms_error_in_eps << "\x1b[0m";
     }
