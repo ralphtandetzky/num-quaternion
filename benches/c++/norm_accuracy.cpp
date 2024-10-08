@@ -26,7 +26,7 @@ float norm_eigen(float w, float x, float y, float z) {
   return q.norm();
 }
 
-typedef float (*NormFunc)(float, float, float, float);
+using NormFunc = float (*)(float, float, float, float);
 
 size_t utf8_length(const char *str) {
   size_t length = 0;
