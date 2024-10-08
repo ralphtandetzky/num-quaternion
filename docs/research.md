@@ -80,7 +80,7 @@ quaternion_core::norm                |  17.37 |      0.3026 |        0.3026 |   
 nalgebra::geometry::Quaternion::norm |   1.89 |      0.2723 |        0.7485 | 8388608      |     inf
 micromath::Quaternion::magnitude     |   2.80 | 239721.1370 |  1770435.9112 |    6.0089e25 | 8388608
 boost::qvm::mag (C++)                |   1.86 |      0.2779 |        0.7324 | 8388608      |     inf
-hypot implementation (C++)           |  15.5  |      0.3026 |        0.3026 |       0.4488 |  0.3026
+hypot implementation (C++)           |  15.5  |      0.2762 |        0.2762 |       0.4226 |  0.2761
 sqrt(a² + b² + c² + d²) (C++)        |   1.86 |      0.2779 |        0.7324 | 8388608      |     inf
 Eigen::Quaternionf::norm (C++)       |   1.51 |      0.2724 |        0.7319 | 8388608      |     inf
 

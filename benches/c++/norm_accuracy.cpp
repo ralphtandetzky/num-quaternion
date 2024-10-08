@@ -14,7 +14,7 @@ float norm_boost_qvm(float w, float x, float y, float z) {
 }
 
 float norm_manual(float w, float x, float y, float z) {
-  return std::hypot(w, std::hypot(x, std::hypot(y, z)));
+  return std::hypot(std::hypot(w, x), std::hypot(y, z));
 }
 
 float norm_manual_fast(float w, float x, float y, float z) {
