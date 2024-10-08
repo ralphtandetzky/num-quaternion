@@ -3,7 +3,7 @@
 #include <boost/qvm/quat.hpp>
 #include <boost/qvm/quat_operations.hpp>
 
-#include <Eigen/Dense>
+#include <Eigen/Geometry>
 
 #include <cmath>
 
@@ -57,7 +57,6 @@ public:
 
   T norm() const { return std::sqrt(w * w + x * x + y * y + z * z); }
 
-private:
   T w, x, y, z;
 };
 
@@ -82,5 +81,29 @@ static void BM_QuaternionF64NormManualImpl(benchmark::State &state) {
 }
 
 BENCHMARK(BM_QuaternionF64NormManualImpl);
+
+static void BM_QuaternionF32NormManualHypotImpl(benchmark::State &state) {
+  for (auto _ : state) {
+    Quaternion<float> q{1.0f, 2.0f, 3.0f, 4.0f};
+    benchmark::DoNotOptimize(q);
+    benchmark::ClobberMemory();
+    benchmark::DoNotOptimize(
+        std::hypot(std::hypot(q.w, q.x), std::hypot(q.y, q.z)));
+  }
+}
+
+BENCHMARK(BM_QuaternionF32NormManualHypotImpl);
+
+static void BM_QuaternionF64NormManualHypotImpl(benchmark::State &state) {
+  for (auto _ : state) {
+    Quaternion<double> q{1.0f, 2.0f, 3.0f, 4.0f};
+    benchmark::DoNotOptimize(q);
+    benchmark::ClobberMemory();
+    benchmark::DoNotOptimize(
+        std::hypot(std::hypot(q.w, q.x), std::hypot(q.y, q.z)));
+  }
+}
+
+BENCHMARK(BM_QuaternionF64NormManualHypotImpl);
 
 BENCHMARK_MAIN();
