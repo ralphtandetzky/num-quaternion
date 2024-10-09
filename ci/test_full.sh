@@ -36,24 +36,36 @@ set -x
 
 # test the default
 cargo build
-cargo test
+if [[ "$*" == *--run_tests* ]]; then
+  cargo test --lib
+fi
 
 # test `no_std`
 cargo build --no-default-features
-cargo test --no-default-features
+if [[ "$*" == *--run_tests* ]]; then
+  cargo test --no-default-features
+fi
 
 # test each isolated feature, with and without std
 for feature in ${FEATURES[*]}; do
   cargo build --no-default-features --features="std $feature"
-  cargo test --no-default-features --features="std $feature"
+  if [[ "$*" == *--run_tests* ]]; then
+    cargo test --no-default-features --features="std $feature"
+  fi
 
   cargo build --no-default-features --features="$feature"
-  cargo test --no-default-features --features="$feature"
+  if [[ "$*" == *--run_tests* ]]; then
+    cargo test --no-default-features --features="$feature"
+  fi
 done
 
 # test all supported features, with and without std
 cargo build --features="std ${FEATURES[*]}"
-cargo test --features="std ${FEATURES[*]}"
+if [[ "$*" == *--run_tests* ]]; then
+  cargo test --features="std ${FEATURES[*]}"
+fi
 
 cargo build --features="${FEATURES[*]}"
-cargo test --features="${FEATURES[*]}"
+if [[ "$*" == *--run_tests* ]]; then
+  cargo test --features="${FEATURES[*]}"
+fi
