@@ -95,7 +95,7 @@ int main() {
                               : (rms_error_in_eps < 1.0) ? "93"sv
                                                          : "91"sv;
       std::cout << " | \x1b[" << color_code << "m" << std::setw(col_width)
-                << rms_error_in_eps << "\x1b[0m";
+                << rms_error_in_eps << "\x1b[0m" << std::flush;
     }
     std::cout << "\n";
   }
