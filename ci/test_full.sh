@@ -3,7 +3,7 @@
 set -e
 
 CRATE=num-quaternion
-MSRV=1.61  # minimum supported rust version
+MSRV=1.63  # minimum supported rust version
 
 get_rust_version() {
   local array=($(rustc --version));
