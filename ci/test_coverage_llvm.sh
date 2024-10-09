@@ -23,7 +23,7 @@ set -e
 cargo clean
 
 # Run the tests with coverage instrumentation
-RUSTFLAGS="-C instrument-coverage" rustup run 1.61.0 cargo t --all-features
+RUSTFLAGS="-C instrument-coverage" rustup run 1.63.0 cargo t --all-features
 
 # Merge the coverage data
 llvm-profdata-14 merge default.profraw -o num-quaternion.profdata

@@ -469,27 +469,14 @@ where
     /// ```
     #[inline]
     pub fn norm(self) -> T {
-        let Self { w, x, y, z } = self;
-        let norm_sqr = w * w + x * x + y * y + z * z;
-        if norm_sqr.is_normal() {
-            // The most likely case first: everything is normal.
-            norm_sqr.sqrt()
-        } else {
-            // This function call may not be inlined each time `norm()` is
-            // inlined. This can avoid code bloat. At the same time is keeps
-            // the norm function simple.
-            self.handle_non_normal_cases(norm_sqr)
-        }
-    }
-
-    /// Computes the norm of self under the precondition that the square norm
-    /// of self is not a normal floating point number.
-    fn handle_non_normal_cases(self, norm_sqr: T) -> T {
-        debug_assert!(!norm_sqr.is_normal());
+        let one = T::one();
+        let two = one + one;
         let s = T::min_positive_value();
-        if norm_sqr < s {
-            // norm_sqr is either subnormal or zero.
-            if self.is_zero() {
+        let norm_sqr = self.norm_sqr();
+        if norm_sqr < T::infinity() {
+            if norm_sqr >= s * two {
+                norm_sqr.sqrt()
+            } else if self.is_zero() {
                 // Likely, the whole vector is zero. If so, we can return
                 // zero directly and avoid expensive floating point math.
                 T::zero()
@@ -498,20 +485,18 @@ where
                 // normal floating point range, then scale down the result.
                 (self / s).fast_norm() * s
             }
-        } else if norm_sqr.is_infinite() {
-            // There are two possible cases:
-            //   1. one of w, x, y, z is infinite, or
-            //   2. none of them is infinite.
-            // In the first case, multiplying by s or dividing by it does
-            // not change the infiniteness and thus the correct result is
-            // returned. In the second case, multiplying by s makes sure
-            // that the square norm is a normal floating point number.
-            // Dividing by it will rescale the result to the correct
-            // magnitude.
-            (self * s).fast_norm() / s
         } else {
-            debug_assert!(norm_sqr.is_nan(), "norm_sqr is not NaN");
-            T::nan()
+            // There are three possible cases:
+            //   1. one of w, x, y, z is NaN,
+            //   2. neither is `NaN`, but at least one of them is infinite, or
+            //   3. all of them are finite.
+            // In the first case, multiplying by s or dividing by it does not
+            // change the that the result is `NaN`. The same applies in the
+            // second case: the result remains infinite. In the third case,
+            // multiplying by s makes sure that the square norm is a normal
+            // floating point number. Dividing by it will rescale the result
+            // to the correct magnitude.
+            (self * s).fast_norm() / s
         }
     }
 }

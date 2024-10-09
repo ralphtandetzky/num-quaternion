@@ -75,7 +75,7 @@ have not been any breaking changes since version 0.2.0, in fact.)
 
 ## Release 0.2.21 (2024-08-01)
 
-- Updated minimum required Rust compiler version to 1.61.
+- Updated minimum required Rust compiler version to 1.63.
 - Added [Design Rationale](DESIGN_RATIONALE.md) laying out the design goals and
   the error handling strategy.
 - Adjusted formatting of the code.

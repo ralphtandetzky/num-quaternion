@@ -15,7 +15,7 @@ jobs:
     strategy:
       matrix:
         rust: [
-          1.61.0, # Minimum version determined by cargo-msrv
+          1.63.0, # Minimum version determined by cargo-msrv
           stable,
         ]
     steps:
@@ -31,7 +31,7 @@ jobs:
     - name: Build
       run: cargo build --verbose
     - name: Run tests
-      run: ./ci/test_full.sh
+      run: ./ci/test_full.sh ${{ matrix.rust == 'stable' && '--run_tests' || '' }}
 
   check_formatting:
     runs-on: ubuntu-latest

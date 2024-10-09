@@ -12,11 +12,19 @@ version = "1.0.0"
 readme = "README.md"
 exclude = ["/.github/*"]
 edition = "2021"
-rust-version = "1.61.0"
+rust-version = "1.63.0"
 
 [package.metadata.docs.rs]
 features = ["std", "libm", "serde", "unstable"]
 rustdoc-args = ["--html-in-header", "katex.html"]
+
+[[bench]]
+name = "norm_runtime"
+harness = false
+
+[[example]]
+name = "benchmark_norm_accuracy"
+required-features = ["std", "rand"]
 
 [[example]]
 name = "pose_animation"
@@ -39,6 +47,22 @@ optional = true
 version = "0.8"
 default-features = false
 features = ["small_rng"]  # Needed only for testing. TODO: Move tests outside lib.rs and make this a development dependency
+
+[dev-dependencies.criterion]
+version = "0.5"
+
+[dev-dependencies.micromath]
+version = "2.1"
+features = ["quaternion", "vector"]
+
+[dev-dependencies.nalgebra]
+version = "0.33"
+
+[dev-dependencies.quaternion]
+version = "1.0"
+
+[dev-dependencies.quaternion-core]
+version = "0.5"
 
 [dependencies.rand_distr]
 optional = true
