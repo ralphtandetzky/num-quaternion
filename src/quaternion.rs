@@ -477,11 +477,25 @@ where
             if norm_sqr >= s * two {
                 norm_sqr.sqrt()
             } else if self.is_zero() {
+                // Likely, the whole vector is zero. If so, we can return
+                // zero directly and avoid expensive floating point math.
                 T::zero()
             } else {
+                // Otherwise, scale up, such that the norm will be in the
+                // normal floating point range, then scale down the result.
                 (self / s).fast_norm() * s
             }
         } else {
+            // There are three possible cases:
+            //   1. one of w, x, y, z is NaN,
+            //   2. neither is `NaN`, but at least one of them is infinite, or
+            //   3. all of them are finite.
+            // In the first case, multiplying by s or dividing by it does not
+            // change the that the result is `NaN`. The same applies in the
+            // second case: the result remains infinite. In the third case,
+            // multiplying by s makes sure that the square norm is a normal
+            // floating point number. Dividing by it will rescale the result
+            // to the correct magnitude.
             (self * s).fast_norm() / s
         }
     }
