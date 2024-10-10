@@ -2,6 +2,16 @@
 
 # Version 1.x
 
+## Release 1.0.1 (2024-10-11)
+
+- Added benchmarks to measure run-time and accuracy of `norm` and compare
+  against other Rust crates and C++ libraries.
+- Improved run-time and accuracy of `norm`.
+- Updated Minimum Supported Rust Version from 1.61 to 1.63.
+
+**Contributors**: @ralphtandetzky
+
+
 ## Release 1.0.0 (2024-09-10)
 
 - Improved and updated high-level documentation.
