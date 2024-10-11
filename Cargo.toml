@@ -19,6 +19,10 @@ features = ["std", "libm", "serde", "unstable"]
 rustdoc-args = ["--html-in-header", "katex.html"]
 
 [[bench]]
+name = "from_euler_angles_runtime"
+harness = false
+
+[[bench]]
 name = "norm_runtime"
 harness = false
 
