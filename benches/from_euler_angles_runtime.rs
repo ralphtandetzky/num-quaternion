@@ -106,6 +106,64 @@ pub fn bench_from_euler_angles(c: &mut Criterion) {
             })
         });
     }
+    {
+        let mut group = c.benchmark_group("nalgebra");
+        group.bench_function(
+            "geometry::Quaternion<f32>::from_euler_angles",
+            |b| {
+                b.iter(|| {
+                    let (roll, pitch, yaw) =
+                        black_box((1.0f32, 2.0f32, 3.0f32));
+                    nalgebra::geometry::UnitQuaternion::from_euler_angles(
+                        roll, pitch, yaw,
+                    )
+                })
+            },
+        );
+        group.bench_function(
+            "geometry::Quaternion<f64>::from_euler_angles",
+            |b| {
+                b.iter(|| {
+                    let (roll, pitch, yaw) =
+                        black_box((1.0f64, 2.0f64, 3.0f64));
+                    nalgebra::geometry::UnitQuaternion::from_euler_angles(
+                        roll, pitch, yaw,
+                    )
+                })
+            },
+        );
+    }
+    {
+        let mut group = c.benchmark_group("micromath");
+        group.bench_function("Quaternion<f32>::from_euler_angles", |b| {
+            b.iter(|| {
+                use micromath::{vector::Vector3d, Quaternion};
+                let (roll, pitch, yaw) = black_box((1.0f32, 2.0f32, 3.0f32));
+                Quaternion::axis_angle(
+                    Vector3d {
+                        x: 1.0,
+                        y: 0.0,
+                        z: 0.0,
+                    },
+                    roll,
+                ) * Quaternion::axis_angle(
+                    Vector3d {
+                        x: 0.0,
+                        y: 1.0,
+                        z: 0.0,
+                    },
+                    pitch,
+                ) * Quaternion::axis_angle(
+                    Vector3d {
+                        x: 0.0,
+                        y: 0.0,
+                        z: 1.0,
+                    },
+                    yaw,
+                )
+            })
+        });
+    }
 }
 
 criterion_group! {
