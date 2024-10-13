@@ -89,7 +89,7 @@ pub fn bench_from_euler_angles(c: &mut Criterion) {
             b.iter(|| {
                 let angles = black_box([1.0f32, 2.0f32, 3.0f32]);
                 quaternion_core::from_euler_angles(
-                    quaternion_core::RotationType::Intrinsic,
+                    quaternion_core::RotationType::Extrinsic,
                     quaternion_core::RotationSequence::XYZ,
                     angles,
                 )
@@ -99,7 +99,7 @@ pub fn bench_from_euler_angles(c: &mut Criterion) {
             b.iter(|| {
                 let angles = black_box([1.0f64, 2.0f64, 3.0f64]);
                 quaternion_core::from_euler_angles(
-                    quaternion_core::RotationType::Intrinsic,
+                    quaternion_core::RotationType::Extrinsic,
                     quaternion_core::RotationSequence::XYZ,
                     angles,
                 )
