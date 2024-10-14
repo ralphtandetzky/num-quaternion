@@ -2,6 +2,12 @@
 
 # Version 1.x
 
+## Release 1.0.2 (2024-10-14)
+
+- Avoid `num-integer` pulling in `std` by default
+
+**Contributors**: [Zachary Catlin](https://github.com/zec)
+
 ## Release 1.0.1 (2024-10-11)
 
 - Added benchmarks to measure run-time and accuracy of `norm` and compare
