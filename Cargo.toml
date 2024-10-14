@@ -36,6 +36,7 @@ default-features = false
 
 [dependencies.num-integer]
 version = "0.1.46"
+default-features = false
 
 [dependencies.serde]
 optional = true
