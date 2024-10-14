@@ -27,6 +27,10 @@ name = "norm_runtime"
 harness = false
 
 [[example]]
+name = "benchmark_from_euler_angles_accuracy"
+required-features = ["std", "rand"]
+
+[[example]]
 name = "benchmark_norm_accuracy"
 required-features = ["std", "rand"]
 
