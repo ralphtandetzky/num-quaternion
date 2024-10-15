@@ -42,8 +42,6 @@ jobs:
       with:
         path: "~/.cache/bazel"
         key: bazel-cache
-    - name: Install dependencies
-      run: sudo apt install libncurses5
     - name: Build
       run: ./ci/bazel_build.bash
 
