@@ -87,6 +87,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [
       build_and_test,
+      bazel_build,
       check_formatting,
       static_analysis,
       semver_checks_all_stable,
