@@ -1,6 +1,6 @@
 #!/bin/bash
 # This script is used to build all Bazel targets in the C++ benchmarks
-# directory of the num-quaternion project.
+# directory.
 
 # Prerequisites:
 # 1. Git must be installed and available in the system's PATH.
