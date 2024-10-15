@@ -43,7 +43,7 @@ jobs:
         path: "~/.cache/bazel"
         key: bazel-cache
     - name: Build
-      run: ./ci/bazel_build.sh
+      run: ./ci/bazel_build.bash
 
   check_formatting:
     runs-on: ubuntu-latest
