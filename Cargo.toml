@@ -67,7 +67,7 @@ version = "0.5"
 
 [dependencies.rand_distr]
 optional = true
-version = "0.4"
+version = "0.5"
 default-features = false
 
 [dev-dependencies.serde_json]
