@@ -87,10 +87,10 @@ fn main() {
                 rand::rngs::SmallRng::seed_from_u64(0x7F0829AE4D31C6B5);
             let mut sum_sqr_error = 0.0;
             for _ in 0..NUM_SAMPLES {
-                let w = rng.gen_range(-scale..scale);
-                let x = rng.gen_range(-scale..scale);
-                let y = rng.gen_range(-scale..scale);
-                let z = rng.gen_range(-scale..scale);
+                let w = rng.random_range(-scale..scale);
+                let x = rng.random_range(-scale..scale);
+                let y = rng.random_range(-scale..scale);
+                let z = rng.random_range(-scale..scale);
                 let norm_f32 = norm_impl(w, x, y, z);
                 let norm_f64 = ((w as f64).powi(2)
                     + (x as f64).powi(2)
