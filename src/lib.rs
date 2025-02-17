@@ -167,6 +167,7 @@
 extern crate std;
 
 mod arithmetics;
+mod pure_quaternion;
 mod quaternion;
 mod unit_quaternion;
 
@@ -174,3 +175,6 @@ pub use {
     quaternion::{Quaternion, Q32, Q64},
     unit_quaternion::{EulerAngles, ReadMat3x3, UnitQuaternion, UQ32, UQ64},
 };
+
+#[cfg(feature = "unstable")]
+pub use pure_quaternion::{PureQuaternion, PQ32, PQ64};
