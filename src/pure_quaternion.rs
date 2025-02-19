@@ -1,5 +1,9 @@
 #![cfg(feature = "unstable")]
 
+use core::ops::{Add, Mul};
+
+use num_traits::{ConstZero, Float, Zero};
+
 /// A pure quaternion, i.e. a quaternion with a real part of zero.
 ///
 /// A pure quaternion is a quaternion of the form $bi + cj + dk$.
@@ -43,5 +47,102 @@ impl<T> PureQuaternion<T> {
     #[inline]
     pub const fn new(x: T, y: T, z: T) -> Self {
         Self { x, y, z }
+    }
+}
+
+impl<T> PureQuaternion<T>
+where
+    T: ConstZero,
+{
+    /// Constructs a new pure quaternion with all components set to zero.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use num_quaternion::PureQuaternion;
+    /// let pq = PureQuaternion::ZERO;
+    /// assert_eq!(pq, PureQuaternion::new(0.0, 0.0, 0.0));
+    /// ```
+    pub const ZERO: Self = Self::new(T::ZERO, T::ZERO, T::ZERO);
+}
+
+// impl<T> ConstZero for PureQuaternion<T>
+// where
+//     T: ConstZero,
+// {
+//     const ZERO: Self = Self::ZERO;
+// }
+
+// impl<T> Zero for PureQuaternion<T>
+// where
+//     T: Zero,
+// {
+//     #[inline]
+//     fn zero() -> Self {
+//         Self::new(T::zero(), T::zero(), T::zero())
+//     }
+
+//     #[inline]
+//     fn is_zero(&self) -> bool {
+//         self.x.is_zero() && self.y.is_zero() && self.z.is_zero()
+//     }
+
+//     #[inline]
+//     fn set_zero(&mut self) {
+//         self.x.set_zero();
+//         self.y.set_zero();
+//         self.z.set_zero();
+//     }
+// }
+
+impl<T> PureQuaternion<T>
+where
+    T: Float,
+{
+    /// Returns a pure quaternion filled with `NaN` values.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use num_quaternion::PQ32;
+    /// let q = PQ32::nan();
+    /// assert!(q.x.is_nan());
+    /// assert!(q.y.is_nan());
+    /// assert!(q.z.is_nan());
+    /// ```
+    #[inline]
+    pub fn nan() -> Self {
+        let nan = T::nan();
+        Self::new(nan, nan, nan)
+    }
+}
+
+impl<T> PureQuaternion<T>
+where
+    T: Clone + Mul<T, Output = T> + Add<T, Output = T>,
+{
+    /// Returns the square of the norm.
+    ///
+    /// The result is $x^2 + y^2 + z^2$ with some rounding errors.
+    /// The rounding error is at most 2
+    /// [ulps](https://en.wikipedia.org/wiki/Unit_in_the_last_place).
+    ///
+    /// This is guaranteed to be more efficient than [`norm`](Quaternion::norm()).
+    /// Furthermore, `T` only needs to support addition and multiplication
+    /// and therefore, this function works for more types than
+    /// [`norm`](Quaternion::norm()).
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use num_quaternion::PureQuaternion;
+    /// let q = PureQuaternion::new(1.0f32, 2.0, 3.0);
+    /// assert_eq!(q.norm_sqr(), 14.0);
+    /// ```
+    #[inline]
+    pub fn norm_sqr(&self) -> T {
+        self.x.clone() * self.x.clone()
+            + self.y.clone() * self.y.clone()
+            + self.z.clone() * self.z.clone()
     }
 }
