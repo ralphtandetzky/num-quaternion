@@ -2,7 +2,10 @@
 
 use core::ops::{Add, Mul};
 
-use num_traits::{ConstZero, Float, Zero};
+use num_traits::{ConstZero, Zero};
+
+#[cfg(any(feature = "std", feature = "libm"))]
+use num_traits::Float;
 
 /// A pure quaternion, i.e. a quaternion with a real part of zero.
 ///
@@ -95,6 +98,7 @@ where
 //     }
 // }
 
+#[cfg(any(feature = "std", feature = "libm"))]
 impl<T> PureQuaternion<T>
 where
     T: Float,
