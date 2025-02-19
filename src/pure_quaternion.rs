@@ -1,3 +1,5 @@
+#![cfg(feature = "unstable")]
+
 /// A pure quaternion, i.e. a quaternion with a real part of zero.
 ///
 /// A pure quaternion is a quaternion of the form $bi + cj + dk$.
