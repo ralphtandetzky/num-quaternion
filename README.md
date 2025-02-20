@@ -35,7 +35,7 @@ Add `num-quaternion` to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-num-quaternion = "1.0.2"
+num-quaternion = "1.0.3"
 ```
 
 For `#![no_std]` environments, disable the default `std` feature and enable
@@ -43,7 +43,7 @@ For `#![no_std]` environments, disable the default `std` feature and enable
 
 ```toml
 [dependencies]
-num-quaternion = { version = "1.0.2", default-features = false, features = ["libm"] }
+num-quaternion = { version = "1.0.3", default-features = false, features = ["libm"] }
 ```
 
 Then, include it in your crate:

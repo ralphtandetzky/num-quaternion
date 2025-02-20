@@ -2,6 +2,16 @@
 
 # Version 1.x
 
+## Release 1.0.3 (2025-02-21)
+
+- Added Bazel build to CI.
+- Improved PR template.
+- Updated dependency `rand` to version `0.9`.
+- Updated dependency `rand_distr` to version `0.5.1`.
+- Updated dependency `quaternion` to version `2.0`.
+
+**Contributors**: @ralphtandetzky
+
 ## Release 1.0.2 (2024-10-14)
 
 - Avoid `num-integer` pulling in `std` by default
