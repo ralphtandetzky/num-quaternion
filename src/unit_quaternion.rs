@@ -1265,8 +1265,8 @@ where
 }
 
 #[cfg(all(feature = "rand", any(feature = "std", feature = "libm")))]
-impl<T> rand::distributions::Distribution<UnitQuaternion<T>>
-    for rand::distributions::Standard
+impl<T> rand::distr::Distribution<UnitQuaternion<T>>
+    for rand::distr::StandardUniform
 where
     T: Float,
     rand_distr::StandardNormal: rand_distr::Distribution<T>,
@@ -1798,7 +1798,7 @@ mod tests {
         use rand::Rng;
         let mut rng = make_seeded_rng();
         for _ in 0..100000 {
-            let q = rng.gen::<UQ32>();
+            let q = rng.random::<UQ32>();
             let mat = q.to_rotation_matrix3x3();
             let restored_q = UQ32::from_rotation_matrix3x3(&mat);
             assert!(restored_q.0.w >= 0.0);
@@ -1858,7 +1858,7 @@ mod tests {
         // in a randomized way.
         use rand::Rng;
         let mut rng = make_seeded_rng();
-        let mut gen_coord = move || rng.gen::<f32>() * 2.0 - 1.0;
+        let mut gen_coord = move || rng.random::<f32>() * 2.0 - 1.0;
         for _ in 0..10000 {
             let a = [gen_coord(), gen_coord(), gen_coord()];
             let b = [-a[0], -a[1], -a[2]];
@@ -1941,7 +1941,7 @@ mod tests {
         // Test `from_two_vectors` in a randomized way.
         use rand::Rng;
         let mut rng = make_seeded_rng();
-        let mut gen_coord = move || rng.gen::<f32>() * 2.0 - 1.0;
+        let mut gen_coord = move || rng.random::<f32>() * 2.0 - 1.0;
         for _ in 0..100000 {
             let a = [gen_coord(), gen_coord(), gen_coord()];
             let b = [gen_coord(), gen_coord(), gen_coord()];
@@ -2388,12 +2388,12 @@ mod tests {
     #[test]
     fn test_unit_quaternion_sample_six_sigma() {
         // Test that the sample distribution of unit quaternions is uniform
-        use rand::distributions::{Distribution, Standard};
+        use rand::distr::{Distribution, StandardUniform};
         let num_iters = 1_000_000;
         let mut sum: Q64 = num_traits::Zero::zero();
         let rng = make_seeded_rng();
-        for q in
-            Distribution::<UQ64>::sample_iter(Standard, rng).take(num_iters)
+        for q in Distribution::<UQ64>::sample_iter(StandardUniform, rng)
+            .take(num_iters)
         {
             sum += q;
         }
@@ -2409,7 +2409,7 @@ mod tests {
     fn test_unit_quaternion_sample_half_planes() {
         // Test that the sample distribution of unit quaternions is uniform
         use rand::{
-            distributions::{Distribution, Standard},
+            distr::{Distribution, StandardUniform},
             Rng,
         };
         let num_iters = 1_000_000;
@@ -2422,14 +2422,14 @@ mod tests {
             UQ64::K,
             Q64::new(1.0, 2.0, 3.0, 4.0).normalize().unwrap(),
             Q64::new(4.0, -3.0, 2.0, -1.0).normalize().unwrap(),
-            rng.gen(),
-            rng.gen(),
-            rng.gen(),
-            rng.gen(),
+            rng.random(),
+            rng.random(),
+            rng.random(),
+            rng.random(),
         ];
         let mut counters = [0; NUM_DIRS];
-        for q in
-            Distribution::<UQ64>::sample_iter(Standard, rng).take(num_iters)
+        for q in Distribution::<UQ64>::sample_iter(StandardUniform, rng)
+            .take(num_iters)
         {
             for (dir, counter) in dirs.iter().zip(counters.iter_mut()) {
                 if q.dot(*dir) > 0.0 {
