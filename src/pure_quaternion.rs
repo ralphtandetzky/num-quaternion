@@ -1,8 +1,8 @@
 #![cfg(feature = "unstable")]
 
-use core::ops::{Add, Mul};
+use core::ops::{Add, Mul, Neg};
 
-use num_traits::{ConstZero, Zero};
+use num_traits::{ConstOne, ConstZero, One, Zero};
 
 #[cfg(any(feature = "std", feature = "libm"))]
 use num_traits::Float;
@@ -69,34 +69,131 @@ where
     pub const ZERO: Self = Self::new(T::ZERO, T::ZERO, T::ZERO);
 }
 
-// impl<T> ConstZero for PureQuaternion<T>
-// where
-//     T: ConstZero,
-// {
-//     const ZERO: Self = Self::ZERO;
-// }
+impl<T> ConstZero for PureQuaternion<T>
+where
+    T: ConstZero,
+{
+    const ZERO: Self = Self::ZERO;
+}
 
-// impl<T> Zero for PureQuaternion<T>
-// where
-//     T: Zero,
-// {
-//     #[inline]
-//     fn zero() -> Self {
-//         Self::new(T::zero(), T::zero(), T::zero())
-//     }
+impl<T> Zero for PureQuaternion<T>
+where
+    T: Zero,
+{
+    #[inline]
+    fn zero() -> Self {
+        Self::new(T::zero(), T::zero(), T::zero())
+    }
 
-//     #[inline]
-//     fn is_zero(&self) -> bool {
-//         self.x.is_zero() && self.y.is_zero() && self.z.is_zero()
-//     }
+    #[inline]
+    fn is_zero(&self) -> bool {
+        self.x.is_zero() && self.y.is_zero() && self.z.is_zero()
+    }
 
-//     #[inline]
-//     fn set_zero(&mut self) {
-//         self.x.set_zero();
-//         self.y.set_zero();
-//         self.z.set_zero();
-//     }
-// }
+    #[inline]
+    fn set_zero(&mut self) {
+        self.x.set_zero();
+        self.y.set_zero();
+        self.z.set_zero();
+    }
+}
+
+impl<T> PureQuaternion<T>
+where
+    T: ConstZero + ConstOne,
+{
+    /// A constant `PureQuaternion` of value $i$.
+    ///
+    /// See also [`Quaternion::I`](crate::Quaternion::I), [`PureQuaternion::i`].
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use num_quaternion::PureQuaternion;
+    /// let q = PureQuaternion::I;
+    /// assert_eq!(q, PureQuaternion::new(1.0, 0.0, 0.0));
+    /// ```
+    pub const I: Self = Self::new(T::ONE, T::ZERO, T::ZERO);
+
+    /// A constant `PureQuaternion` of value $j$.
+    ///
+    /// See also [`Quaternion::J`](crate::Quaternion::J), [`PureQuaternion::j`].
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use num_quaternion::PureQuaternion;
+    /// let q = PureQuaternion::J;
+    /// assert_eq!(q, PureQuaternion::new(0.0, 1.0, 0.0));
+    /// ```
+    pub const J: Self = Self::new(T::ZERO, T::ONE, T::ZERO);
+
+    /// A constant `PureQuaternion` of value $k$.
+    ///
+    /// See also [`Quaternion::K`](crate::Quaternion::K), [`PureQuaternion::k`].
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use num_quaternion::PureQuaternion;
+    /// let q = PureQuaternion::K;
+    /// assert_eq!(q, PureQuaternion::new(0.0, 0.0, 1.0));
+    /// ```
+    pub const K: Self = Self::new(T::ZERO, T::ZERO, T::ONE);
+}
+
+impl<T> PureQuaternion<T>
+where
+    T: Zero + One,
+{
+    /// Returns the imaginary unit $i$.
+    ///
+    /// See also [`Quaternion::i`](crate::Quaternion::i), [`PureQuaternion::I`].
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use num_quaternion::PureQuaternion;
+    /// let q = PureQuaternion::i();
+    /// assert_eq!(q, PureQuaternion::new(1.0, 0.0, 0.0));
+    /// ```
+    #[inline]
+    pub fn i() -> Self {
+        Self::new(T::one(), T::zero(), T::zero())
+    }
+
+    /// Returns the imaginary unit $j$.
+    ///
+    /// See also [`Quaternion::j`](crate::Quaternion::j), [`PureQuaternion::J`].
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use num_quaternion::PureQuaternion;
+    /// let q = PureQuaternion::j();
+    /// assert_eq!(q, PureQuaternion::new(0.0, 1.0, 0.0));
+    /// ```
+    #[inline]
+    pub fn j() -> Self {
+        Self::new(T::zero(), T::one(), T::zero())
+    }
+
+    /// Returns the imaginary unit $k$.
+    ///
+    /// See also [`Quaternion::k`](crate::Quaternion::k), [`PureQuaternion::K`].
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use num_quaternion::PureQuaternion;
+    /// let q = PureQuaternion::k();
+    /// assert_eq!(q, PureQuaternion::new(0.0, 0.0, 1.0));
+    /// ```
+    #[inline]
+    pub fn k() -> Self {
+        Self::new(T::zero(), T::zero(), T::one())
+    }
+}
 
 #[cfg(any(feature = "std", feature = "libm"))]
 impl<T> PureQuaternion<T>
@@ -148,5 +245,24 @@ where
         self.x.clone() * self.x.clone()
             + self.y.clone() * self.y.clone()
             + self.z.clone() * self.z.clone()
+    }
+}
+
+impl<T> PureQuaternion<T>
+where
+    T: Clone + Neg<Output = T>,
+{
+    /// Returns the conjugate of the pure quaternion, i. e. its negation.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use num_quaternion::PureQuaternion;
+    /// let q = PureQuaternion::new(1.0f32, 2.0, 3.0);
+    /// assert_eq!(q.conj(), PureQuaternion::new(-1.0, -2.0, -3.0));
+    /// ```
+    #[inline]
+    pub fn conj(&self) -> Self {
+        Self::new(-self.x.clone(), -self.y.clone(), -self.z.clone())
     }
 }

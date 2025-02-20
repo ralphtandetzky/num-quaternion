@@ -6,6 +6,9 @@ use {
     num_traits::{Inv, Num, Zero},
 };
 
+#[cfg(feature = "unstable")]
+use crate::PureQuaternion;
+
 impl<T> Add<Quaternion<T>> for Quaternion<T>
 where
     T: Add<T, Output = T>,
@@ -558,6 +561,69 @@ impl_op_with_ref!(impl<T> Add::add for UnitQuaternion<T>, T);
 impl_op_with_ref!(impl<T> Sub::sub for UnitQuaternion<T>, T);
 impl_op_with_ref!(impl<T> Mul::mul for UnitQuaternion<T>, T);
 impl_op_with_ref!(impl<T> Div::div for UnitQuaternion<T>, T);
+
+#[cfg(feature = "unstable")]
+impl<T> Add<PureQuaternion<T>> for PureQuaternion<T>
+where
+    T: Add<T, Output = T>,
+{
+    type Output = PureQuaternion<T>;
+
+    #[inline]
+    fn add(self, rhs: PureQuaternion<T>) -> Self::Output {
+        Self::new(self.x + rhs.x, self.y + rhs.y, self.z + rhs.z)
+    }
+}
+
+#[cfg(feature = "unstable")]
+impl<T> Sub<PureQuaternion<T>> for PureQuaternion<T>
+where
+    T: Sub<T, Output = T>,
+{
+    type Output = PureQuaternion<T>;
+
+    #[inline]
+    fn sub(self, rhs: PureQuaternion<T>) -> Self::Output {
+        Self::new(self.x - rhs.x, self.y - rhs.y, self.z - rhs.z)
+    }
+}
+
+#[cfg(feature = "unstable")]
+impl<T> Mul<PureQuaternion<T>> for PureQuaternion<T>
+where
+    T: Neg<Output = T>
+        + Add<T, Output = T>
+        + Sub<T, Output = T>
+        + Mul<T, Output = T>
+        + Clone,
+{
+    type Output = Quaternion<T>;
+
+    #[inline]
+    fn mul(self, rhs: PureQuaternion<T>) -> Self::Output {
+        Quaternion::new(
+            -(self.x.clone() * rhs.x.clone()
+                + self.y.clone() * rhs.y.clone()
+                + self.z.clone() * rhs.z.clone()),
+            self.y.clone() * rhs.z.clone() - self.z.clone() * rhs.y.clone(),
+            self.z.clone() * rhs.x.clone() - self.x.clone() * rhs.z.clone(),
+            self.x.clone() * rhs.y.clone() - self.y.clone() * rhs.x.clone(),
+        )
+    }
+}
+
+#[cfg(feature = "unstable")]
+impl<T> Mul<T> for PureQuaternion<T>
+where
+    T: Mul<T, Output = T> + Clone,
+{
+    type Output = PureQuaternion<T>;
+
+    #[inline]
+    fn mul(self, rhs: T) -> Self::Output {
+        Self::new(self.x * rhs.clone(), self.y * rhs.clone(), self.z * rhs)
+    }
+}
 
 #[cfg(test)]
 mod tests {
