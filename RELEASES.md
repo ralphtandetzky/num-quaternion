@@ -2,6 +2,10 @@
 
 # Version 1.x
 
+## [Unreleased]
+
+- Updated pull request template.
+
 ## Release 1.0.3 (2025-02-21)
 
 - Added Bazel build to CI.
