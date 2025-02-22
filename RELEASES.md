@@ -2,6 +2,11 @@
 
 # Version 1.x
 
+## [Unreleased]
+
+- Updated dependency `serde` to version `1.0.218`.
+- Updated dependency `serde_json` to version `1.0.139`.
+
 ## Release 1.0.3 (2025-02-21)
 
 - Added Bazel build to CI.

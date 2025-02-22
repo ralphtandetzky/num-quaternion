@@ -40,7 +40,7 @@ default-features = false
 
 [dependencies.serde]
 optional = true
-version = "1.0"
+version = "1.0.218"
 default-features = false
 
 [dependencies.rand]
@@ -71,7 +71,7 @@ version = ">=0.5.1"
 default-features = false
 
 [dev-dependencies.serde_json]
-version = "1.0"
+version = "1.0.139"
 
 [features]
 default = ["std"]
