@@ -4,6 +4,7 @@
 
 ## [Unreleased]
 
+- Updated pull request template.
 - Updated dependency `serde` to version `1.0.218`.
 - Updated dependency `serde_json` to version `1.0.139`.
 
