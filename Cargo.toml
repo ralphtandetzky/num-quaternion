@@ -8,7 +8,7 @@ categories = ["algorithms", "data-structures", "science", "no-std", "mathematics
 license = "MIT OR Apache-2.0"
 name = "num-quaternion"
 repository = "https://github.com/ralphtandetzky/num-quaternion"
-version = "1.0.2"
+version = "1.0.3"
 readme = "README.md"
 exclude = ["/.github/*"]
 edition = "2021"
@@ -40,12 +40,12 @@ default-features = false
 
 [dependencies.serde]
 optional = true
-version = "1.0"
+version = "1.0.218"
 default-features = false
 
 [dependencies.rand]
 optional = true
-version = "0.8"
+version = "0.9"
 default-features = false
 features = ["small_rng"]  # Needed only for testing. TODO: Move tests outside lib.rs and make this a development dependency
 
@@ -67,11 +67,11 @@ version = "0.5"
 
 [dependencies.rand_distr]
 optional = true
-version = "0.4"
+version = ">=0.5.1"
 default-features = false
 
 [dev-dependencies.serde_json]
-version = "1.0"
+version = "1.0.139"
 
 [features]
 default = ["std"]
