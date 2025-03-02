@@ -2,7 +2,7 @@
 
 use core::ops::{Add, Mul, Neg};
 
-use num_traits::{ConstOne, ConstZero, One, Zero};
+use num_traits::{ConstOne, ConstZero, Inv, Num, One, Zero};
 
 #[cfg(any(feature = "std", feature = "libm"))]
 use num_traits::Float;
@@ -264,5 +264,54 @@ where
     #[inline]
     pub fn conj(&self) -> Self {
         Self::new(-self.x.clone(), -self.y.clone(), -self.z.clone())
+    }
+}
+
+impl<T> PureQuaternion<T>
+where
+    for<'a> &'a Self: Inv<Output = PureQuaternion<T>>,
+{
+    /// Returns the inverse of the pure quaternion.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use num_quaternion::PureQuaternion;
+    /// let q = PureQuaternion::new(1.0f32, 2.0, 3.0);
+    /// assert_eq!(q.inv(), PureQuaternion::new(
+    ///     -1.0 / 14.0, -2.0 / 14.0, -3.0 / 14.0));
+    /// ```
+    #[inline]
+    pub fn inv(&self) -> Self {
+        Inv::inv(self)
+    }
+}
+
+impl<T> Inv for &PureQuaternion<T>
+where
+    T: Clone + Neg<Output = T> + Num,
+{
+    type Output = PureQuaternion<T>;
+
+    #[inline]
+    fn inv(self) -> Self::Output {
+        let norm_sqr = self.norm_sqr();
+        PureQuaternion::new(
+            -self.x.clone() / norm_sqr.clone(),
+            -self.y.clone() / norm_sqr.clone(),
+            -self.z.clone() / norm_sqr,
+        )
+    }
+}
+
+impl<T> Inv for PureQuaternion<T>
+where
+    for<'a> &'a Self: Inv<Output = PureQuaternion<T>>,
+{
+    type Output = PureQuaternion<T>;
+
+    #[inline]
+    fn inv(self) -> Self::Output {
+        Inv::inv(&self)
     }
 }
