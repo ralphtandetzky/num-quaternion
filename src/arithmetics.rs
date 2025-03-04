@@ -625,6 +625,19 @@ where
     }
 }
 
+#[cfg(feature = "unstable")]
+impl<T> Div<T> for PureQuaternion<T>
+where
+    T: Div<T, Output = T> + Clone,
+{
+    type Output = PureQuaternion<T>;
+
+    #[inline]
+    fn div(self, rhs: T) -> Self::Output {
+        Self::new(self.x / rhs.clone(), self.y / rhs.clone(), self.z / rhs)
+    }
+}
+
 #[cfg(test)]
 mod tests {
 
