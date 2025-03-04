@@ -315,3 +315,99 @@ where
         Inv::inv(&self)
     }
 }
+
+#[cfg(any(feature = "std", feature = "libm"))]
+impl<T> PureQuaternion<T>
+where
+    T: Float,
+{
+    /// Calculates |self|.
+    ///
+    /// The result is $\sqrt{x^2+y^2+z^2}$ with some possible rounding
+    /// errors. The total relative rounding error is at most two
+    /// [ulps](https://en.wikipedia.org/wiki/Unit_in_the_last_place).
+    ///
+    /// If any of the components of the input quaternion is `NaN`, then `NaN`
+    /// is returned. Otherwise, if any of the components is infinite, then
+    /// a positive infinite value is returned.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use num_quaternion::PureQuaternion;
+    /// let q = PureQuaternion::new(1.0f32, 2.0, 3.0);
+    /// assert_eq!(q.norm(), 14.0f32.sqrt());
+    /// ```
+    #[inline]
+    pub fn norm(self) -> T {
+        let one = T::one();
+        let two = one + one;
+        let s = T::min_positive_value();
+        let norm_sqr = self.norm_sqr();
+        if norm_sqr < T::infinity() {
+            if norm_sqr >= s * two {
+                norm_sqr.sqrt()
+            } else if self.is_zero() {
+                // Likely, the whole vector is zero. If so, we can return
+                // zero directly and avoid expensive floating point math.
+                T::zero()
+            } else {
+                // Otherwise, scale up, such that the norm will be in the
+                // normal floating point range, then scale down the result.
+                (self / s).fast_norm() * s
+            }
+        } else {
+            // There are three possible cases:
+            //   1. one of x, y, z is NaN,
+            //   2. neither is `NaN`, but at least one of them is infinite, or
+            //   3. all of them are finite.
+            // In the first case, multiplying by s or dividing by it does not
+            // change the that the result is `NaN`. The same applies in the
+            // second case: the result remains infinite. In the third case,
+            // multiplying by s makes sure that the square norm is a normal
+            // floating point number. Dividing by it will rescale the result
+            // to the correct magnitude.
+            (self * s).fast_norm() / s
+        }
+    }
+}
+
+#[cfg(any(feature = "std", feature = "libm"))]
+impl<T> PureQuaternion<T>
+where
+    T: Float,
+{
+    /// Calculates |self| without branching.
+    ///
+    /// This function returns the same result as [`norm`](Self::norm), if
+    /// |self|² is a normal floating point number (i. e. there is no overflow
+    /// nor underflow), or if `self` is zero. In these cases the maximum
+    /// relative error of the result is guaranteed to be less than two ulps.
+    /// In all other cases, there's no guarantee on the precision of the
+    /// result:
+    ///
+    /// * If |self|² overflows, then $\infty$ is returned.
+    /// * If |self|² underflows to zero, then zero will be returned.
+    /// * If |self|² is a subnormal number (very small floating point value
+    ///   with reduced relative precision), then the result is the square
+    ///   root of that.
+    ///
+    /// In other words, this function can be imprecise for very large and very
+    /// small floating point numbers, but it is generally faster than
+    /// [`norm`](Self::norm), because it does not do any branching. So if you
+    /// are interested in maximum speed of your code, feel free to use this
+    /// function. If you need to be precise results for the whole range of the
+    /// floating point type `T`, stay with [`norm`](Self::norm).
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use num_quaternion::PureQuaternion;
+    /// let q = PureQuaternion::new(1.0f32, 2.0, 3.0);
+    /// assert_eq!(q.fast_norm(), q.norm());
+    /// ```
+    #[inline]
+    pub fn fast_norm(self) -> T {
+        self.norm_sqr().sqrt()
+    }
+}
