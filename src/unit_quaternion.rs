@@ -7,6 +7,9 @@ use {
     num_traits::{ConstOne, ConstZero, Inv, Num, One, Zero},
 };
 
+#[cfg(feature = "unstable")]
+use crate::PureQuaternion;
+
 #[cfg(any(feature = "std", feature = "libm"))]
 use {
     core::num::FpCategory,
@@ -1239,6 +1242,128 @@ where
                     c.z / im_norm,
                 ))
             }
+        }
+    }
+}
+
+#[cfg(feature = "unstable")]
+#[cfg(any(feature = "std", feature = "libm"))]
+impl<T> UnitQuaternion<T>
+where
+    T: Float + FloatConst,
+{
+    /// Computes the natural logarithm of a unit quaternion.
+    ///
+    /// The function implements the following guarantees for extreme input
+    /// values:
+    ///
+    /// - The function is continuous onto the branch cut taking into account
+    ///   the sign of the coefficient of $i$.
+    /// - For all quaternions $q$ it holds `q.conj().ln() == q.ln().conj()`.
+    /// - The signs of the coefficients of the imaginary parts of the outputs
+    ///   are equal to the signs of the respective coefficients of the inputs.
+    ///   This also holds for signs of zeros, but not for `NaNs`.
+    /// - If the input has a `NaN` value, then the result is `NaN` in all
+    ///   components.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use num_quaternion::Quaternion;
+    /// let q = Quaternion::new(1.0f32, 2.0, 3.0, 4.0).normalize().unwrap();
+    /// let ln_q = q.ln();
+    /// ```
+    pub fn ln(self) -> PureQuaternion<T> {
+        // The square norm of the imaginary part.
+        let sqr_norm_im =
+            self.0.x * self.0.x + self.0.y * self.0.y + self.0.z * self.0.z;
+
+        if sqr_norm_im <= T::epsilon() {
+            // We're close to or on the positive real axis
+            if self.0.w.is_sign_positive() {
+                // This approximation leaves a relative error of less
+                // than a floating point epsilon for the imaginary part
+                PureQuaternion::new(self.0.x, self.0.y, self.0.z)
+            } else if self.0.x.is_zero()
+                && self.0.y.is_zero()
+                && self.0.z.is_zero()
+            {
+                // We're on the negative real axis.
+                PureQuaternion::new(
+                    T::PI().copysign(self.0.x),
+                    self.0.y,
+                    self.0.z,
+                )
+            } else if sqr_norm_im.is_normal() {
+                // We're close the the negative real axis. Compute the
+                // norm of the imaginary part.
+                let norm_im = sqr_norm_im.sqrt();
+
+                // The angle of `self` to the positive real axis is
+                // pi minus the angle from the negative real axis.
+                // The angle from the negative real axis
+                // can be approximated by `norm_im / self.w.abs()`
+                // which is equal to `-norm_im / self.w`. This the
+                // angle from the positive real axis is
+                // `pi + norm_im / self.w`. We obtain the imaginary
+                // part of the result by multiplying this value by
+                // the imaginary part of the input normalized, or
+                // equivalently, by multiplying the imaginary part
+                // of the input by the following factor:
+                let f = T::PI() / norm_im + self.0.w.recip();
+
+                PureQuaternion::new(self.0.x, self.0.y, self.0.z) * f
+            } else {
+                // The imaginary part is so small, that the norm of the
+                // resulting imaginary part differs from `pi` by way
+                // less than half an ulp. Therefore, it's sufficient to
+                // normalize the imaginary part and multiply it by
+                // `pi`.
+                let f = T::min_positive_value().sqrt();
+                let xf = self.0.x / f;
+                let yf = self.0.y / f;
+                let zf = self.0.z / f;
+                let sqr_sum = xf * xf + yf * yf + zf * zf;
+                let im_norm_div_f = sqr_sum.sqrt();
+                let pi_div_f = T::PI() / f;
+                // We could try to reduce the number of divisions by
+                // computing `pi_div_f / im_norm_div_f` and then
+                // multiplying the imaginary part by this value.
+                // However, this reduces numerical accuracy, if the
+                // pi times the norm of the imaginary part is
+                // subnormal. We could also introduce another branch
+                // here, but this would make the code more complex
+                // and extend the worst case latency. Therefore, we
+                // keep the divisions like that.
+                PureQuaternion::new(
+                    self.0.x * pi_div_f / im_norm_div_f,
+                    self.0.y * pi_div_f / im_norm_div_f,
+                    self.0.z * pi_div_f / im_norm_div_f,
+                )
+            }
+        } else {
+            // The most natural case: We're far enough from the real
+            // axis and the norm of the input quaternion is large
+            // enough to exclude any numerical instabilities.
+            let norm_im = if sqr_norm_im.is_normal() {
+                // `sqr_norm_im` has maximum precision.
+                sqr_norm_im.sqrt()
+            } else {
+                // Otherwise, using `sqr_norm_im` is imprecise.
+                // We magnify the imaginary part first, so we can
+                // get around this problem.
+                let f = T::min_positive_value().sqrt();
+                let xf = self.0.x / f;
+                let yf = self.0.y / f;
+                let zf = self.0.z / f;
+                let sqr_sum = xf * xf + yf * yf + zf * zf;
+                sqr_sum.sqrt() * f
+            };
+            let angle = norm_im.atan2(self.0.w);
+            let x = self.0.x * angle / norm_im;
+            let y = self.0.y * angle / norm_im;
+            let z = self.0.z * angle / norm_im;
+            PureQuaternion::new(x, y, z)
         }
     }
 }
