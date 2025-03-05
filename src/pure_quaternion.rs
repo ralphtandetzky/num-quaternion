@@ -2,10 +2,12 @@
 
 use core::ops::{Add, Mul, Neg};
 
-use num_traits::{ConstOne, ConstZero, Inv, Num, One, Zero};
+use num_traits::{ConstOne, ConstZero, FloatConst, Inv, Num, One, Zero};
 
 #[cfg(any(feature = "std", feature = "libm"))]
 use num_traits::Float;
+
+use crate::UnitQuaternion;
 
 /// A pure quaternion, i.e. a quaternion with a real part of zero.
 ///
@@ -409,5 +411,61 @@ where
     #[inline]
     pub fn fast_norm(self) -> T {
         self.norm_sqr().sqrt()
+    }
+}
+
+#[cfg(any(feature = "std", feature = "libm"))]
+impl<T> PureQuaternion<T>
+where
+    T: Float + FloatConst,
+{
+    /// Given a pure quaternion $q$, returns $e^q$, where $e$ is the base of
+    /// the natural logarithm.
+    ///
+    /// This method computes the exponential of a quaternion, handling various
+    /// edge cases to ensure numerical stability and correctness:
+    ///
+    /// 1. **NaN Input**: If any component of the input quaternion is `NaN`,
+    ///    the method returns a quaternion filled with `NaN` values.
+    ///
+    /// 2. **Large Norm**: If the norm of the pure quaternion is too large,
+    ///    the method may return a `NaN` quaternion or a quaternion with the
+    ///    correct magnitude but inaccurate direction.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use num_quaternion::PureQuaternion;
+    /// let q = PureQuaternion::new(1.0f32, 2.0, 3.0);
+    /// let exp_q = q.exp();
+    /// ```
+    pub fn exp(self) -> UnitQuaternion<T> {
+        let one = T::one();
+
+        // Compute the squared norm of the imaginary part
+        let sqr_angle = self.x * self.x + self.y * self.y + self.z * self.z;
+
+        if sqr_angle <= T::epsilon() {
+            // Use Taylor series approximation for small angles to
+            // maintain numerical stability. By Taylor expansion of
+            // `cos(angle)` we get
+            //     cos(angle) >= 1 - angle² / 2
+            // and thus |cos(angle) - 1| is less than half a floating
+            // point epsilon. Similarly,
+            //     sinc(angle) >= 1 - angle² / 6
+            // and thus |sinc(angle) - 1| is less than a sixth of a
+            // floating point epsilon.
+            UnitQuaternion::new(one, self.x, self.y, self.z)
+        } else {
+            // Standard computation for larger angles
+            let angle = sqr_angle.sqrt();
+            let cos_angle = angle.cos();
+            let sinc_angle = angle.sin() / angle;
+            let w = cos_angle;
+            let x = self.x * sinc_angle;
+            let y = self.y * sinc_angle;
+            let z = self.z * sinc_angle;
+            UnitQuaternion::new(w, x, y, z)
+        }
     }
 }
