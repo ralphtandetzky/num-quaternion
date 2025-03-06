@@ -469,3 +469,30 @@ where
         }
     }
 }
+
+#[cfg(feature = "serde")]
+impl<T> serde::Serialize for PureQuaternion<T>
+where
+    T: serde::Serialize,
+{
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        (&self.x, &self.y, &self.z).serialize(serializer)
+    }
+}
+
+#[cfg(feature = "serde")]
+impl<'de, T> serde::Deserialize<'de> for PureQuaternion<T>
+where
+    T: serde::Deserialize<'de>,
+{
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let (x, y, z) = serde::Deserialize::deserialize(deserializer)?;
+        Ok(PureQuaternion::new(x, y, z))
+    }
+}
