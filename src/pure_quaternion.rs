@@ -47,7 +47,7 @@ impl<T> PureQuaternion<T> {
     ///
     /// ```
     /// # use num_quaternion::PureQuaternion;
-    /// let pq = PureQuaternion::new(1.0, 2.0, 3.0);
+    /// let q = PureQuaternion::new(1.0, 2.0, 3.0);
     /// ```
     #[inline]
     pub const fn new(x: T, y: T, z: T) -> Self {
@@ -65,8 +65,8 @@ where
     ///
     /// ```
     /// # use num_quaternion::PureQuaternion;
-    /// let pq = PureQuaternion::ZERO;
-    /// assert_eq!(pq, PureQuaternion::new(0.0, 0.0, 0.0));
+    /// let q = PureQuaternion::ZERO;
+    /// assert_eq!(q, PureQuaternion::new(0.0, 0.0, 0.0));
     /// ```
     pub const ZERO: Self = Self::new(T::ZERO, T::ZERO, T::ZERO);
 }
@@ -494,5 +494,212 @@ where
     {
         let (x, y, z) = serde::Deserialize::deserialize(deserializer)?;
         Ok(PureQuaternion::new(x, y, z))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use core::f32;
+
+    use super::*;
+
+    #[test]
+    fn test_new() {
+        let q = PQ32::new(1.0, 2.0, 3.0);
+        assert_eq!(q.x, 1.0);
+        assert_eq!(q.y, 2.0);
+        assert_eq!(q.z, 3.0);
+    }
+
+    #[test]
+    fn test_zero_const() {
+        let q = PQ64::ZERO;
+        assert_eq!(q.x, 0.0);
+        assert_eq!(q.y, 0.0);
+        assert_eq!(q.z, 0.0);
+    }
+
+    #[test]
+    fn test_const_zero() {
+        let q: PQ32 = ConstZero::ZERO;
+        assert_eq!(q.x, 0.0);
+        assert_eq!(q.y, 0.0);
+        assert_eq!(q.z, 0.0);
+    }
+
+    #[test]
+    fn test_zero_trait() {
+        let q = PQ32::zero();
+        assert_eq!(q.x, 0.0);
+        assert_eq!(q.y, 0.0);
+        assert_eq!(q.z, 0.0);
+        assert!(q.is_zero());
+
+        let mut q = PQ32::new(1.0, 2.0, 3.0);
+        assert!(!q.is_zero());
+        q.set_zero();
+        assert!(q.is_zero());
+    }
+
+    #[test]
+    fn test_i_const() {
+        let q = PQ32::I;
+        assert_eq!(q.x, 1.0);
+        assert_eq!(q.y, 0.0);
+        assert_eq!(q.z, 0.0);
+    }
+
+    #[test]
+    fn test_j_const() {
+        let q = PQ64::J;
+        assert_eq!(q.x, 0.0);
+        assert_eq!(q.y, 1.0);
+        assert_eq!(q.z, 0.0);
+    }
+
+    #[test]
+    fn test_k_const() {
+        let q = PQ32::K;
+        assert_eq!(q.x, 0.0);
+        assert_eq!(q.y, 0.0);
+        assert_eq!(q.z, 1.0);
+    }
+
+    #[test]
+    fn test_i_static() {
+        let q = PQ64::i();
+        assert_eq!(q.x, 1.0);
+        assert_eq!(q.y, 0.0);
+        assert_eq!(q.z, 0.0);
+    }
+
+    #[test]
+    fn test_j_static() {
+        let q = PQ32::j();
+        assert_eq!(q.x, 0.0);
+        assert_eq!(q.y, 1.0);
+        assert_eq!(q.z, 0.0);
+    }
+
+    #[test]
+    fn test_k_static() {
+        let q = PQ64::k();
+        assert_eq!(q.x, 0.0);
+        assert_eq!(q.y, 0.0);
+        assert_eq!(q.z, 1.0);
+    }
+
+    #[test]
+    fn test_nan() {
+        let q = PQ32::nan();
+        assert!(q.x.is_nan());
+        assert!(q.y.is_nan());
+        assert!(q.z.is_nan());
+    }
+
+    #[test]
+    fn test_norm_sqr() {
+        let q = PQ64::new(1.0, 2.0, 3.0);
+        assert_eq!(q.norm_sqr(), 14.0);
+    }
+
+    #[test]
+    fn test_conj() {
+        let q = PQ32::new(1.0, 2.0, 3.0);
+        assert_eq!(q.conj(), PureQuaternion::new(-1.0, -2.0, -3.0));
+    }
+
+    #[test]
+    fn test_inv() {
+        let q = PQ64::new(1.0, 2.0, 3.0);
+        assert_eq!(
+            q.inv(),
+            PureQuaternion::new(-1.0 / 14.0, -2.0 / 14.0, -3.0 / 14.0)
+        );
+    }
+
+    #[test]
+    fn test_inv_trait() {
+        let q = PQ32::new(1.0, 2.0, 3.0);
+        assert_eq!(
+            Inv::inv(&q),
+            PureQuaternion::new(-1.0 / 14.0, -2.0 / 14.0, -3.0 / 14.0)
+        );
+    }
+
+    #[test]
+    fn test_norm_normal_values() {
+        let q = PQ64::new(1.0, 2.0, 3.0);
+        assert_eq!(q.norm(), 14.0f64.sqrt());
+    }
+
+    #[test]
+    fn test_norm_zero_quaternion() {
+        let q = PQ32::zero();
+        assert_eq!(q.norm(), 0.0);
+    }
+
+    #[test]
+    fn test_norm_subnormal_values() {
+        let s = f64::MIN_POSITIVE * 0.25;
+        let q = PQ64::new(s, s, s);
+        assert!(
+            (q.norm() - s * 3.0f64.sqrt()).abs() < 4.0 * s * f64::EPSILON,
+            "Norm of subnormal quaternion is not accurate."
+        )
+    }
+
+    #[test]
+    fn test_norm_large_values() {
+        let s = f64::MAX * 0.5;
+        let q = PQ64::new(s, s, s);
+        assert!(
+            (q.norm() - s * 3.0f64.sqrt()).abs() < 2.0 * s * f64::EPSILON,
+            "Norm of large quaternion is not accurate."
+        );
+    }
+
+    #[test]
+    fn test_norm_infinite_values() {
+        let inf = f32::INFINITY;
+        assert_eq!(PQ32::new(inf, 1.0, 1.0).norm(), inf);
+        assert_eq!(PQ32::new(1.0, inf, 1.0).norm(), inf);
+        assert_eq!(PQ32::new(1.0, 1.0, inf).norm(), inf);
+    }
+
+    #[test]
+    fn test_norm_nan_values() {
+        let nan = f32::NAN;
+        assert!(PQ32::new(nan, 1.0, 1.0).norm().is_nan());
+        assert!(PQ32::new(1.0, nan, 1.0).norm().is_nan());
+        assert!(PQ32::new(1.0, 1.0, nan).norm().is_nan());
+    }
+
+    #[test]
+    fn test_fast_norm_normal_values() {
+        let q = PQ64::new(1.1, 2.7, 3.4);
+        assert_eq!(q.fast_norm(), q.norm());
+    }
+
+    #[test]
+    fn test_fast_norm_zero_quaternion() {
+        let q = PQ32::zero();
+        assert_eq!(q.fast_norm(), 0.0);
+    }
+
+    #[test]
+    fn test_fast_norm_infinite_values() {
+        let inf = f32::INFINITY;
+        assert_eq!(PQ32::new(inf, 1.0, 1.0).fast_norm(), inf);
+        assert_eq!(PQ32::new(1.0, inf, 1.0).fast_norm(), inf);
+        assert_eq!(PQ32::new(1.0, 1.0, inf).fast_norm(), inf);
+    }
+
+    #[test]
+    fn test_fast_norm_nan_values() {
+        let nan = f32::NAN;
+        assert!(PQ32::new(nan, 1.0, 1.0).fast_norm().is_nan());
+        assert!(PQ32::new(1.0, nan, 1.0).fast_norm().is_nan());
+        assert!(PQ32::new(1.0, 1.0, nan).fast_norm().is_nan());
     }
 }
