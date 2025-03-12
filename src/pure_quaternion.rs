@@ -702,4 +702,86 @@ mod tests {
         assert!(PQ32::new(1.0, nan, 1.0).fast_norm().is_nan());
         assert!(PQ32::new(1.0, 1.0, nan).fast_norm().is_nan());
     }
+
+    #[test]
+    fn test_exp_zero_quaternion() {
+        assert_eq!(PQ64::ZERO.exp(), UnitQuaternion::ONE);
+    }
+
+    #[test]
+    fn test_exp_i_quaternion() {
+        let q = PQ32::I;
+        let exp_q = q.exp();
+        let expected =
+            UnitQuaternion::new(1.0f32.cos(), 1.0f32.sin(), 0.0, 0.0);
+        assert_eq!(exp_q, expected);
+    }
+
+    #[test]
+    fn test_exp_complex_quaternion() {
+        let q = PQ64::new(1.0, 1.0, 1.0);
+        let exp_q = q.exp();
+        let angle = 3.0f64.sqrt();
+        let re = angle.cos();
+        let im = angle.sin() / angle;
+        let expected = UnitQuaternion::new(re, im, im, im);
+        assert!((exp_q - expected).norm() <= 2.0 * f64::EPSILON);
+    }
+
+    #[test]
+    fn test_exp_nan_quaternion() {
+        for q in [
+            PQ32::new(f32::NAN, 1.0, 1.0),
+            PQ32::new(1.0, f32::NAN, 1.0),
+            PQ32::new(1.0, 1.0, f32::NAN),
+        ]
+        .iter()
+        {
+            let exp_q = q.exp();
+            assert!(exp_q.as_quaternion().w.is_nan());
+            assert!(exp_q.as_quaternion().x.is_nan());
+            assert!(exp_q.as_quaternion().y.is_nan());
+            assert!(exp_q.as_quaternion().z.is_nan());
+        }
+    }
+
+    #[test]
+    fn test_exp_large_imaginary_norm() {
+        let q = PQ32::new(1e30, 1e30, 1e30);
+        let exp_q = q.exp();
+        assert!(exp_q.as_quaternion().w.is_nan());
+        assert!(exp_q.as_quaternion().x.is_nan());
+        assert!(exp_q.as_quaternion().y.is_nan());
+        assert!(exp_q.as_quaternion().z.is_nan());
+    }
+
+    #[test]
+    fn test_exp_infinite_imaginary_part() {
+        let q = PQ64::new(1.0, 1.0, f64::INFINITY);
+        let exp_q = q.exp();
+        assert!(exp_q.as_quaternion().w.is_nan());
+        assert!(exp_q.as_quaternion().x.is_nan());
+        assert!(exp_q.as_quaternion().y.is_nan());
+        assert!(exp_q.as_quaternion().z.is_nan());
+    }
+
+    #[test]
+    fn test_exp_small_imaginary_norm() {
+        let epsilon = f32::EPSILON;
+        let q = PQ32::new(epsilon, epsilon, epsilon);
+        let exp_q = q.exp();
+        let expected = UnitQuaternion::new(1.0, epsilon, epsilon, epsilon);
+        assert!((exp_q - expected).norm() <= 0.5 * f32::EPSILON);
+    }
+
+    #[test]
+    fn test_serde_pure_quaternion() {
+        let q = PQ32::new(1.0, 2.0, 3.0);
+        let serialized =
+            serde_json::to_string(&q).expect("Failed to serialize quaternion");
+
+        let deserialized: PQ32 = serde_json::from_str(&serialized)
+            .expect("Failed to deserialize quaternion");
+        assert_eq!(deserialized, q);
+    }
 }
