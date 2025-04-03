@@ -1150,7 +1150,7 @@ where
                         // `pi`.
                         let f = T::one()
                             / (T::min_positive_value().sqrt() * T::epsilon());
-                        // `f` is a power of two (for `f32` and `f64`), so the 
+                        // `f` is a power of two (for `f32` and `f64`), so the
                         // following multiplications are exact.
                         let xf = self.x * f;
                         let yf = self.y * f;
@@ -1185,12 +1185,17 @@ where
                         // Otherwise, using `sqr_norm_im` is imprecise.
                         // We magnify the imaginary part first, so we can
                         // get around this problem.
-                        let f = T::min_positive_value().sqrt();
-                        let xf = self.x / f;
-                        let yf = self.y / f;
-                        let zf = self.z / f;
+                        let f = T::one() / T::min_positive_value().sqrt();
+                        // `f` is a power of two (for `f32` and `f64`), so the
+                        // following multiplications are exact.
+                        let xf = self.x * f;
+                        let yf = self.y * f;
+                        let zf = self.z * f;
                         let sqr_sum = xf * xf + yf * yf + zf * zf;
-                        sqr_sum.sqrt() * f
+                        // Since `f` is a power of two, the following line can
+                        // be optimized into a multiplication without loss of
+                        // precision.
+                        sqr_sum.sqrt() / f
                     };
                     let angle = norm_im.atan2(self.w);
                     let x = self.x * angle / norm_im;
@@ -2587,7 +2592,6 @@ mod tests {
     #[test]
     fn test_ln_negative_real_part_tiny_imaginary_part() {
         // Test a quaternion with a tiny imaginary part
-
         use core::f32;
         let q = Q32::new(-2.0, 346.0 * f32::EPSILON, 0.0, 0.0);
         let ln_q = q.ln();
