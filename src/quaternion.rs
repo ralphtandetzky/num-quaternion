@@ -1148,13 +1148,16 @@ where
                         // less than half an ulp. Therefore, it's sufficient to
                         // normalize the imaginary part and multiply it by
                         // `pi`.
-                        let f = T::min_positive_value().sqrt();
-                        let xf = self.x / f;
-                        let yf = self.y / f;
-                        let zf = self.z / f;
+                        let f = T::one()
+                            / (T::min_positive_value().sqrt() * T::epsilon());
+                        // `f` is a power of two (for `f32` and `f64`), so the 
+                        // following multiplications are exact.
+                        let xf = self.x * f;
+                        let yf = self.y * f;
+                        let zf = self.z * f;
                         let sqr_sum = xf * xf + yf * yf + zf * zf;
                         let im_norm_div_f = sqr_sum.sqrt();
-                        let pi_div_f = T::PI() / f;
+                        let pi_div_f = T::PI() * f;
                         // We could try to reduce the number of divisions by
                         // computing `pi_div_f / im_norm_div_f` and then
                         // multiplying the imaginary part by this value.
