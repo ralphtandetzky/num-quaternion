@@ -589,6 +589,7 @@ mod tests {
         assert_eq!(q.z, 1.0);
     }
 
+    #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_nan() {
         let q = PQ32::nan();
@@ -627,18 +628,21 @@ mod tests {
         );
     }
 
+    #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_norm_normal_values() {
         let q = PQ64::new(1.0, 2.0, 3.0);
         assert_eq!(q.norm(), 14.0f64.sqrt());
     }
 
+    #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_norm_zero_quaternion() {
         let q = PQ32::zero();
         assert_eq!(q.norm(), 0.0);
     }
 
+    #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_norm_subnormal_values() {
         let s = f64::MIN_POSITIVE * 0.25;
@@ -649,6 +653,7 @@ mod tests {
         )
     }
 
+    #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_norm_large_values() {
         let s = f64::MAX * 0.5;
@@ -659,6 +664,7 @@ mod tests {
         );
     }
 
+    #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_norm_infinite_values() {
         let inf = f32::INFINITY;
@@ -667,6 +673,7 @@ mod tests {
         assert_eq!(PQ32::new(1.0, 1.0, inf).norm(), inf);
     }
 
+    #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_norm_nan_values() {
         let nan = f32::NAN;
@@ -675,18 +682,21 @@ mod tests {
         assert!(PQ32::new(1.0, 1.0, nan).norm().is_nan());
     }
 
+    #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_fast_norm_normal_values() {
         let q = PQ64::new(1.1, 2.7, 3.4);
         assert_eq!(q.fast_norm(), q.norm());
     }
 
+    #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_fast_norm_zero_quaternion() {
         let q = PQ32::zero();
         assert_eq!(q.fast_norm(), 0.0);
     }
 
+    #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_fast_norm_infinite_values() {
         let inf = f32::INFINITY;
@@ -695,6 +705,7 @@ mod tests {
         assert_eq!(PQ32::new(1.0, 1.0, inf).fast_norm(), inf);
     }
 
+    #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_fast_norm_nan_values() {
         let nan = f32::NAN;
@@ -703,11 +714,13 @@ mod tests {
         assert!(PQ32::new(1.0, 1.0, nan).fast_norm().is_nan());
     }
 
+    #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_exp_zero_quaternion() {
         assert_eq!(PQ64::ZERO.exp(), UnitQuaternion::ONE);
     }
 
+    #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_exp_i_quaternion() {
         let q = PQ32::I;
@@ -717,6 +730,7 @@ mod tests {
         assert_eq!(exp_q, expected);
     }
 
+    #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_exp_complex_quaternion() {
         let q = PQ64::new(1.0, 1.0, 1.0);
@@ -728,6 +742,7 @@ mod tests {
         assert!((exp_q - expected).norm() <= 2.0 * f64::EPSILON);
     }
 
+    #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_exp_nan_quaternion() {
         for q in [
@@ -745,6 +760,7 @@ mod tests {
         }
     }
 
+    #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_exp_large_imaginary_norm() {
         let q = PQ32::new(1e30, 1e30, 1e30);
@@ -755,6 +771,7 @@ mod tests {
         assert!(exp_q.as_quaternion().z.is_nan());
     }
 
+    #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_exp_infinite_imaginary_part() {
         let q = PQ64::new(1.0, 1.0, f64::INFINITY);
@@ -765,6 +782,7 @@ mod tests {
         assert!(exp_q.as_quaternion().z.is_nan());
     }
 
+    #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_exp_small_imaginary_norm() {
         let epsilon = f32::EPSILON;
