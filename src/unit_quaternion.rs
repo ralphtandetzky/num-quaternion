@@ -1319,7 +1319,7 @@ where
                 // less than half an ulp. Therefore, it's sufficient to
                 // normalize the imaginary part and multiply it by
                 // `pi`.
-                let f = T::min_positive_value().sqrt();
+                let f = T::min_positive_value().sqrt() * T::epsilon();
                 let xf = self.0.x / f;
                 let yf = self.0.y / f;
                 let zf = self.0.z / f;
@@ -1352,7 +1352,7 @@ where
                 // Otherwise, using `sqr_norm_im` is imprecise.
                 // We magnify the imaginary part first, so we can
                 // get around this problem.
-                let f = T::min_positive_value().sqrt();
+                let f = T::min_positive_value().sqrt() * T::epsilon();
                 let xf = self.0.x / f;
                 let yf = self.0.y / f;
                 let zf = self.0.z / f;
