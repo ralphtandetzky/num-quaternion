@@ -1437,6 +1437,10 @@ mod tests {
     #[cfg(any(feature = "std", feature = "libm", feature = "serde"))]
     use crate::EulerAngles;
 
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[cfg(feature = "unstable")]
+    use crate::PureQuaternion;
+
     /// Computes the hash value of `val` using the default hasher.
     #[cfg(feature = "std")]
     fn compute_hash(val: impl Hash) -> u64 {
@@ -2471,6 +2475,71 @@ mod tests {
             (result.0.z - expected.0.z).abs()
                 <= 2.0 * expected.0.z * f64::EPSILON
         );
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[cfg(feature = "unstable")]
+    #[test]
+    fn test_ln_of_identity() {
+        // Test the natural logarithm of the identity unit quaternion
+        assert_eq!(UQ32::ONE.ln(), PureQuaternion::ZERO);
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[cfg(feature = "unstable")]
+    #[test]
+    fn test_ln_of_normal_case() {
+        let q = Q64::new(1.0, 2.0, 3.0, 4.0);
+        let p = q.normalize().expect("Failed to normalize quaternion").ln();
+        assert!((p.z / p.x - q.z / q.x).abs() <= 4.0 * f64::EPSILON);
+        assert!((p.y / p.x - q.y / q.x).abs() <= 4.0 * f64::EPSILON);
+        assert!((p.norm() - 29.0f64.sqrt().atan()).abs() <= 4.0 * f64::EPSILON);
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[cfg(feature = "unstable")]
+    #[test]
+    fn test_ln_near_positive_real_axis() {
+        // Test close to the positive real axis
+        let q = Quaternion::new(1.0, 1e-10, 1e-10, 1e-10)
+            .normalize()
+            .unwrap();
+        let ln_q = q.ln();
+        let expected = PureQuaternion::new(1e-10, 1e-10, 1e-10); // ln(1) = 0 and imaginary parts small
+        assert!((ln_q - expected).norm() <= 1e-11);
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[cfg(feature = "unstable")]
+    #[test]
+    fn test_ln_negative_real_axis() {
+        // Test on the negative real axis
+        let q = Q32::new(-1.0, 0.0, 0.0, 0.0).normalize().unwrap();
+        let ln_q = q.ln();
+        let expected = PureQuaternion::new(core::f32::consts::PI, 0.0, 0.0); // ln(-1) = pi*i
+        assert!(
+            (ln_q - expected).norm() <= core::f32::consts::PI * f32::EPSILON
+        );
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[cfg(feature = "unstable")]
+    #[test]
+    fn test_ln_near_negative_real_axis() {
+        // Test a quaternion with a tiny imaginary part
+        use core::f32;
+        let q = Q32::new(-2.0, 346.0 * f32::EPSILON, 0.0, 0.0);
+        let uq = q.normalize().unwrap();
+        let ln_uq = uq.ln();
+        let expected =
+            PureQuaternion::new(f32::consts::PI + q.x / q.w, 0.0, 0.0);
+        assert!((ln_uq - expected).norm() <= 8.0 * f32::EPSILON);
+
+        let q = Q32::new(-1.0, f32::MIN_POSITIVE / 192.0, 0.0, 0.0);
+        let uq = q.normalize().unwrap();
+        let ln_uq = uq.ln();
+        let expected = PureQuaternion::new(f32::consts::PI, 0.0, 0.0);
+        assert_eq!(ln_uq, expected);
     }
 
     #[cfg(all(feature = "serde", any(feature = "std", feature = "libm")))]
