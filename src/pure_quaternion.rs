@@ -774,6 +774,7 @@ mod tests {
         assert!((exp_q - expected).norm() <= 0.5 * f32::EPSILON);
     }
 
+    #[cfg(feature = "serde")]
     #[test]
     fn test_serde_pure_quaternion() {
         let q = PQ32::new(1.0, 2.0, 3.0);
