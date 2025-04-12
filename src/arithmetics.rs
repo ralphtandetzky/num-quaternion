@@ -256,8 +256,8 @@ where
 }
 
 macro_rules! impl_bin_op_assign {
-    (impl $bin_op_assign_trait:ident::$bin_op_assign:ident, $bin_op_trait:ident::$bin_op:ident) => {
-        impl<T, S> $bin_op_assign_trait<S> for Quaternion<T>
+    (impl $bin_op_assign_trait:ident::$bin_op_assign:ident as $bin_op_trait:ident::$bin_op:ident for $generic:ident) => {
+        impl<T, S> $bin_op_assign_trait<S> for $generic<T>
         where
             Self: $bin_op_trait<S, Output = Self> + Clone,
         {
@@ -269,10 +269,10 @@ macro_rules! impl_bin_op_assign {
     };
 }
 
-impl_bin_op_assign!(impl AddAssign::add_assign, Add::add);
-impl_bin_op_assign!(impl SubAssign::sub_assign, Sub::sub);
-impl_bin_op_assign!(impl MulAssign::mul_assign, Mul::mul);
-impl_bin_op_assign!(impl DivAssign::div_assign, Div::div);
+impl_bin_op_assign!(impl AddAssign::add_assign as Add::add for Quaternion);
+impl_bin_op_assign!(impl SubAssign::sub_assign as Sub::sub for Quaternion);
+impl_bin_op_assign!(impl MulAssign::mul_assign as Mul::mul for Quaternion);
+impl_bin_op_assign!(impl DivAssign::div_assign as Div::div for Quaternion);
 
 macro_rules! impl_op_with_ref {
     (impl<$T:ident> $bin_op_trait:ident::$bin_op:ident for $lhs_type:ty, $rhs_type:ty) => {
@@ -688,6 +688,9 @@ impl_op_with_ref!(impl<T> Sub::sub for UnitQuaternion<T>, PureQuaternion<T>);
 impl_op_with_ref!(impl<T> Mul::mul for UnitQuaternion<T>, PureQuaternion<T>);
 impl_op_with_ref!(impl<T> Div::div for UnitQuaternion<T>, PureQuaternion<T>);
 
+impl_bin_op_assign!(impl MulAssign::mul_assign as Mul::mul for UnitQuaternion);
+impl_bin_op_assign!(impl DivAssign::div_assign as Div::div for UnitQuaternion);
+
 #[cfg(feature = "unstable")]
 impl<T> Add<PureQuaternion<T>> for PureQuaternion<T>
 where
@@ -1034,6 +1037,15 @@ impl_op_with_ref!(impl<T> Sub::sub for PureQuaternion<T>, T);
 impl_op_with_ref!(impl<T> Mul::mul for PureQuaternion<T>, T);
 #[cfg(feature = "unstable")]
 impl_op_with_ref!(impl<T> Div::div for PureQuaternion<T>, T);
+
+#[cfg(feature = "unstable")]
+impl_bin_op_assign!(impl AddAssign::add_assign as Add::add for PureQuaternion);
+#[cfg(feature = "unstable")]
+impl_bin_op_assign!(impl SubAssign::sub_assign as Sub::sub for PureQuaternion);
+#[cfg(feature = "unstable")]
+impl_bin_op_assign!(impl MulAssign::mul_assign as Mul::mul for PureQuaternion);
+#[cfg(feature = "unstable")]
+impl_bin_op_assign!(impl DivAssign::div_assign as Div::div for PureQuaternion);
 
 #[cfg(test)]
 mod tests {
