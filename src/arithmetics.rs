@@ -7,7 +7,7 @@ use {
 };
 
 #[cfg(feature = "unstable")]
-use crate::PureQuaternion;
+use crate::{PureQuaternion, PQ32, PQ64};
 
 impl<T> Add<Quaternion<T>> for Quaternion<T>
 where
@@ -50,6 +50,19 @@ where
     }
 }
 
+#[cfg(feature = "unstable")]
+impl<T> Add<PureQuaternion<T>> for Quaternion<T>
+where
+    T: Add<T, Output = T>,
+{
+    type Output = Quaternion<T>;
+
+    #[inline]
+    fn add(self, rhs: PureQuaternion<T>) -> Self::Output {
+        Self::new(self.w, self.x + rhs.x, self.y + rhs.y, self.z + rhs.z)
+    }
+}
+
 impl<T> Sub<Quaternion<T>> for Quaternion<T>
 where
     T: Sub<T, Output = T>,
@@ -88,6 +101,19 @@ where
     #[inline]
     fn sub(self, rhs: UnitQuaternion<T>) -> Self {
         self - rhs.into_inner()
+    }
+}
+
+#[cfg(feature = "unstable")]
+impl<T> Sub<PureQuaternion<T>> for Quaternion<T>
+where
+    T: Sub<T, Output = T>,
+{
+    type Output = Quaternion<T>;
+
+    #[inline]
+    fn sub(self, rhs: PureQuaternion<T>) -> Self::Output {
+        Self::new(self.w, self.x - rhs.x, self.y - rhs.y, self.z - rhs.z)
     }
 }
 
@@ -145,6 +171,32 @@ where
     }
 }
 
+#[cfg(feature = "unstable")]
+impl<T> Mul<PureQuaternion<T>> for Quaternion<T>
+where
+    T: Neg<Output = T>
+        + Add<T, Output = T>
+        + Sub<T, Output = T>
+        + Mul<T, Output = T>
+        + Neg<Output = T>
+        + Clone,
+{
+    type Output = Quaternion<T>;
+
+    #[inline]
+    fn mul(self, rhs: PureQuaternion<T>) -> Self::Output {
+        let a = -self.x.clone() * rhs.x.clone()
+            - self.y.clone() * rhs.y.clone()
+            - self.z.clone() * rhs.z.clone();
+        let b = self.w.clone() * rhs.x.clone() + self.y.clone() * rhs.z.clone()
+            - self.z.clone() * rhs.y.clone();
+        let c = self.w.clone() * rhs.y.clone() - self.x.clone() * rhs.z.clone()
+            + self.z.clone() * rhs.x.clone();
+        let d = self.w * rhs.z + self.x * rhs.y - self.y * rhs.x;
+        Self::new(a, b, c, d)
+    }
+}
+
 impl<T> Div<Quaternion<T>> for Quaternion<T>
 where
     T: Num + Clone + Neg<Output = T>,
@@ -189,8 +241,22 @@ where
     }
 }
 
+#[cfg(feature = "unstable")]
+impl<T> Div<PureQuaternion<T>> for Quaternion<T>
+where
+    T: Num + Clone + Neg<Output = T>,
+{
+    type Output = Quaternion<T>;
+
+    #[allow(clippy::suspicious_arithmetic_impl)]
+    #[inline]
+    fn div(self, rhs: PureQuaternion<T>) -> Self::Output {
+        self * rhs.inv()
+    }
+}
+
 macro_rules! impl_bin_op_assign {
-    (impl $bin_op_assign_trait:ident, $bin_op_assign:ident, $bin_op_trait:ident, $bin_op:ident) => {
+    (impl $bin_op_assign_trait:ident::$bin_op_assign:ident, $bin_op_trait:ident::$bin_op:ident) => {
         impl<T, S> $bin_op_assign_trait<S> for Quaternion<T>
         where
             Self: $bin_op_trait<S, Output = Self> + Clone,
@@ -203,10 +269,10 @@ macro_rules! impl_bin_op_assign {
     };
 }
 
-impl_bin_op_assign!(impl AddAssign, add_assign, Add, add);
-impl_bin_op_assign!(impl SubAssign, sub_assign, Sub, sub);
-impl_bin_op_assign!(impl MulAssign, mul_assign, Mul, mul);
-impl_bin_op_assign!(impl DivAssign, div_assign, Div, div);
+impl_bin_op_assign!(impl AddAssign::add_assign, Add::add);
+impl_bin_op_assign!(impl SubAssign::sub_assign, Sub::sub);
+impl_bin_op_assign!(impl MulAssign::mul_assign, Mul::mul);
+impl_bin_op_assign!(impl DivAssign::div_assign, Div::div);
 
 macro_rules! impl_op_with_ref {
     (impl<$T:ident> $bin_op_trait:ident::$bin_op:ident for $lhs_type:ty, $rhs_type:ty) => {
@@ -259,6 +325,10 @@ impl_op_with_ref!(impl<T> Add::add for Quaternion<T>, T);
 impl_op_with_ref!(impl<T> Sub::sub for Quaternion<T>, T);
 impl_op_with_ref!(impl<T> Mul::mul for Quaternion<T>, T);
 impl_op_with_ref!(impl<T> Div::div for Quaternion<T>, T);
+impl_op_with_ref!(impl<T> Add::add for Quaternion<T>, PureQuaternion<T>);
+impl_op_with_ref!(impl<T> Sub::sub for Quaternion<T>, PureQuaternion<T>);
+impl_op_with_ref!(impl<T> Mul::mul for Quaternion<T>, PureQuaternion<T>);
+impl_op_with_ref!(impl<T> Div::div for Quaternion<T>, PureQuaternion<T>);
 
 macro_rules! impl_ops_lhs_real {
     ($($real:ty),*) => {
@@ -377,6 +447,19 @@ where
     }
 }
 
+#[cfg(feature = "unstable")]
+impl<T> Add<PureQuaternion<T>> for UnitQuaternion<T>
+where
+    Quaternion<T>: Add<PureQuaternion<T>, Output = Quaternion<T>>,
+{
+    type Output = Quaternion<T>;
+
+    #[inline]
+    fn add(self, rhs: PureQuaternion<T>) -> Self::Output {
+        self.into_inner() + rhs
+    }
+}
+
 impl Add<UQ32> for f32 {
     type Output = Q32;
 
@@ -431,6 +514,19 @@ where
     }
 }
 
+#[cfg(feature = "unstable")]
+impl<T> Sub<PureQuaternion<T>> for UnitQuaternion<T>
+where
+    Quaternion<T>: Sub<PureQuaternion<T>, Output = Quaternion<T>>,
+{
+    type Output = Quaternion<T>;
+
+    #[inline]
+    fn sub(self, rhs: PureQuaternion<T>) -> Self::Output {
+        self.into_inner() - rhs
+    }
+}
+
 impl Sub<UQ32> for f32 {
     type Output = Q32;
 
@@ -469,6 +565,19 @@ where
 
     #[inline]
     fn mul(self, rhs: T) -> Self::Output {
+        self.into_inner() * rhs
+    }
+}
+
+#[cfg(feature = "unstable")]
+impl<T> Mul<PureQuaternion<T>> for UnitQuaternion<T>
+where
+    Quaternion<T>: Mul<PureQuaternion<T>, Output = Quaternion<T>>,
+{
+    type Output = Quaternion<T>;
+
+    #[inline]
+    fn mul(self, rhs: PureQuaternion<T>) -> Self::Output {
         self.into_inner() * rhs
     }
 }
@@ -529,6 +638,19 @@ where
     }
 }
 
+#[cfg(feature = "unstable")]
+impl<T> Div<PureQuaternion<T>> for UnitQuaternion<T>
+where
+    Quaternion<T>: Div<PureQuaternion<T>, Output = Quaternion<T>>,
+{
+    type Output = Quaternion<T>;
+
+    #[inline]
+    fn div(self, rhs: PureQuaternion<T>) -> Self::Output {
+        self.into_inner() / rhs
+    }
+}
+
 impl Div<UQ32> for f32 {
     type Output = Q32;
 
@@ -561,6 +683,10 @@ impl_op_with_ref!(impl<T> Add::add for UnitQuaternion<T>, T);
 impl_op_with_ref!(impl<T> Sub::sub for UnitQuaternion<T>, T);
 impl_op_with_ref!(impl<T> Mul::mul for UnitQuaternion<T>, T);
 impl_op_with_ref!(impl<T> Div::div for UnitQuaternion<T>, T);
+impl_op_with_ref!(impl<T> Add::add for UnitQuaternion<T>, PureQuaternion<T>);
+impl_op_with_ref!(impl<T> Sub::sub for UnitQuaternion<T>, PureQuaternion<T>);
+impl_op_with_ref!(impl<T> Mul::mul for UnitQuaternion<T>, PureQuaternion<T>);
+impl_op_with_ref!(impl<T> Div::div for UnitQuaternion<T>, PureQuaternion<T>);
 
 #[cfg(feature = "unstable")]
 impl<T> Add<PureQuaternion<T>> for PureQuaternion<T>
@@ -576,6 +702,62 @@ where
 }
 
 #[cfg(feature = "unstable")]
+impl<T> Add<Quaternion<T>> for PureQuaternion<T>
+where
+    T: Add<T, Output = T>,
+{
+    type Output = Quaternion<T>;
+
+    #[inline]
+    fn add(self, rhs: Quaternion<T>) -> Self::Output {
+        Quaternion::new(rhs.w, self.x + rhs.x, self.y + rhs.y, self.z + rhs.z)
+    }
+}
+
+#[cfg(feature = "unstable")]
+impl<T> Add<UnitQuaternion<T>> for PureQuaternion<T>
+where
+    T: Add<T, Output = T>,
+{
+    type Output = Quaternion<T>;
+
+    #[inline]
+    fn add(self, rhs: UnitQuaternion<T>) -> Self::Output {
+        self + rhs.into_inner()
+    }
+}
+
+#[cfg(feature = "unstable")]
+impl<T> Add<T> for PureQuaternion<T> {
+    type Output = Quaternion<T>;
+
+    #[inline]
+    fn add(self, rhs: T) -> Self::Output {
+        Self::Output::new(rhs, self.x, self.y, self.z)
+    }
+}
+
+#[cfg(feature = "unstable")]
+impl Add<PQ32> for f32 {
+    type Output = Q32;
+
+    #[inline]
+    fn add(self, rhs: PQ32) -> Self::Output {
+        Self::Output::new(self, rhs.x, rhs.y, rhs.z)
+    }
+}
+
+#[cfg(feature = "unstable")]
+impl Add<PQ64> for f64 {
+    type Output = Q64;
+
+    #[inline]
+    fn add(self, rhs: PQ64) -> Self::Output {
+        Self::Output::new(self, rhs.x, rhs.y, rhs.z)
+    }
+}
+
+#[cfg(feature = "unstable")]
 impl<T> Sub<PureQuaternion<T>> for PureQuaternion<T>
 where
     T: Sub<T, Output = T>,
@@ -585,6 +767,65 @@ where
     #[inline]
     fn sub(self, rhs: PureQuaternion<T>) -> Self::Output {
         Self::new(self.x - rhs.x, self.y - rhs.y, self.z - rhs.z)
+    }
+}
+
+#[cfg(feature = "unstable")]
+impl<T> Sub<Quaternion<T>> for PureQuaternion<T>
+where
+    T: Sub<T, Output = T>,
+{
+    type Output = Quaternion<T>;
+
+    #[inline]
+    fn sub(self, rhs: Quaternion<T>) -> Self::Output {
+        Quaternion::new(rhs.w, self.x - rhs.x, self.y - rhs.y, self.z - rhs.z)
+    }
+}
+
+#[cfg(feature = "unstable")]
+impl<T> Sub<UnitQuaternion<T>> for PureQuaternion<T>
+where
+    T: Sub<T, Output = T>,
+{
+    type Output = Quaternion<T>;
+
+    #[inline]
+    fn sub(self, rhs: UnitQuaternion<T>) -> Self::Output {
+        self - rhs.into_inner()
+    }
+}
+
+#[cfg(feature = "unstable")]
+impl<T> Sub<T> for PureQuaternion<T>
+where
+    T: Neg<Output = T>,
+{
+    type Output = Quaternion<T>;
+
+    #[inline]
+    fn sub(self, rhs: T) -> Self::Output {
+        Self::Output::new(-rhs, self.x, self.y, self.z)
+    }
+}
+
+#[cfg(feature = "unstable")]
+impl Sub<PQ32> for f32 {
+    type Output = Q32;
+
+    #[inline]
+    fn sub(self, rhs: PQ32) -> Self::Output {
+        Self::Output::new(self, -rhs.x, -rhs.y, -rhs.z)
+    }
+}
+
+#[cfg(feature = "unstable")]
+impl Sub<PQ64> for f64 {
+    type Output = Q64;
+
+    #[inline]
+    fn sub(self, rhs: PQ64) -> Self::Output {
+        Self::Output::new(self, -rhs.x, -rhs.y, -rhs.z)
     }
 }
 
@@ -613,6 +854,45 @@ where
 }
 
 #[cfg(feature = "unstable")]
+impl<T> Mul<Quaternion<T>> for PureQuaternion<T>
+where
+    T: Neg<Output = T>
+        + Add<T, Output = T>
+        + Sub<T, Output = T>
+        + Mul<T, Output = T>
+        + Clone,
+{
+    type Output = Quaternion<T>;
+
+    #[inline]
+    fn mul(self, rhs: Quaternion<T>) -> Self::Output {
+        let a = -self.x.clone() * rhs.x.clone()
+            - self.y.clone() * rhs.y.clone()
+            - self.z.clone() * rhs.z.clone();
+        let b = self.x.clone() * rhs.w.clone() + self.y.clone() * rhs.z.clone()
+            - self.z.clone() * rhs.y.clone();
+        let c = -self.x.clone() * rhs.z.clone()
+            + self.y.clone() * rhs.w.clone()
+            + self.z.clone() * rhs.x.clone();
+        let d = self.x * rhs.y - self.y * rhs.x + self.z * rhs.w;
+        Self::Output::new(a, b, c, d)
+    }
+}
+
+#[cfg(feature = "unstable")]
+impl<T> Mul<UnitQuaternion<T>> for PureQuaternion<T>
+where
+    PureQuaternion<T>: Mul<Quaternion<T>, Output = Quaternion<T>>,
+{
+    type Output = Quaternion<T>;
+
+    #[inline]
+    fn mul(self, rhs: UnitQuaternion<T>) -> Self::Output {
+        self * rhs.into_inner()
+    }
+}
+
+#[cfg(feature = "unstable")]
 impl<T> Mul<T> for PureQuaternion<T>
 where
     T: Mul<T, Output = T> + Clone,
@@ -622,6 +902,68 @@ where
     #[inline]
     fn mul(self, rhs: T) -> Self::Output {
         Self::new(self.x * rhs.clone(), self.y * rhs.clone(), self.z * rhs)
+    }
+}
+
+#[cfg(feature = "unstable")]
+impl Mul<PQ32> for f32 {
+    type Output = PQ32;
+
+    #[inline]
+    fn mul(self, rhs: PQ32) -> Self::Output {
+        Self::Output::new(self * rhs.x, self * rhs.y, self * rhs.z)
+    }
+}
+
+#[cfg(feature = "unstable")]
+impl Mul<PQ64> for f64 {
+    type Output = PQ64;
+
+    #[inline]
+    fn mul(self, rhs: PQ64) -> Self::Output {
+        Self::Output::new(self * rhs.x, self * rhs.y, self * rhs.z)
+    }
+}
+
+#[cfg(feature = "unstable")]
+impl<T> Div<PureQuaternion<T>> for PureQuaternion<T>
+where
+    T: Num + Clone + Neg<Output = T>,
+{
+    type Output = Quaternion<T>;
+
+    #[allow(clippy::suspicious_arithmetic_impl)]
+    #[inline]
+    fn div(self, rhs: PureQuaternion<T>) -> Self::Output {
+        self * rhs.inv()
+    }
+}
+
+#[cfg(feature = "unstable")]
+impl<T> Div<Quaternion<T>> for PureQuaternion<T>
+where
+    T: Num + Clone + Neg<Output = T>,
+{
+    type Output = Quaternion<T>;
+
+    #[allow(clippy::suspicious_arithmetic_impl)]
+    #[inline]
+    fn div(self, rhs: Quaternion<T>) -> Self::Output {
+        self * rhs.inv()
+    }
+}
+
+#[cfg(feature = "unstable")]
+impl<T> Div<UnitQuaternion<T>> for PureQuaternion<T>
+where
+    T: Num + Clone + Neg<Output = T>,
+{
+    type Output = Quaternion<T>;
+
+    #[allow(clippy::suspicious_arithmetic_impl)]
+    #[inline]
+    fn div(self, rhs: UnitQuaternion<T>) -> Self::Output {
+        self * rhs.inv()
     }
 }
 
@@ -637,6 +979,61 @@ where
         Self::new(self.x / rhs.clone(), self.y / rhs.clone(), self.z / rhs)
     }
 }
+
+#[cfg(feature = "unstable")]
+impl Div<PQ32> for f32 {
+    type Output = PQ32;
+
+    #[allow(clippy::suspicious_arithmetic_impl)]
+    #[inline]
+    fn div(self, rhs: PQ32) -> Self::Output {
+        self * rhs.inv()
+    }
+}
+
+#[cfg(feature = "unstable")]
+impl Div<PQ64> for f64 {
+    type Output = PQ64;
+
+    #[allow(clippy::suspicious_arithmetic_impl)]
+    #[inline]
+    fn div(self, rhs: PQ64) -> Self::Output {
+        self * rhs.inv()
+    }
+}
+
+#[cfg(feature = "unstable")]
+impl_op_with_ref!(impl<T> Add::add for PureQuaternion<T>, PureQuaternion<T>);
+#[cfg(feature = "unstable")]
+impl_op_with_ref!(impl<T> Sub::sub for PureQuaternion<T>, PureQuaternion<T>);
+#[cfg(feature = "unstable")]
+impl_op_with_ref!(impl<T> Mul::mul for PureQuaternion<T>, PureQuaternion<T>);
+#[cfg(feature = "unstable")]
+impl_op_with_ref!(impl<T> Div::div for PureQuaternion<T>, PureQuaternion<T>);
+#[cfg(feature = "unstable")]
+impl_op_with_ref!(impl<T> Add::add for PureQuaternion<T>, UnitQuaternion<T>);
+#[cfg(feature = "unstable")]
+impl_op_with_ref!(impl<T> Sub::sub for PureQuaternion<T>, UnitQuaternion<T>);
+#[cfg(feature = "unstable")]
+impl_op_with_ref!(impl<T> Mul::mul for PureQuaternion<T>, UnitQuaternion<T>);
+#[cfg(feature = "unstable")]
+impl_op_with_ref!(impl<T> Div::div for PureQuaternion<T>, UnitQuaternion<T>);
+#[cfg(feature = "unstable")]
+impl_op_with_ref!(impl<T> Add::add for PureQuaternion<T>, Quaternion<T>);
+#[cfg(feature = "unstable")]
+impl_op_with_ref!(impl<T> Sub::sub for PureQuaternion<T>, Quaternion<T>);
+#[cfg(feature = "unstable")]
+impl_op_with_ref!(impl<T> Mul::mul for PureQuaternion<T>, Quaternion<T>);
+#[cfg(feature = "unstable")]
+impl_op_with_ref!(impl<T> Div::div for PureQuaternion<T>, Quaternion<T>);
+#[cfg(feature = "unstable")]
+impl_op_with_ref!(impl<T> Add::add for PureQuaternion<T>, T);
+#[cfg(feature = "unstable")]
+impl_op_with_ref!(impl<T> Sub::sub for PureQuaternion<T>, T);
+#[cfg(feature = "unstable")]
+impl_op_with_ref!(impl<T> Mul::mul for PureQuaternion<T>, T);
+#[cfg(feature = "unstable")]
+impl_op_with_ref!(impl<T> Div::div for PureQuaternion<T>, T);
 
 #[cfg(test)]
 mod tests {
