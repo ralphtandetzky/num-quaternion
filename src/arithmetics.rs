@@ -325,9 +325,13 @@ impl_op_with_ref!(impl<T> Add::add for Quaternion<T>, T);
 impl_op_with_ref!(impl<T> Sub::sub for Quaternion<T>, T);
 impl_op_with_ref!(impl<T> Mul::mul for Quaternion<T>, T);
 impl_op_with_ref!(impl<T> Div::div for Quaternion<T>, T);
+#[cfg(feature = "unstable")]
 impl_op_with_ref!(impl<T> Add::add for Quaternion<T>, PureQuaternion<T>);
+#[cfg(feature = "unstable")]
 impl_op_with_ref!(impl<T> Sub::sub for Quaternion<T>, PureQuaternion<T>);
+#[cfg(feature = "unstable")]
 impl_op_with_ref!(impl<T> Mul::mul for Quaternion<T>, PureQuaternion<T>);
+#[cfg(feature = "unstable")]
 impl_op_with_ref!(impl<T> Div::div for Quaternion<T>, PureQuaternion<T>);
 
 macro_rules! impl_ops_lhs_real {
@@ -683,9 +687,13 @@ impl_op_with_ref!(impl<T> Add::add for UnitQuaternion<T>, T);
 impl_op_with_ref!(impl<T> Sub::sub for UnitQuaternion<T>, T);
 impl_op_with_ref!(impl<T> Mul::mul for UnitQuaternion<T>, T);
 impl_op_with_ref!(impl<T> Div::div for UnitQuaternion<T>, T);
+#[cfg(feature = "unstable")]
 impl_op_with_ref!(impl<T> Add::add for UnitQuaternion<T>, PureQuaternion<T>);
+#[cfg(feature = "unstable")]
 impl_op_with_ref!(impl<T> Sub::sub for UnitQuaternion<T>, PureQuaternion<T>);
+#[cfg(feature = "unstable")]
 impl_op_with_ref!(impl<T> Mul::mul for UnitQuaternion<T>, PureQuaternion<T>);
+#[cfg(feature = "unstable")]
 impl_op_with_ref!(impl<T> Div::div for UnitQuaternion<T>, PureQuaternion<T>);
 
 impl_bin_op_assign!(impl MulAssign::mul_assign as Mul::mul for UnitQuaternion);
