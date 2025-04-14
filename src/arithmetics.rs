@@ -1281,6 +1281,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "unstable")]
     fn test_div_assign() {
         // Test the division assignment operator
         let mut q = Quaternion::new(1.0f32, 2.0f32, 3.0f32, 4.0f32);
