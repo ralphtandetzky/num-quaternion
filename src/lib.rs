@@ -123,7 +123,9 @@
 //!
 //! - `unstable`: Enables unstable features. Items marked as `unstable` may
 //!   undergo breaking changes in future releases without a major version
-//!   update. Use with caution in production environments.
+//!   update. Use with caution in production environments. Currently, the
+//!   the `PureQuaternion` type is marked as unstable. They represent
+//!   quaternions with zero real part.
 //!
 //! - `serde`: Implements the `Serialize` and `Deserialize` traits for all
 //!   data structures where possible. Useful for easy integration with
