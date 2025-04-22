@@ -184,15 +184,20 @@ where
     type Output = Quaternion<T>;
 
     #[inline]
+    #[rustfmt::skip]
     fn mul(self, rhs: PureQuaternion<T>) -> Self::Output {
-        let a = -self.x.clone() * rhs.x.clone()
-            - self.y.clone() * rhs.y.clone()
-            - self.z.clone() * rhs.z.clone();
-        let b = self.w.clone() * rhs.x.clone() + self.y.clone() * rhs.z.clone()
-            - self.z.clone() * rhs.y.clone();
-        let c = self.w.clone() * rhs.y.clone() - self.x.clone() * rhs.z.clone()
-            + self.z.clone() * rhs.x.clone();
-        let d = self.w * rhs.z + self.x * rhs.y - self.y * rhs.x;
+        let a = - self.x.clone() * rhs.x.clone()
+                   - self.y.clone() * rhs.y.clone()
+                   - self.z.clone() * rhs.z.clone();
+        let b =   self.w.clone() * rhs.x.clone()
+                   + self.y.clone() * rhs.z.clone()
+                   - self.z.clone() * rhs.y.clone();
+        let c =   self.w.clone() * rhs.y.clone()
+                   - self.x.clone() * rhs.z.clone()
+                   + self.z.clone() * rhs.x.clone();
+        let d =   self.w         * rhs.z
+                   + self.x         * rhs.y
+                   - self.y         * rhs.x;
         Self::new(a, b, c, d)
     }
 }
@@ -852,11 +857,10 @@ where
     type Output = Quaternion<T>;
 
     #[inline]
+    #[rustfmt::skip]
     fn mul(self, rhs: PureQuaternion<T>) -> Self::Output {
         Quaternion::new(
-            -(self.x.clone() * rhs.x.clone()
-                + self.y.clone() * rhs.y.clone()
-                + self.z.clone() * rhs.z.clone()),
+          -(self.x.clone() * rhs.x.clone() + self.y.clone() * rhs.y.clone() + self.z.clone() * rhs.z.clone()),
             self.y.clone() * rhs.z.clone() - self.z.clone() * rhs.y.clone(),
             self.z.clone() * rhs.x.clone() - self.x.clone() * rhs.z.clone(),
             self.x.clone() * rhs.y.clone() - self.y.clone() * rhs.x.clone(),
@@ -876,16 +880,20 @@ where
     type Output = Quaternion<T>;
 
     #[inline]
+    #[rustfmt::skip]
     fn mul(self, rhs: Quaternion<T>) -> Self::Output {
-        let a = -self.x.clone() * rhs.x.clone()
-            - self.y.clone() * rhs.y.clone()
-            - self.z.clone() * rhs.z.clone();
-        let b = self.x.clone() * rhs.w.clone() + self.y.clone() * rhs.z.clone()
-            - self.z.clone() * rhs.y.clone();
-        let c = -self.x.clone() * rhs.z.clone()
-            + self.y.clone() * rhs.w.clone()
-            + self.z.clone() * rhs.x.clone();
-        let d = self.x * rhs.y - self.y * rhs.x + self.z * rhs.w;
+        let a = - self.x.clone() * rhs.x.clone()
+                   - self.y.clone() * rhs.y.clone()
+                   - self.z.clone() * rhs.z.clone();
+        let b =   self.x.clone() * rhs.w.clone()
+                   + self.y.clone() * rhs.z.clone()
+                   - self.z.clone() * rhs.y.clone();
+        let c = - self.x.clone() * rhs.z.clone()
+                   + self.y.clone() * rhs.w.clone()
+                   + self.z.clone() * rhs.x.clone();
+        let d =   self.x         * rhs.y
+                   - self.y         * rhs.x
+                   + self.z         * rhs.w;
         Self::Output::new(a, b, c, d)
     }
 }
@@ -898,8 +906,11 @@ where
     type Output = PureQuaternion<T>;
 
     #[inline]
+    #[rustfmt::skip]
     fn mul(self, rhs: T) -> Self::Output {
-        Self::new(self.x * rhs.clone(), self.y * rhs.clone(), self.z * rhs)
+        Self::new(self.x * rhs.clone(),
+                  self.y * rhs.clone(),
+                  self.z * rhs)
     }
 }
 
@@ -921,8 +932,11 @@ impl Mul<PQ32> for f32 {
     type Output = PQ32;
 
     #[inline]
+    #[rustfmt::skip]
     fn mul(self, rhs: PQ32) -> Self::Output {
-        Self::Output::new(self * rhs.x, self * rhs.y, self * rhs.z)
+        Self::Output::new(self * rhs.x,
+                          self * rhs.y,
+                          self * rhs.z)
     }
 }
 
@@ -931,8 +945,11 @@ impl Mul<PQ64> for f64 {
     type Output = PQ64;
 
     #[inline]
+    #[rustfmt::skip]
     fn mul(self, rhs: PQ64) -> Self::Output {
-        Self::Output::new(self * rhs.x, self * rhs.y, self * rhs.z)
+        Self::Output::new(self * rhs.x,
+                          self * rhs.y,
+                          self * rhs.z)
     }
 }
 
