@@ -2489,6 +2489,7 @@ mod tests {
     #[cfg(feature = "unstable")]
     #[test]
     fn test_ln_of_normal_case() {
+        // Test the natural logarithm of a unit quaternion
         let q = Q64::new(1.0, 2.0, 3.0, 4.0);
         let p = q.normalize().expect("Failed to normalize quaternion").ln();
         assert!((p.z / p.x - q.z / q.x).abs() <= 4.0 * f64::EPSILON);
