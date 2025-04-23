@@ -1295,8 +1295,7 @@ where
                     self.0.z,
                 )
             } else if sqr_norm_im.is_normal() {
-                // We're close the the negative real axis. Compute the
-                // norm of the imaginary part.
+                // We're close to the negative real axis. Compute the
                 let norm_im = sqr_norm_im.sqrt();
 
                 // The angle of `self` to the positive real axis is
