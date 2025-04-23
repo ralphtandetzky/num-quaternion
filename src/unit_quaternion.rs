@@ -7,6 +7,9 @@ use {
     num_traits::{ConstOne, ConstZero, Inv, Num, One, Zero},
 };
 
+#[cfg(feature = "unstable")]
+use crate::PureQuaternion;
+
 #[cfg(any(feature = "std", feature = "libm"))]
 use {
     core::num::FpCategory,
@@ -75,6 +78,12 @@ pub struct UnitQuaternion<T>(Quaternion<T>);
 pub type UQ32 = UnitQuaternion<f32>;
 /// Alias for a [`UnitQuaternion<f64>`].
 pub type UQ64 = UnitQuaternion<f64>;
+
+impl<T> UnitQuaternion<T> {
+    pub(crate) fn new(w: T, x: T, y: T, z: T) -> Self {
+        Self(Quaternion::new(w, x, y, z))
+    }
+}
 
 /// Contains the roll, pitch and yaw angle of a rotation.
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
@@ -1237,6 +1246,127 @@ where
     }
 }
 
+#[cfg(feature = "unstable")]
+#[cfg(any(feature = "std", feature = "libm"))]
+impl<T> UnitQuaternion<T>
+where
+    T: Float + FloatConst,
+{
+    /// Computes the natural logarithm of a unit quaternion.
+    ///
+    /// The function implements the following guarantees for extreme input
+    /// values:
+    ///
+    /// - The function is continuous onto the branch cut taking into account
+    ///   the sign of the coefficient of $i$.
+    /// - For all quaternions $q$ it holds `q.conj().ln() == q.ln().conj()`.
+    /// - The signs of the coefficients of the imaginary parts of the outputs
+    ///   are equal to the signs of the respective coefficients of the inputs.
+    ///   This also holds for signs of zeros, but not for `NaNs`.
+    /// - If the input has a `NaN` value, then the result is `NaN` in all
+    ///   components.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use num_quaternion::Quaternion;
+    /// let q = Quaternion::new(1.0f32, 2.0, 3.0, 4.0).normalize().unwrap();
+    /// let ln_q = q.ln();
+    /// ```
+    pub fn ln(self) -> PureQuaternion<T> {
+        // The square norm of the imaginary part.
+        let sqr_norm_im =
+            self.0.x * self.0.x + self.0.y * self.0.y + self.0.z * self.0.z;
+
+        if sqr_norm_im <= T::epsilon() {
+            // We're close to or on the positive real axis
+            if self.0.w.is_sign_positive() {
+                // This approximation leaves a relative error of less
+                // than a floating point epsilon for the imaginary part
+                PureQuaternion::new(self.0.x, self.0.y, self.0.z)
+            } else if self.0.x.is_zero()
+                && self.0.y.is_zero()
+                && self.0.z.is_zero()
+            {
+                // We're on the negative real axis.
+                PureQuaternion::new(
+                    T::PI().copysign(self.0.x),
+                    self.0.y,
+                    self.0.z,
+                )
+            } else if sqr_norm_im.is_normal() {
+                // We're close to the negative real axis. Compute the
+                let norm_im = sqr_norm_im.sqrt();
+
+                // The angle of `self` to the positive real axis is
+                // pi minus the angle from the negative real axis.
+                // The angle from the negative real axis
+                // can be approximated by `norm_im / self.w.abs()`
+                // which is equal to `-norm_im / self.w`. This the
+                // angle from the positive real axis is
+                // `pi + norm_im / self.w`. We obtain the imaginary
+                // part of the result by multiplying this value by
+                // the imaginary part of the input normalized, or
+                // equivalently, by multiplying the imaginary part
+                // of the input by the following factor:
+                let f = T::PI() / norm_im + self.0.w.recip();
+
+                PureQuaternion::new(self.0.x, self.0.y, self.0.z) * f
+            } else {
+                // The imaginary part is so small, that the norm of the
+                // resulting imaginary part differs from `pi` by way
+                // less than half an ulp. Therefore, it's sufficient to
+                // normalize the imaginary part and multiply it by
+                // `pi`.
+                let f = T::min_positive_value().sqrt() * T::epsilon();
+                let xf = self.0.x / f;
+                let yf = self.0.y / f;
+                let zf = self.0.z / f;
+                let sqr_sum = xf * xf + yf * yf + zf * zf;
+                let im_norm_div_f = sqr_sum.sqrt();
+                let pi_div_f = T::PI() / f;
+                // We could try to reduce the number of divisions by
+                // computing `pi_div_f / im_norm_div_f` and then
+                // multiplying the imaginary part by this value.
+                // However, this reduces numerical accuracy, if the
+                // pi times the norm of the imaginary part is
+                // subnormal. We could also introduce another branch
+                // here, but this would make the code more complex
+                // and extend the worst case latency. Therefore, we
+                // keep the divisions like that.
+                PureQuaternion::new(
+                    self.0.x * pi_div_f / im_norm_div_f,
+                    self.0.y * pi_div_f / im_norm_div_f,
+                    self.0.z * pi_div_f / im_norm_div_f,
+                )
+            }
+        } else {
+            // The most natural case: We're far enough from the real
+            // axis and the norm of the input quaternion is large
+            // enough to exclude any numerical instabilities.
+            let norm_im = if sqr_norm_im.is_normal() {
+                // `sqr_norm_im` has maximum precision.
+                sqr_norm_im.sqrt()
+            } else {
+                // Otherwise, using `sqr_norm_im` is imprecise.
+                // We magnify the imaginary part first, so we can
+                // get around this problem.
+                let f = T::min_positive_value().sqrt() * T::epsilon();
+                let xf = self.0.x / f;
+                let yf = self.0.y / f;
+                let zf = self.0.z / f;
+                let sqr_sum = xf * xf + yf * yf + zf * zf;
+                sqr_sum.sqrt() * f
+            };
+            let angle = norm_im.atan2(self.0.w);
+            let x = self.0.x * angle / norm_im;
+            let y = self.0.y * angle / norm_im;
+            let z = self.0.z * angle / norm_im;
+            PureQuaternion::new(x, y, z)
+        }
+    }
+}
+
 #[cfg(feature = "serde")]
 impl<T> serde::Serialize for UnitQuaternion<T>
 where
@@ -1305,6 +1435,10 @@ mod tests {
 
     #[cfg(any(feature = "std", feature = "libm", feature = "serde"))]
     use crate::EulerAngles;
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[cfg(feature = "unstable")]
+    use crate::PureQuaternion;
 
     /// Computes the hash value of `val` using the default hasher.
     #[cfg(feature = "std")]
@@ -2340,6 +2474,72 @@ mod tests {
             (result.0.z - expected.0.z).abs()
                 <= 2.0 * expected.0.z * f64::EPSILON
         );
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[cfg(feature = "unstable")]
+    #[test]
+    fn test_ln_of_identity() {
+        // Test the natural logarithm of the identity unit quaternion
+        assert_eq!(UQ32::ONE.ln(), PureQuaternion::ZERO);
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[cfg(feature = "unstable")]
+    #[test]
+    fn test_ln_of_normal_case() {
+        // Test the natural logarithm of a unit quaternion
+        let q = Q64::new(1.0, 2.0, 3.0, 4.0);
+        let p = q.normalize().expect("Failed to normalize quaternion").ln();
+        assert!((p.z / p.x - q.z / q.x).abs() <= 4.0 * f64::EPSILON);
+        assert!((p.y / p.x - q.y / q.x).abs() <= 4.0 * f64::EPSILON);
+        assert!((p.norm() - 29.0f64.sqrt().atan()).abs() <= 4.0 * f64::EPSILON);
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[cfg(feature = "unstable")]
+    #[test]
+    fn test_ln_near_positive_real_axis() {
+        // Test close to the positive real axis
+        let q = Quaternion::new(1.0, 1e-10, 1e-10, 1e-10)
+            .normalize()
+            .unwrap();
+        let ln_q = q.ln();
+        let expected = PureQuaternion::new(1e-10, 1e-10, 1e-10); // ln(1) = 0 and imaginary parts small
+        assert!((ln_q - expected).norm() <= 1e-11);
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[cfg(feature = "unstable")]
+    #[test]
+    fn test_ln_negative_real_axis() {
+        // Test on the negative real axis
+        let q = Q32::new(-1.0, 0.0, 0.0, 0.0).normalize().unwrap();
+        let ln_q = q.ln();
+        let expected = PureQuaternion::new(core::f32::consts::PI, 0.0, 0.0); // ln(-1) = pi*i
+        assert!(
+            (ln_q - expected).norm() <= core::f32::consts::PI * f32::EPSILON
+        );
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[cfg(feature = "unstable")]
+    #[test]
+    fn test_ln_near_negative_real_axis() {
+        // Test a quaternion with a tiny imaginary part
+        use core::f32;
+        let q = Q32::new(-2.0, 346.0 * f32::EPSILON, 0.0, 0.0);
+        let uq = q.normalize().unwrap();
+        let ln_uq = uq.ln();
+        let expected =
+            PureQuaternion::new(f32::consts::PI + q.x / q.w, 0.0, 0.0);
+        assert!((ln_uq - expected).norm() <= 8.0 * f32::EPSILON);
+
+        let q = Q32::new(-1.0, f32::MIN_POSITIVE / 192.0, 0.0, 0.0);
+        let uq = q.normalize().unwrap();
+        let ln_uq = uq.ln();
+        let expected = PureQuaternion::new(f32::consts::PI, 0.0, 0.0);
+        assert_eq!(ln_uq, expected);
     }
 
     #[cfg(all(feature = "serde", any(feature = "std", feature = "libm")))]

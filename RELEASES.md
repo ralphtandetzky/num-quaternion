@@ -4,6 +4,9 @@
 
 ## [Unreleased]
 
+- Added `PureQuaternion` type.
+- Added missing arithmetic operations, such as `MutAssign` and `DivAssign` traits for `UnitQuaternion`.
+- Fixed numerical inaccuracy in the `ln` method of `Quaternion` in edge cases.
 - Updated pull request template.
 - Updated dependency `serde` to version `1.0.218`.
 - Updated dependency `serde_json` to version `1.0.139`.

@@ -6,6 +6,9 @@ use {
     num_traits::{Inv, Num, Zero},
 };
 
+#[cfg(feature = "unstable")]
+use crate::{PureQuaternion, PQ32, PQ64};
+
 impl<T> Add<Quaternion<T>> for Quaternion<T>
 where
     T: Add<T, Output = T>,
@@ -47,6 +50,19 @@ where
     }
 }
 
+#[cfg(feature = "unstable")]
+impl<T> Add<PureQuaternion<T>> for Quaternion<T>
+where
+    T: Add<T, Output = T>,
+{
+    type Output = Quaternion<T>;
+
+    #[inline]
+    fn add(self, rhs: PureQuaternion<T>) -> Self::Output {
+        Self::new(self.w, self.x + rhs.x, self.y + rhs.y, self.z + rhs.z)
+    }
+}
+
 impl<T> Sub<Quaternion<T>> for Quaternion<T>
 where
     T: Sub<T, Output = T>,
@@ -85,6 +101,19 @@ where
     #[inline]
     fn sub(self, rhs: UnitQuaternion<T>) -> Self {
         self - rhs.into_inner()
+    }
+}
+
+#[cfg(feature = "unstable")]
+impl<T> Sub<PureQuaternion<T>> for Quaternion<T>
+where
+    T: Sub<T, Output = T>,
+{
+    type Output = Quaternion<T>;
+
+    #[inline]
+    fn sub(self, rhs: PureQuaternion<T>) -> Self::Output {
+        Self::new(self.w, self.x - rhs.x, self.y - rhs.y, self.z - rhs.z)
     }
 }
 
@@ -142,6 +171,37 @@ where
     }
 }
 
+#[cfg(feature = "unstable")]
+impl<T> Mul<PureQuaternion<T>> for Quaternion<T>
+where
+    T: Neg<Output = T>
+        + Add<T, Output = T>
+        + Sub<T, Output = T>
+        + Mul<T, Output = T>
+        + Neg<Output = T>
+        + Clone,
+{
+    type Output = Quaternion<T>;
+
+    #[inline]
+    #[rustfmt::skip]
+    fn mul(self, rhs: PureQuaternion<T>) -> Self::Output {
+        let a = - self.x.clone() * rhs.x.clone()
+                   - self.y.clone() * rhs.y.clone()
+                   - self.z.clone() * rhs.z.clone();
+        let b =   self.w.clone() * rhs.x.clone()
+                   + self.y.clone() * rhs.z.clone()
+                   - self.z.clone() * rhs.y.clone();
+        let c =   self.w.clone() * rhs.y.clone()
+                   - self.x.clone() * rhs.z.clone()
+                   + self.z.clone() * rhs.x.clone();
+        let d =   self.w         * rhs.z
+                   + self.x         * rhs.y
+                   - self.y         * rhs.x;
+        Self::new(a, b, c, d)
+    }
+}
+
 impl<T> Div<Quaternion<T>> for Quaternion<T>
 where
     T: Num + Clone + Neg<Output = T>,
@@ -186,9 +246,23 @@ where
     }
 }
 
+#[cfg(feature = "unstable")]
+impl<T> Div<PureQuaternion<T>> for Quaternion<T>
+where
+    T: Num + Clone + Neg<Output = T>,
+{
+    type Output = Quaternion<T>;
+
+    #[allow(clippy::suspicious_arithmetic_impl)]
+    #[inline]
+    fn div(self, rhs: PureQuaternion<T>) -> Self::Output {
+        self * rhs.inv()
+    }
+}
+
 macro_rules! impl_bin_op_assign {
-    (impl $bin_op_assign_trait:ident, $bin_op_assign:ident, $bin_op_trait:ident, $bin_op:ident) => {
-        impl<T, S> $bin_op_assign_trait<S> for Quaternion<T>
+    (impl $bin_op_assign_trait:ident::$bin_op_assign:ident as $bin_op_trait:ident::$bin_op:ident for $generic:ident) => {
+        impl<T, S> $bin_op_assign_trait<S> for $generic<T>
         where
             Self: $bin_op_trait<S, Output = Self> + Clone,
         {
@@ -200,10 +274,10 @@ macro_rules! impl_bin_op_assign {
     };
 }
 
-impl_bin_op_assign!(impl AddAssign, add_assign, Add, add);
-impl_bin_op_assign!(impl SubAssign, sub_assign, Sub, sub);
-impl_bin_op_assign!(impl MulAssign, mul_assign, Mul, mul);
-impl_bin_op_assign!(impl DivAssign, div_assign, Div, div);
+impl_bin_op_assign!(impl AddAssign::add_assign as Add::add for Quaternion);
+impl_bin_op_assign!(impl SubAssign::sub_assign as Sub::sub for Quaternion);
+impl_bin_op_assign!(impl MulAssign::mul_assign as Mul::mul for Quaternion);
+impl_bin_op_assign!(impl DivAssign::div_assign as Div::div for Quaternion);
 
 macro_rules! impl_op_with_ref {
     (impl<$T:ident> $bin_op_trait:ident::$bin_op:ident for $lhs_type:ty, $rhs_type:ty) => {
@@ -256,6 +330,14 @@ impl_op_with_ref!(impl<T> Add::add for Quaternion<T>, T);
 impl_op_with_ref!(impl<T> Sub::sub for Quaternion<T>, T);
 impl_op_with_ref!(impl<T> Mul::mul for Quaternion<T>, T);
 impl_op_with_ref!(impl<T> Div::div for Quaternion<T>, T);
+#[cfg(feature = "unstable")]
+impl_op_with_ref!(impl<T> Add::add for Quaternion<T>, PureQuaternion<T>);
+#[cfg(feature = "unstable")]
+impl_op_with_ref!(impl<T> Sub::sub for Quaternion<T>, PureQuaternion<T>);
+#[cfg(feature = "unstable")]
+impl_op_with_ref!(impl<T> Mul::mul for Quaternion<T>, PureQuaternion<T>);
+#[cfg(feature = "unstable")]
+impl_op_with_ref!(impl<T> Div::div for Quaternion<T>, PureQuaternion<T>);
 
 macro_rules! impl_ops_lhs_real {
     ($($real:ty),*) => {
@@ -392,6 +474,19 @@ impl Add<UQ64> for f64 {
     }
 }
 
+#[cfg(feature = "unstable")]
+impl<T> Add<PureQuaternion<T>> for UnitQuaternion<T>
+where
+    Quaternion<T>: Add<PureQuaternion<T>, Output = Quaternion<T>>,
+{
+    type Output = Quaternion<T>;
+
+    #[inline]
+    fn add(self, rhs: PureQuaternion<T>) -> Self::Output {
+        self.into_inner() + rhs
+    }
+}
+
 impl<T> Sub<UnitQuaternion<T>> for UnitQuaternion<T>
 where
     Quaternion<T>: Sub<Output = Quaternion<T>>,
@@ -446,6 +541,19 @@ impl Sub<UQ64> for f64 {
     }
 }
 
+#[cfg(feature = "unstable")]
+impl<T> Sub<PureQuaternion<T>> for UnitQuaternion<T>
+where
+    Quaternion<T>: Sub<PureQuaternion<T>, Output = Quaternion<T>>,
+{
+    type Output = Quaternion<T>;
+
+    #[inline]
+    fn sub(self, rhs: PureQuaternion<T>) -> Self::Output {
+        self.into_inner() - rhs
+    }
+}
+
 impl<T> Mul<Quaternion<T>> for UnitQuaternion<T>
 where
     Quaternion<T>: Mul<Output = Quaternion<T>>,
@@ -485,6 +593,19 @@ impl Mul<UQ64> for f64 {
     #[inline]
     fn mul(self, rhs: UQ64) -> Self::Output {
         self * rhs.into_inner()
+    }
+}
+
+#[cfg(feature = "unstable")]
+impl<T> Mul<PureQuaternion<T>> for UnitQuaternion<T>
+where
+    Quaternion<T>: Mul<PureQuaternion<T>, Output = Quaternion<T>>,
+{
+    type Output = Quaternion<T>;
+
+    #[inline]
+    fn mul(self, rhs: PureQuaternion<T>) -> Self::Output {
+        self.into_inner() * rhs
     }
 }
 
@@ -546,6 +667,19 @@ impl Div<UQ64> for f64 {
     }
 }
 
+#[cfg(feature = "unstable")]
+impl<T> Div<PureQuaternion<T>> for UnitQuaternion<T>
+where
+    Quaternion<T>: Div<PureQuaternion<T>, Output = Quaternion<T>>,
+{
+    type Output = Quaternion<T>;
+
+    #[inline]
+    fn div(self, rhs: PureQuaternion<T>) -> Self::Output {
+        self.into_inner() / rhs
+    }
+}
+
 impl_op_with_ref!(impl<T> Add::add for UnitQuaternion<T>, UnitQuaternion<T>);
 impl_op_with_ref!(impl<T> Sub::sub for UnitQuaternion<T>, UnitQuaternion<T>);
 impl_op_with_ref!(impl<T> Mul::mul for UnitQuaternion<T>, UnitQuaternion<T>);
@@ -558,11 +692,392 @@ impl_op_with_ref!(impl<T> Add::add for UnitQuaternion<T>, T);
 impl_op_with_ref!(impl<T> Sub::sub for UnitQuaternion<T>, T);
 impl_op_with_ref!(impl<T> Mul::mul for UnitQuaternion<T>, T);
 impl_op_with_ref!(impl<T> Div::div for UnitQuaternion<T>, T);
+#[cfg(feature = "unstable")]
+impl_op_with_ref!(impl<T> Add::add for UnitQuaternion<T>, PureQuaternion<T>);
+#[cfg(feature = "unstable")]
+impl_op_with_ref!(impl<T> Sub::sub for UnitQuaternion<T>, PureQuaternion<T>);
+#[cfg(feature = "unstable")]
+impl_op_with_ref!(impl<T> Mul::mul for UnitQuaternion<T>, PureQuaternion<T>);
+#[cfg(feature = "unstable")]
+impl_op_with_ref!(impl<T> Div::div for UnitQuaternion<T>, PureQuaternion<T>);
+
+impl_bin_op_assign!(impl MulAssign::mul_assign as Mul::mul for UnitQuaternion);
+impl_bin_op_assign!(impl DivAssign::div_assign as Div::div for UnitQuaternion);
+
+#[cfg(feature = "unstable")]
+impl<T> Add<PureQuaternion<T>> for PureQuaternion<T>
+where
+    T: Add<T, Output = T>,
+{
+    type Output = PureQuaternion<T>;
+
+    #[inline]
+    fn add(self, rhs: PureQuaternion<T>) -> Self::Output {
+        Self::new(self.x + rhs.x, self.y + rhs.y, self.z + rhs.z)
+    }
+}
+
+#[cfg(feature = "unstable")]
+impl<T> Add<Quaternion<T>> for PureQuaternion<T>
+where
+    T: Add<T, Output = T>,
+{
+    type Output = Quaternion<T>;
+
+    #[inline]
+    fn add(self, rhs: Quaternion<T>) -> Self::Output {
+        Quaternion::new(rhs.w, self.x + rhs.x, self.y + rhs.y, self.z + rhs.z)
+    }
+}
+
+#[cfg(feature = "unstable")]
+impl<T> Add<T> for PureQuaternion<T> {
+    type Output = Quaternion<T>;
+
+    #[inline]
+    fn add(self, rhs: T) -> Self::Output {
+        Self::Output::new(rhs, self.x, self.y, self.z)
+    }
+}
+
+#[cfg(feature = "unstable")]
+impl<T> Add<UnitQuaternion<T>> for PureQuaternion<T>
+where
+    T: Add<T, Output = T>,
+{
+    type Output = Quaternion<T>;
+
+    #[inline]
+    fn add(self, rhs: UnitQuaternion<T>) -> Self::Output {
+        self + rhs.into_inner()
+    }
+}
+
+#[cfg(feature = "unstable")]
+impl Add<PQ32> for f32 {
+    type Output = Q32;
+
+    #[inline]
+    fn add(self, rhs: PQ32) -> Self::Output {
+        Self::Output::new(self, rhs.x, rhs.y, rhs.z)
+    }
+}
+
+#[cfg(feature = "unstable")]
+impl Add<PQ64> for f64 {
+    type Output = Q64;
+
+    #[inline]
+    fn add(self, rhs: PQ64) -> Self::Output {
+        Self::Output::new(self, rhs.x, rhs.y, rhs.z)
+    }
+}
+
+#[cfg(feature = "unstable")]
+impl<T> Sub<PureQuaternion<T>> for PureQuaternion<T>
+where
+    T: Sub<T, Output = T>,
+{
+    type Output = PureQuaternion<T>;
+
+    #[inline]
+    fn sub(self, rhs: PureQuaternion<T>) -> Self::Output {
+        Self::new(self.x - rhs.x, self.y - rhs.y, self.z - rhs.z)
+    }
+}
+
+#[cfg(feature = "unstable")]
+impl<T> Sub<Quaternion<T>> for PureQuaternion<T>
+where
+    T: Sub<T, Output = T> + Neg<Output = T>,
+{
+    type Output = Quaternion<T>;
+
+    #[inline]
+    fn sub(self, rhs: Quaternion<T>) -> Self::Output {
+        Quaternion::new(-rhs.w, self.x - rhs.x, self.y - rhs.y, self.z - rhs.z)
+    }
+}
+
+#[cfg(feature = "unstable")]
+impl<T> Sub<T> for PureQuaternion<T>
+where
+    T: Neg<Output = T>,
+{
+    type Output = Quaternion<T>;
+
+    #[inline]
+    fn sub(self, rhs: T) -> Self::Output {
+        Self::Output::new(-rhs, self.x, self.y, self.z)
+    }
+}
+
+#[cfg(feature = "unstable")]
+impl<T> Sub<UnitQuaternion<T>> for PureQuaternion<T>
+where
+    T: Sub<T, Output = T> + Neg<Output = T>,
+{
+    type Output = Quaternion<T>;
+
+    #[inline]
+    fn sub(self, rhs: UnitQuaternion<T>) -> Self::Output {
+        self - rhs.into_inner()
+    }
+}
+
+#[cfg(feature = "unstable")]
+impl Sub<PQ32> for f32 {
+    type Output = Q32;
+
+    #[inline]
+    fn sub(self, rhs: PQ32) -> Self::Output {
+        Self::Output::new(self, -rhs.x, -rhs.y, -rhs.z)
+    }
+}
+
+#[cfg(feature = "unstable")]
+impl Sub<PQ64> for f64 {
+    type Output = Q64;
+
+    #[inline]
+    fn sub(self, rhs: PQ64) -> Self::Output {
+        Self::Output::new(self, -rhs.x, -rhs.y, -rhs.z)
+    }
+}
+
+#[cfg(feature = "unstable")]
+impl<T> Mul<PureQuaternion<T>> for PureQuaternion<T>
+where
+    T: Neg<Output = T>
+        + Add<T, Output = T>
+        + Sub<T, Output = T>
+        + Mul<T, Output = T>
+        + Clone,
+{
+    type Output = Quaternion<T>;
+
+    #[inline]
+    #[rustfmt::skip]
+    fn mul(self, rhs: PureQuaternion<T>) -> Self::Output {
+        Quaternion::new(
+          -(self.x.clone() * rhs.x.clone() + self.y.clone() * rhs.y.clone() + self.z.clone() * rhs.z.clone()),
+            self.y.clone() * rhs.z.clone() - self.z.clone() * rhs.y.clone(),
+            self.z.clone() * rhs.x.clone() - self.x.clone() * rhs.z.clone(),
+            self.x.clone() * rhs.y.clone() - self.y.clone() * rhs.x.clone(),
+        )
+    }
+}
+
+#[cfg(feature = "unstable")]
+impl<T> Mul<Quaternion<T>> for PureQuaternion<T>
+where
+    T: Neg<Output = T>
+        + Add<T, Output = T>
+        + Sub<T, Output = T>
+        + Mul<T, Output = T>
+        + Clone,
+{
+    type Output = Quaternion<T>;
+
+    #[inline]
+    #[rustfmt::skip]
+    fn mul(self, rhs: Quaternion<T>) -> Self::Output {
+        let a = - self.x.clone() * rhs.x.clone()
+                   - self.y.clone() * rhs.y.clone()
+                   - self.z.clone() * rhs.z.clone();
+        let b =   self.x.clone() * rhs.w.clone()
+                   + self.y.clone() * rhs.z.clone()
+                   - self.z.clone() * rhs.y.clone();
+        let c = - self.x.clone() * rhs.z.clone()
+                   + self.y.clone() * rhs.w.clone()
+                   + self.z.clone() * rhs.x.clone();
+        let d =   self.x         * rhs.y
+                   - self.y         * rhs.x
+                   + self.z         * rhs.w;
+        Self::Output::new(a, b, c, d)
+    }
+}
+
+#[cfg(feature = "unstable")]
+impl<T> Mul<T> for PureQuaternion<T>
+where
+    T: Mul<T, Output = T> + Clone,
+{
+    type Output = PureQuaternion<T>;
+
+    #[inline]
+    #[rustfmt::skip]
+    fn mul(self, rhs: T) -> Self::Output {
+        Self::new(self.x * rhs.clone(),
+                  self.y * rhs.clone(),
+                  self.z * rhs)
+    }
+}
+
+#[cfg(feature = "unstable")]
+impl<T> Mul<UnitQuaternion<T>> for PureQuaternion<T>
+where
+    PureQuaternion<T>: Mul<Quaternion<T>, Output = Quaternion<T>>,
+{
+    type Output = Quaternion<T>;
+
+    #[inline]
+    fn mul(self, rhs: UnitQuaternion<T>) -> Self::Output {
+        self * rhs.into_inner()
+    }
+}
+
+#[cfg(feature = "unstable")]
+impl Mul<PQ32> for f32 {
+    type Output = PQ32;
+
+    #[inline]
+    #[rustfmt::skip]
+    fn mul(self, rhs: PQ32) -> Self::Output {
+        Self::Output::new(self * rhs.x,
+                          self * rhs.y,
+                          self * rhs.z)
+    }
+}
+
+#[cfg(feature = "unstable")]
+impl Mul<PQ64> for f64 {
+    type Output = PQ64;
+
+    #[inline]
+    #[rustfmt::skip]
+    fn mul(self, rhs: PQ64) -> Self::Output {
+        Self::Output::new(self * rhs.x,
+                          self * rhs.y,
+                          self * rhs.z)
+    }
+}
+
+#[cfg(feature = "unstable")]
+impl<T> Div<PureQuaternion<T>> for PureQuaternion<T>
+where
+    T: Num + Clone + Neg<Output = T>,
+{
+    type Output = Quaternion<T>;
+
+    #[allow(clippy::suspicious_arithmetic_impl)]
+    #[inline]
+    fn div(self, rhs: PureQuaternion<T>) -> Self::Output {
+        self * rhs.inv()
+    }
+}
+
+#[cfg(feature = "unstable")]
+impl<T> Div<Quaternion<T>> for PureQuaternion<T>
+where
+    T: Num + Clone + Neg<Output = T>,
+{
+    type Output = Quaternion<T>;
+
+    #[allow(clippy::suspicious_arithmetic_impl)]
+    #[inline]
+    fn div(self, rhs: Quaternion<T>) -> Self::Output {
+        self * rhs.inv()
+    }
+}
+
+#[cfg(feature = "unstable")]
+impl<T> Div<T> for PureQuaternion<T>
+where
+    T: Div<T, Output = T> + Clone,
+{
+    type Output = PureQuaternion<T>;
+
+    #[inline]
+    fn div(self, rhs: T) -> Self::Output {
+        Self::new(self.x / rhs.clone(), self.y / rhs.clone(), self.z / rhs)
+    }
+}
+
+#[cfg(feature = "unstable")]
+impl<T> Div<UnitQuaternion<T>> for PureQuaternion<T>
+where
+    T: Num + Clone + Neg<Output = T>,
+{
+    type Output = Quaternion<T>;
+
+    #[allow(clippy::suspicious_arithmetic_impl)]
+    #[inline]
+    fn div(self, rhs: UnitQuaternion<T>) -> Self::Output {
+        self * rhs.inv()
+    }
+}
+
+#[cfg(feature = "unstable")]
+impl Div<PQ32> for f32 {
+    type Output = PQ32;
+
+    #[allow(clippy::suspicious_arithmetic_impl)]
+    #[inline]
+    fn div(self, rhs: PQ32) -> Self::Output {
+        self * rhs.inv()
+    }
+}
+
+#[cfg(feature = "unstable")]
+impl Div<PQ64> for f64 {
+    type Output = PQ64;
+
+    #[allow(clippy::suspicious_arithmetic_impl)]
+    #[inline]
+    fn div(self, rhs: PQ64) -> Self::Output {
+        self * rhs.inv()
+    }
+}
+
+#[cfg(feature = "unstable")]
+impl_op_with_ref!(impl<T> Add::add for PureQuaternion<T>, PureQuaternion<T>);
+#[cfg(feature = "unstable")]
+impl_op_with_ref!(impl<T> Sub::sub for PureQuaternion<T>, PureQuaternion<T>);
+#[cfg(feature = "unstable")]
+impl_op_with_ref!(impl<T> Mul::mul for PureQuaternion<T>, PureQuaternion<T>);
+#[cfg(feature = "unstable")]
+impl_op_with_ref!(impl<T> Div::div for PureQuaternion<T>, PureQuaternion<T>);
+#[cfg(feature = "unstable")]
+impl_op_with_ref!(impl<T> Add::add for PureQuaternion<T>, Quaternion<T>);
+#[cfg(feature = "unstable")]
+impl_op_with_ref!(impl<T> Sub::sub for PureQuaternion<T>, Quaternion<T>);
+#[cfg(feature = "unstable")]
+impl_op_with_ref!(impl<T> Mul::mul for PureQuaternion<T>, Quaternion<T>);
+#[cfg(feature = "unstable")]
+impl_op_with_ref!(impl<T> Div::div for PureQuaternion<T>, Quaternion<T>);
+#[cfg(feature = "unstable")]
+impl_op_with_ref!(impl<T> Add::add for PureQuaternion<T>, T);
+#[cfg(feature = "unstable")]
+impl_op_with_ref!(impl<T> Sub::sub for PureQuaternion<T>, T);
+#[cfg(feature = "unstable")]
+impl_op_with_ref!(impl<T> Mul::mul for PureQuaternion<T>, T);
+#[cfg(feature = "unstable")]
+impl_op_with_ref!(impl<T> Div::div for PureQuaternion<T>, T);
+#[cfg(feature = "unstable")]
+impl_op_with_ref!(impl<T> Add::add for PureQuaternion<T>, UnitQuaternion<T>);
+#[cfg(feature = "unstable")]
+impl_op_with_ref!(impl<T> Sub::sub for PureQuaternion<T>, UnitQuaternion<T>);
+#[cfg(feature = "unstable")]
+impl_op_with_ref!(impl<T> Mul::mul for PureQuaternion<T>, UnitQuaternion<T>);
+#[cfg(feature = "unstable")]
+impl_op_with_ref!(impl<T> Div::div for PureQuaternion<T>, UnitQuaternion<T>);
+
+#[cfg(feature = "unstable")]
+impl_bin_op_assign!(impl AddAssign::add_assign as Add::add for PureQuaternion);
+#[cfg(feature = "unstable")]
+impl_bin_op_assign!(impl SubAssign::sub_assign as Sub::sub for PureQuaternion);
+#[cfg(feature = "unstable")]
+impl_bin_op_assign!(impl MulAssign::mul_assign as Mul::mul for PureQuaternion);
+#[cfg(feature = "unstable")]
+impl_bin_op_assign!(impl DivAssign::div_assign as Div::div for PureQuaternion);
 
 #[cfg(test)]
 mod tests {
 
     use crate::{Quaternion, Q32, Q64, UQ32, UQ64};
+    #[cfg(feature = "unstable")]
+    use crate::{PQ32, PQ64};
 
     #[test]
     fn test_add_quaternion() {
@@ -585,6 +1100,30 @@ mod tests {
     }
 
     #[test]
+    fn test_add_quaternion_and_unit_quaternion() {
+        // Test the addition of a quaternion and a unit quaternion
+        assert_eq!(Q32::I + UQ32::J, Q32::new(0.0, 1.0, 1.0, 0.0));
+        assert_eq!(
+            Q64::new(1.0, 2.0, 3.0, 4.0) + UQ64::K,
+            Q64::new(1.0, 2.0, 3.0, 5.0)
+        );
+    }
+
+    #[test]
+    #[cfg(feature = "unstable")]
+    fn test_add_quaternion_and_pure_quaternion() {
+        // Test the addition of a quaternion and a pure quaternion
+        assert_eq!(
+            Q32::I + PQ32::new(1.0, 2.0, 3.0),
+            Q32::new(0.0, 2.0, 2.0, 3.0)
+        );
+        assert_eq!(
+            Q64::new(1.0, 2.0, 3.0, 4.0) + PQ64::new(1.0, 3.0, 10.0),
+            Q64::new(1.0, 3.0, 6.0, 14.0)
+        );
+    }
+
+    #[test]
     fn test_sub_quaternion() {
         // Test the subtraction of quaternions
         assert_eq!(Q32::ONE - Q32::J, Q32::new(1.0, 0.0, -1.0, 0.0));
@@ -601,6 +1140,17 @@ mod tests {
         assert_eq!(
             Q32::new(1.0, 2.0, 3.0, 4.0) - 42.0,
             Q32::new(-41.0, 2.0, 3.0, 4.0)
+        );
+    }
+
+    #[test]
+    #[cfg(feature = "unstable")]
+    fn test_sub_quaternion_and_unit_quaternion() {
+        // Test the subtraction of a quaternion and a unit quaternion
+        assert_eq!(Q32::I - UQ32::J, Q32::new(0.0, 1.0, -1.0, 0.0));
+        assert_eq!(
+            Q64::new(1.0, 2.0, 3.0, 4.0) - UQ64::K,
+            Q64::new(1.0, 2.0, 3.0, 3.0)
         );
     }
 
@@ -651,6 +1201,20 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "unstable")]
+    fn test_mul_quaternion_by_pure_quaternion() {
+        // Test the multiplication of a quaternion by a pure quaternion
+        assert_eq!(
+            Q32::I * PQ32::new(1.0, 2.0, 3.0),
+            Q32::new(-1.0, 0.0, -3.0, 2.0)
+        );
+        assert_eq!(
+            Q64::new(1.0, 2.0, 3.0, 4.0) * PQ64::new(1.0, 3.0, 10.0),
+            Q64::new(1.0, 2.0, 3.0, 4.0) * Q64::new(0.0, 1.0, 3.0, 10.0)
+        );
+    }
+
+    #[test]
     fn test_div_quaternion() {
         // Test the division of quaternions
         assert_eq!(Q32::ONE / Q32::ONE * Q32::ONE, Q32::ONE);
@@ -696,6 +1260,20 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "unstable")]
+    fn test_div_quaternion_by_pure_quaternion() {
+        // Test the division of a quaternion by a pure quaternion
+        assert_eq!(
+            Q32::I / PQ32::new(1.0, 2.0, 3.0),
+            Q32::new(1.0, 0.0, 3.0, -2.0) / 14.0
+        );
+        assert_eq!(
+            Q64::new(1.0, 2.0, 3.0, 4.0) / PQ64::new(1.0, 3.0, 10.0),
+            Q64::new(1.0, 2.0, 3.0, 4.0) / Q64::new(0.0, 1.0, 3.0, 10.0)
+        );
+    }
+
+    #[test]
     fn test_add_assign() {
         // Test the addition assignment operator
         let mut q = Q32::new(1.0, 2.0, 3.0, 4.0);
@@ -715,16 +1293,17 @@ mod tests {
     fn test_mul_assign() {
         // Test the multiplication assignment operator
         let mut q = Q32::new(1.0, 2.0, 3.0, 4.0);
-        q *= Q32::I;
+        q *= UQ32::I;
         assert_eq!(q, Quaternion::new(-2.0, 1.0, 4.0, -3.0));
     }
 
     #[test]
+    #[cfg(feature = "unstable")]
     fn test_div_assign() {
         // Test the division assignment operator
         let mut q = Quaternion::new(1.0f32, 2.0f32, 3.0f32, 4.0f32);
-        q /= 4.0f32;
-        assert_eq!(q, Quaternion::new(0.25f32, 0.5f32, 0.75f32, 1.0f32));
+        q /= PQ32::new(4.0f32, 0.0, 0.0);
+        assert_eq!(q, Quaternion::new(0.5f32, -0.25f32, -1.0f32, 0.75f32));
     }
 
     #[test]
@@ -871,6 +1450,54 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "unstable")]
+    #[allow(clippy::op_ref)]
+    fn test_add_pure_quaternion_with_ref() {
+        // Test the addition of a pure quaternion with references
+        let lhs = Quaternion::new(1.0, 2.0, 3.0, 4.0);
+        let rhs = PQ32::new(5.0, 6.0, 7.0);
+        assert_eq!(lhs + rhs, &lhs + rhs);
+        assert_eq!(lhs + rhs, lhs + &rhs);
+        assert_eq!(lhs + rhs, &lhs + &rhs);
+    }
+
+    #[test]
+    #[cfg(feature = "unstable")]
+    #[allow(clippy::op_ref)]
+    fn test_sub_pure_quaternion_with_ref() {
+        // Test the subtraction of a pure quaternion with references
+        let lhs = Quaternion::new(1.0, 2.0, 3.0, 4.0);
+        let rhs = PQ32::new(5.0, 6.0, 7.0);
+        assert_eq!(lhs - rhs, &lhs - rhs);
+        assert_eq!(lhs - rhs, lhs - &rhs);
+        assert_eq!(lhs - rhs, &lhs - &rhs);
+    }
+
+    #[test]
+    #[cfg(feature = "unstable")]
+    #[allow(clippy::op_ref)]
+    fn test_mul_pure_quaternion_with_ref() {
+        // Test the multiplication of a pure quaternion with references
+        let lhs = Quaternion::new(1.0, 2.0, 3.0, 4.0);
+        let rhs = PQ32::new(5.0, 6.0, 7.0);
+        assert_eq!(lhs * rhs, &lhs * rhs);
+        assert_eq!(lhs * rhs, lhs * &rhs);
+        assert_eq!(lhs * rhs, &lhs * &rhs);
+    }
+
+    #[test]
+    #[cfg(feature = "unstable")]
+    #[allow(clippy::op_ref)]
+    fn test_div_pure_quaternion_with_ref() {
+        // Test the division of a pure quaternion with references
+        let lhs = Quaternion::new(1.0, 2.0, 3.0, 4.0);
+        let rhs = PQ32::new(5.0, 6.0, 7.0);
+        assert_eq!(lhs / rhs, &lhs / rhs);
+        assert_eq!(lhs / rhs, lhs / &rhs);
+        assert_eq!(lhs / rhs, &lhs / &rhs);
+    }
+
+    #[test]
     fn test_add_lhs_real() {
         // Test the addition of a real number to a quaternion
         assert_eq!(42.0 + Quaternion::I, Quaternion::new(42.0, 1.0, 0.0, 0.0));
@@ -953,6 +1580,16 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "unstable")]
+    fn test_unit_quaternion_add_pure_quaternion() {
+        // Test the addition of unit quaternions and pure quaternions
+        assert_eq!(
+            UQ32::J + PQ32::new(1.0, 2.0, 3.0),
+            Q32::new(0.0, 1.0, 3.0, 3.0)
+        );
+    }
+
+    #[test]
     fn test_unit_quaternion_sub() {
         // Test the subtraction of unit quaternions
         assert_eq!(UQ32::I - UQ32::J, Q32::new(0.0, 1.0, -1.0, 0.0));
@@ -980,6 +1617,16 @@ mod tests {
     fn test_f64_sub_unit_quaternion() {
         // Test the subtraction of `f64` values and `f64` unit quaternions
         assert_eq!(4.0f64 - UQ64::I, Q64::new(4.0, -1.0, 0.0, 0.0));
+    }
+
+    #[test]
+    #[cfg(feature = "unstable")]
+    fn test_unit_quaternion_sub_pure_quaternion() {
+        // Test the subtraction of unit quaternions and pure quaternions
+        assert_eq!(
+            UQ32::J - PQ32::new(1.0, 2.0, 3.0),
+            Q32::new(0.0, -1.0, -1.0, -3.0)
+        );
     }
 
     #[test]
@@ -1013,6 +1660,16 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "unstable")]
+    fn test_unit_quaternion_mul_pure_quaternion() {
+        // Test the multiplication of unit quaternions and pure quaternions
+        assert_eq!(
+            UQ32::J * PQ32::new(1.0, 2.0, 3.0),
+            Q32::new(-2.0, 3.0, 0.0, -1.0)
+        );
+    }
+
+    #[test]
     fn test_unit_quaternion_div() {
         // Test the division of unit quaternions
         assert_eq!(UQ32::I / UQ32::J, -UQ32::K);
@@ -1040,6 +1697,16 @@ mod tests {
     fn test_f64_div_unit_quaternion() {
         // Test the division of `f64` values and `f64` unit quaternions
         assert_eq!(4.0f64 / UQ64::I, Q64::new(0.0, -4.0, 0.0, 0.0));
+    }
+
+    #[test]
+    #[cfg(feature = "unstable")]
+    fn test_unit_quaternion_div_pure_quaternion() {
+        // Test the division of unit quaternions and pure quaternions
+        assert_eq!(
+            UQ32::J / PQ32::new(1.0, 2.0, 3.0),
+            Q32::new(2.0, -3.0, 0.0, 1.0) / 14.0
+        );
     }
 
     #[test]
@@ -1184,5 +1851,542 @@ mod tests {
         assert_eq!(lhs / rhs, &lhs / rhs);
         assert_eq!(lhs / rhs, lhs / &rhs);
         assert_eq!(lhs / rhs, &lhs / &rhs);
+    }
+
+    #[test]
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[cfg(feature = "unstable")]
+    #[allow(clippy::op_ref)]
+    fn test_add_pure_quaternion_with_ref_unit_quaternion() {
+        // Test the addition of unit quaternions and pure quaternions with
+        // references
+        let lhs = Quaternion::new(1.0, 2.0, 3.0, 4.0).normalize().unwrap();
+        let rhs = PQ32::new(5.0, 6.0, 7.0);
+        assert_eq!(lhs + rhs, &lhs + rhs);
+        assert_eq!(lhs + rhs, lhs + &rhs);
+        assert_eq!(lhs + rhs, &lhs + &rhs);
+    }
+
+    #[test]
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[cfg(feature = "unstable")]
+    #[allow(clippy::op_ref)]
+    fn test_sub_pure_quaternion_with_ref_unit_quaternion() {
+        // Test the subtraction of unit quaternions and pure quaternions with
+        // references
+        let lhs = Quaternion::new(1.0, 2.0, 3.0, 4.0).normalize().unwrap();
+        let rhs = PQ32::new(5.0, 6.0, 7.0);
+        assert_eq!(lhs - rhs, &lhs - rhs);
+        assert_eq!(lhs - rhs, lhs - &rhs);
+        assert_eq!(lhs - rhs, &lhs - &rhs);
+    }
+
+    #[test]
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[cfg(feature = "unstable")]
+    #[allow(clippy::op_ref)]
+    fn test_mul_pure_quaternion_with_ref_unit_quaternion() {
+        // Test the multiplication of unit quaternions and pure quaternions with
+        // references
+        let lhs = Quaternion::new(1.0, 2.0, 3.0, 4.0).normalize().unwrap();
+        let rhs = PQ32::new(5.0, 6.0, 7.0);
+        assert_eq!(lhs * rhs, &lhs * rhs);
+        assert_eq!(lhs * rhs, lhs * &rhs);
+        assert_eq!(lhs * rhs, &lhs * &rhs);
+    }
+
+    #[test]
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[cfg(feature = "unstable")]
+    #[allow(clippy::op_ref)]
+    fn test_div_pure_quaternion_with_ref_unit_quaternion() {
+        // Test the division of unit quaternions and pure quaternions with
+        // references
+        let lhs = Quaternion::new(1.0, 2.0, 3.0, 4.0).normalize().unwrap();
+        let rhs = PQ32::new(5.0, 6.0, 7.0);
+        assert_eq!(lhs / rhs, &lhs / rhs);
+        assert_eq!(lhs / rhs, lhs / &rhs);
+        assert_eq!(lhs / rhs, &lhs / &rhs);
+    }
+
+    #[test]
+    fn test_mul_assign_unit_quaternion() {
+        // Test the multiplication assignment operator with unit quaternions
+        let mut q = Q32::new(1.0, 2.0, 3.0, 4.0);
+        q *= UQ32::I;
+        assert_eq!(q, Quaternion::new(-2.0, 1.0, 4.0, -3.0));
+    }
+
+    #[test]
+    fn test_div_assign_unit_quaternion() {
+        // Test the division assignment operator with unit quaternions
+        let mut q = Q32::new(1.0, 2.0, 3.0, 4.0);
+        q /= UQ32::I;
+        assert_eq!(q, Quaternion::new(2.0, -1.0, -4.0, 3.0));
+    }
+
+    #[test]
+    #[cfg(feature = "unstable")]
+    fn test_pure_quaternion_add() {
+        // Test the addition of pure quaternions
+        assert_eq!(
+            PQ32::new(1.0, 2.0, 3.0) + PQ32::new(4.0, 5.0, 6.0),
+            PQ32::new(5.0, 7.0, 9.0)
+        );
+    }
+
+    #[test]
+    #[cfg(feature = "unstable")]
+    fn test_pure_quaternion_add_quaternion() {
+        // Test the addition of pure quaternions and quaternions
+        assert_eq!(
+            PQ32::new(1.0, 2.0, 3.0) + Q32::new(4.0, 5.0, 6.0, 7.0),
+            Q32::new(4.0, 6.0, 8.0, 10.0)
+        );
+    }
+
+    #[test]
+    #[cfg(feature = "unstable")]
+    fn test_pure_quaternion_add_real() {
+        // Test the addition of pure quaternions and real numbers
+        assert_eq!(
+            PQ32::new(1.0, 2.0, 3.0) + 4.0,
+            Q32::new(4.0, 1.0, 2.0, 3.0)
+        );
+    }
+
+    #[test]
+    #[cfg(feature = "unstable")]
+    fn test_pure_quaternion_add_unit_quaternion() {
+        // Test the addition of pure quaternions and unit quaternions
+        assert_eq!(
+            PQ32::new(1.0, 2.0, 3.0) + UQ32::I,
+            Q32::new(0.0, 2.0, 2.0, 3.0)
+        );
+    }
+
+    #[test]
+    #[cfg(feature = "unstable")]
+    fn test_f32_add_pure_quaternion() {
+        // Test the addition of `f32` values and pure quaternions
+        assert_eq!(
+            3.0f32 + PQ32::new(1.0, 2.0, 3.0),
+            Q32::new(3.0, 1.0, 2.0, 3.0)
+        );
+    }
+
+    #[test]
+    #[cfg(feature = "unstable")]
+    fn test_f64_add_pure_quaternion() {
+        // Test the addition of `f64` values and pure quaternions
+        assert_eq!(
+            4.0f64 + PQ64::new(1.0, 2.0, 3.0),
+            Q64::new(4.0, 1.0, 2.0, 3.0)
+        );
+    }
+
+    #[test]
+    #[cfg(feature = "unstable")]
+    fn test_pure_quaternion_sub() {
+        // Test the subtraction of pure quaternions
+        assert_eq!(
+            PQ32::new(1.0, 2.0, 3.0) - PQ32::new(4.0, 5.0, 6.0),
+            PQ32::new(-3.0, -3.0, -3.0)
+        );
+    }
+
+    #[test]
+    #[cfg(feature = "unstable")]
+    fn test_pure_quaternion_sub_quaternion() {
+        // Test the subtraction of pure quaternions and quaternions
+        assert_eq!(
+            PQ32::new(1.0, 2.0, 3.0) - Q32::new(4.0, 5.0, 6.0, 7.0),
+            Q32::new(-4.0, -4.0, -4.0, -4.0)
+        );
+    }
+
+    #[test]
+    #[cfg(feature = "unstable")]
+    fn test_pure_quaternion_sub_real() {
+        // Test the subtraction of pure quaternions and real numbers
+        assert_eq!(
+            PQ32::new(1.0, 2.0, 3.0) - 4.0,
+            Q32::new(-4.0, 1.0, 2.0, 3.0)
+        );
+    }
+
+    #[test]
+    #[cfg(feature = "unstable")]
+    fn test_pure_quaternion_sub_unit_quaternion() {
+        // Test the subtraction of pure quaternions and unit quaternions
+        assert_eq!(
+            PQ32::new(1.0, 2.0, 3.0) - UQ32::J,
+            Q32::new(0.0, 1.0, 1.0, 3.0)
+        );
+    }
+
+    #[test]
+    #[cfg(feature = "unstable")]
+    fn test_f32_sub_pure_quaternion() {
+        // Test the subtraction of `f32` values and pure quaternions
+        assert_eq!(
+            3.0f32 - PQ32::new(1.0, 2.0, 3.0),
+            Q32::new(3.0, -1.0, -2.0, -3.0)
+        );
+    }
+
+    #[test]
+    #[cfg(feature = "unstable")]
+    fn test_f64_sub_pure_quaternion() {
+        // Test the subtraction of `f64` values and pure quaternions
+        assert_eq!(
+            4.0f64 - PQ64::new(1.0, 2.0, 3.0),
+            Q64::new(4.0, -1.0, -2.0, -3.0)
+        );
+    }
+
+    #[test]
+    #[cfg(feature = "unstable")]
+    fn test_pure_quaternion_mul() {
+        // Test the multiplication of pure quaternions
+        assert_eq!(
+            PQ32::new(1.0, 2.0, 3.0) * PQ32::new(4.0, 5.0, 6.0),
+            Q32::new(0.0, 1.0, 2.0, 3.0) * Q32::new(0.0, 4.0, 5.0, 6.0)
+        );
+    }
+
+    #[test]
+    #[cfg(feature = "unstable")]
+    fn test_pure_quaternion_mul_quaternion() {
+        // Test the multiplication of pure quaternions and quaternions
+        assert_eq!(
+            PQ32::new(1.0, 2.0, 3.0) * Q32::new(4.0, 5.0, 6.0, 7.0),
+            Q32::new(0.0, 1.0, 2.0, 3.0) * Q32::new(4.0, 5.0, 6.0, 7.0)
+        );
+    }
+
+    #[test]
+    #[cfg(feature = "unstable")]
+    fn test_pure_quaternion_mul_real() {
+        // Test the multiplication of pure quaternions and real numbers
+        assert_eq!(PQ32::new(1.0, 2.0, 3.0) * 4.0, PQ32::new(4.0, 8.0, 12.0));
+    }
+
+    #[test]
+    #[cfg(feature = "unstable")]
+    fn test_pure_quaternion_mul_unit_quaternion() {
+        // Test the multiplication of pure quaternions and unit quaternions
+        assert_eq!(
+            PQ32::new(1.0, 2.0, 3.0) * UQ32::I,
+            Q32::new(0.0, 1.0, 2.0, 3.0) * Q32::new(0.0, 1.0, 0.0, 0.0)
+        );
+    }
+
+    #[test]
+    #[cfg(feature = "unstable")]
+    fn test_f32_mul_pure_quaternion() {
+        // Test the multiplication of `f32` values and pure quaternions
+        assert_eq!(3.0f32 * PQ32::new(1.0, 2.0, 3.0), PQ32::new(3.0, 6.0, 9.0));
+    }
+
+    #[test]
+    #[cfg(feature = "unstable")]
+    fn test_f64_mul_pure_quaternion() {
+        // Test the multiplication of `f64` values and pure quaternions
+        assert_eq!(
+            4.0f64 * PQ64::new(1.0, 2.0, 3.0),
+            PQ64::new(4.0, 8.0, 12.0)
+        );
+    }
+
+    #[test]
+    #[cfg(feature = "unstable")]
+    fn test_pure_quaternion_div() {
+        // Test the division of pure quaternions
+        assert_eq!(
+            PQ32::new(1.0, 2.0, 3.0) / PQ32::new(4.0, 5.0, 6.0),
+            Q32::new(0.0, 1.0, 2.0, 3.0) / Q32::new(0.0, 4.0, 5.0, 6.0)
+        );
+    }
+
+    #[test]
+    #[cfg(feature = "unstable")]
+    fn test_pure_quaternion_div_quaternion() {
+        // Test the division of pure quaternions and quaternions
+        assert_eq!(
+            PQ32::new(1.0, 2.0, 3.0) / Q32::new(4.0, 5.0, 6.0, 7.0),
+            Q32::new(0.0, 1.0, 2.0, 3.0) / Q32::new(4.0, 5.0, 6.0, 7.0)
+        );
+    }
+
+    #[test]
+    #[cfg(feature = "unstable")]
+    fn test_pure_quaternion_div_real() {
+        // Test the division of pure quaternions and real numbers
+        assert_eq!(PQ32::new(1.0, 2.0, 3.0) / 4.0, PQ32::new(0.25, 0.5, 0.75));
+    }
+
+    #[test]
+    #[cfg(feature = "unstable")]
+    fn test_pure_quaternion_div_unit_quaternion() {
+        // Test the division of pure quaternions and unit quaternions
+        assert_eq!(
+            PQ32::new(1.0, 2.0, 3.0) / UQ32::I,
+            Q32::new(0.0, 1.0, 2.0, 3.0) / Q32::new(0.0, 1.0, 0.0, 0.0)
+        );
+    }
+
+    #[test]
+    #[cfg(feature = "unstable")]
+    fn test_f32_div_pure_quaternion() {
+        // Test the division of `f32` values and pure quaternions
+        assert_eq!(
+            4.0f32 / PQ32::new(1.0, 2.0, 3.0),
+            PQ32::new(-4.0, -8.0, -12.0) / 14.0
+        );
+    }
+
+    #[test]
+    #[cfg(feature = "unstable")]
+    fn test_f64_div_pure_quaternion() {
+        // Test the division of `f64` values and pure quaternions
+        assert_eq!(
+            4.0f64 / PQ64::new(1.0, 2.0, 3.0),
+            PQ64::new(-4.0, -8.0, -12.0) / 14.0
+        );
+    }
+
+    #[test]
+    #[cfg(feature = "unstable")]
+    #[allow(clippy::op_ref)]
+    fn test_pure_quaternion_add_ref() {
+        // Test the addition of pure quaternions with references
+        let lhs = PQ32::new(1.0, 2.0, 3.0);
+        let rhs = PQ32::new(4.0, 5.0, 6.0);
+        assert_eq!(lhs + rhs, &lhs + rhs);
+        assert_eq!(lhs + rhs, lhs + &rhs);
+        assert_eq!(lhs + rhs, &lhs + &rhs);
+    }
+
+    #[test]
+    #[cfg(feature = "unstable")]
+    #[allow(clippy::op_ref)]
+    fn test_pure_quaternion_sub_ref() {
+        // Test the subtraction of pure quaternions with references
+        let lhs = PQ32::new(1.0, 2.0, 3.0);
+        let rhs = PQ32::new(4.0, 5.0, 6.0);
+        assert_eq!(lhs - rhs, &lhs - rhs);
+        assert_eq!(lhs - rhs, lhs - &rhs);
+        assert_eq!(lhs - rhs, &lhs - &rhs);
+    }
+
+    #[test]
+    #[cfg(feature = "unstable")]
+    #[allow(clippy::op_ref)]
+    fn test_pure_quaternion_mul_ref() {
+        // Test the multiplication of pure quaternions with references
+        let lhs = PQ32::new(1.0, 2.0, 3.0);
+        let rhs = PQ32::new(4.0, 5.0, 6.0);
+        assert_eq!(lhs * rhs, &lhs * rhs);
+        assert_eq!(lhs * rhs, lhs * &rhs);
+        assert_eq!(lhs * rhs, &lhs * &rhs);
+    }
+
+    #[test]
+    #[cfg(feature = "unstable")]
+    #[allow(clippy::op_ref)]
+    fn test_pure_quaternion_div_ref() {
+        // Test the division of pure quaternions with references
+        let lhs = PQ32::new(1.0, 2.0, 3.0);
+        let rhs = PQ32::new(4.0, 5.0, 6.0);
+        assert_eq!(lhs / rhs, &lhs / rhs);
+        assert_eq!(lhs / rhs, lhs / &rhs);
+        assert_eq!(lhs / rhs, &lhs / &rhs);
+    }
+
+    #[test]
+    #[cfg(feature = "unstable")]
+    #[allow(clippy::op_ref)]
+    fn test_pure_quaternion_add_quaternion_ref() {
+        // Test the addition of pure quaternions and quaternions with references
+        let lhs = PQ32::new(1.0, 2.0, 3.0);
+        let rhs = Q32::new(4.0, 5.0, 6.0, 7.0);
+        assert_eq!(lhs + rhs, &lhs + rhs);
+        assert_eq!(lhs + rhs, lhs + &rhs);
+        assert_eq!(lhs + rhs, &lhs + &rhs);
+    }
+
+    #[test]
+    #[cfg(feature = "unstable")]
+    #[allow(clippy::op_ref)]
+    fn test_pure_quaternion_sub_quaternion_ref() {
+        // Test the subtraction of pure quaternions and quaternions with references
+        let lhs = PQ32::new(1.0, 2.0, 3.0);
+        let rhs = Q32::new(4.0, 5.0, 6.0, 7.0);
+        assert_eq!(lhs - rhs, &lhs - rhs);
+        assert_eq!(lhs - rhs, lhs - &rhs);
+        assert_eq!(lhs - rhs, &lhs - &rhs);
+    }
+
+    #[test]
+    #[cfg(feature = "unstable")]
+    #[allow(clippy::op_ref)]
+    fn test_pure_quaternion_mul_quaternion_ref() {
+        // Test the multiplication of pure quaternions and quaternions with
+        // references
+        let lhs = PQ32::new(1.0, 2.0, 3.0);
+        let rhs = Q32::new(4.0, 5.0, 6.0, 7.0);
+        assert_eq!(lhs * rhs, &lhs * rhs);
+        assert_eq!(lhs * rhs, lhs * &rhs);
+        assert_eq!(lhs * rhs, &lhs * &rhs);
+    }
+
+    #[test]
+    #[cfg(feature = "unstable")]
+    #[allow(clippy::op_ref)]
+    fn test_pure_quaternion_div_quaternion_ref() {
+        // Test the division of pure quaternions and quaternions with references
+        let lhs = PQ32::new(1.0, 2.0, 3.0);
+        let rhs = Q32::new(4.0, 5.0, 6.0, 7.0);
+        assert_eq!(lhs / rhs, &lhs / rhs);
+        assert_eq!(lhs / rhs, lhs / &rhs);
+        assert_eq!(lhs / rhs, &lhs / &rhs);
+    }
+
+    #[test]
+    #[cfg(feature = "unstable")]
+    #[allow(clippy::op_ref)]
+    fn test_pure_quaternion_add_real_ref() {
+        // Test the addition of pure quaternions and real numbers with references
+        let lhs = PQ32::new(1.0, 2.0, 3.0);
+        let rhs = 4.0;
+        assert_eq!(lhs + rhs, &lhs + rhs);
+        assert_eq!(lhs + rhs, lhs + &rhs);
+        assert_eq!(lhs + rhs, &lhs + &rhs);
+    }
+
+    #[test]
+    #[cfg(feature = "unstable")]
+    #[allow(clippy::op_ref)]
+    fn test_pure_quaternion_sub_real_ref() {
+        // Test the subtraction of pure quaternions and real numbers with
+        // references
+        let lhs = PQ32::new(1.0, 2.0, 3.0);
+        let rhs = 4.0;
+        assert_eq!(lhs - rhs, &lhs - rhs);
+        assert_eq!(lhs - rhs, lhs - &rhs);
+        assert_eq!(lhs - rhs, &lhs - &rhs);
+    }
+
+    #[test]
+    #[cfg(feature = "unstable")]
+    #[allow(clippy::op_ref)]
+    fn test_pure_quaternion_mul_real_ref() {
+        // Test the multiplication of pure quaternions and real numbers with
+        // references
+        let lhs = PQ32::new(1.0, 2.0, 3.0);
+        let rhs = 4.0;
+        assert_eq!(lhs * rhs, &lhs * rhs);
+        assert_eq!(lhs * rhs, lhs * &rhs);
+        assert_eq!(lhs * rhs, &lhs * &rhs);
+    }
+
+    #[test]
+    #[cfg(feature = "unstable")]
+    #[allow(clippy::op_ref)]
+    fn test_pure_quaternion_div_real_ref() {
+        // Test the division of pure quaternions and real numbers with references
+        let lhs = PQ32::new(1.0, 2.0, 3.0);
+        let rhs = 4.0;
+        assert_eq!(lhs / rhs, &lhs / rhs);
+        assert_eq!(lhs / rhs, lhs / &rhs);
+        assert_eq!(lhs / rhs, &lhs / &rhs);
+    }
+
+    #[test]
+    #[cfg(feature = "unstable")]
+    #[allow(clippy::op_ref)]
+    fn test_pure_quaternion_add_unit_quaternion_ref() {
+        // Test the addition of pure quaternions and unit quaternions with
+        // references
+        let lhs = PQ32::new(1.0, 2.0, 3.0);
+        let rhs = UQ32::I;
+        assert_eq!(lhs + rhs, &lhs + rhs);
+        assert_eq!(lhs + rhs, lhs + &rhs);
+        assert_eq!(lhs + rhs, &lhs + &rhs);
+    }
+
+    #[test]
+    #[cfg(feature = "unstable")]
+    #[allow(clippy::op_ref)]
+    fn test_pure_quaternion_sub_unit_quaternion_ref() {
+        // Test the subtraction of pure quaternions and unit quaternions with
+        // references
+        let lhs = PQ32::new(1.0, 2.0, 3.0);
+        let rhs = UQ32::I;
+        assert_eq!(lhs - rhs, &lhs - rhs);
+        assert_eq!(lhs - rhs, lhs - &rhs);
+        assert_eq!(lhs - rhs, &lhs - &rhs);
+    }
+
+    #[test]
+    #[cfg(feature = "unstable")]
+    #[allow(clippy::op_ref)]
+    fn test_pure_quaternion_mul_unit_quaternion_ref() {
+        // Test the multiplication of pure quaternions and unit quaternions with
+        // references
+        let lhs = PQ32::new(1.0, 2.0, 3.0);
+        let rhs = UQ32::I;
+        assert_eq!(lhs * rhs, &lhs * rhs);
+        assert_eq!(lhs * rhs, lhs * &rhs);
+        assert_eq!(lhs * rhs, &lhs * &rhs);
+    }
+    #[test]
+    #[cfg(feature = "unstable")]
+    #[allow(clippy::op_ref)]
+    fn test_pure_quaternion_div_unit_quaternion_ref() {
+        // Test the division of pure quaternions and unit quaternions with
+        // references
+        let lhs = PQ32::new(1.0, 2.0, 3.0);
+        let rhs = UQ32::I;
+        assert_eq!(lhs / rhs, &lhs / rhs);
+        assert_eq!(lhs / rhs, lhs / &rhs);
+        assert_eq!(lhs / rhs, &lhs / &rhs);
+    }
+
+    #[test]
+    #[cfg(feature = "unstable")]
+    fn test_pure_quaternion_add_assign() {
+        // Test the addition assignment operator with pure quaternions
+        let mut q = PQ32::new(1.0, 2.0, 3.0);
+        q += PQ32::new(4.0, 5.0, 6.0);
+        assert_eq!(q, PQ32::new(5.0, 7.0, 9.0));
+    }
+
+    #[test]
+    #[cfg(feature = "unstable")]
+    fn test_pure_quaternion_sub_assign() {
+        // Test the subtraction assignment operator with pure quaternions
+        let mut q = PQ32::new(1.0, 2.0, 3.0);
+        q -= PQ32::new(4.0, 5.0, 6.0);
+        assert_eq!(q, PQ32::new(-3.0, -3.0, -3.0));
+    }
+
+    #[test]
+    #[cfg(feature = "unstable")]
+    fn test_pure_quaternion_mul_assign() {
+        // Test the multiplication assignment operator with pure quaternions
+        let mut q = PQ32::new(1.0, 2.0, 3.0);
+        q *= 2.0f32;
+        assert_eq!(q, PQ32::new(2.0, 4.0, 6.0));
+    }
+
+    #[test]
+    #[cfg(feature = "unstable")]
+    fn test_pure_quaternion_div_assign() {
+        // Test the division assignment operator with pure quaternions
+        let mut q = PQ32::new(1.0, 2.0, 3.0);
+        q /= 4.0f32;
+        assert_eq!(q, PQ32::new(0.25, 0.5, 0.75));
     }
 }
