@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+## Release 1.0.4 (2025-04-23)
+
 - Added `PureQuaternion` type.
 - Added missing arithmetic operations, such as `MutAssign` and `DivAssign` traits for `UnitQuaternion`.
 - Fixed numerical inaccuracy in the `ln` method of `Quaternion` in edge cases.
