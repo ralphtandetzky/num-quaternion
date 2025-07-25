@@ -50,7 +50,7 @@ default-features = false
 features = ["small_rng"]  # Needed only for testing. TODO: Move tests outside lib.rs and make this a development dependency
 
 [dev-dependencies.criterion]
-version = "0.5"
+version = "0.7"
 
 [dev-dependencies.micromath]
 version = "2.1"
