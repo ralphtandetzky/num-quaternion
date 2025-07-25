@@ -8,6 +8,7 @@ use {
 };
 
 #[cfg(feature = "unstable")]
+#[cfg(any(feature = "std", feature = "libm"))]
 use crate::PureQuaternion;
 
 #[cfg(any(feature = "std", feature = "libm"))]

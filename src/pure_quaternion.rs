@@ -2,11 +2,12 @@
 
 use core::ops::{Add, Mul, Neg};
 
-use num_traits::{ConstOne, ConstZero, FloatConst, Inv, Num, One, Zero};
+use num_traits::{ConstOne, ConstZero, Inv, Num, One, Zero};
 
 #[cfg(any(feature = "std", feature = "libm"))]
-use num_traits::Float;
+use num_traits::{Float, FloatConst};
 
+#[cfg(any(feature = "std", feature = "libm"))]
 use crate::UnitQuaternion;
 
 /// A pure quaternion, i.e. a quaternion with a real part of zero.
