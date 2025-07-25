@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+- Updated versions of dependencies in C++ benchmarks.
+
 ## Release 1.0.4 (2025-04-23)
 
 - Added `PureQuaternion` type.
