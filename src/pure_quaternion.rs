@@ -500,6 +500,7 @@ where
 
 #[cfg(test)]
 mod tests {
+    #[cfg(any(feature = "std", feature = "libm"))]
     use core::f32;
 
     use super::*;
