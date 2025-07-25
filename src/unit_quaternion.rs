@@ -8,6 +8,7 @@ use {
 };
 
 #[cfg(feature = "unstable")]
+#[cfg(any(feature = "std", feature = "libm"))]
 use crate::PureQuaternion;
 
 #[cfg(any(feature = "std", feature = "libm"))]
@@ -79,6 +80,8 @@ pub type UQ32 = UnitQuaternion<f32>;
 /// Alias for a [`UnitQuaternion<f64>`].
 pub type UQ64 = UnitQuaternion<f64>;
 
+#[cfg(feature = "unstable")]
+#[cfg(any(feature = "std", feature = "libm"))]
 impl<T> UnitQuaternion<T> {
     pub(crate) fn new(w: T, x: T, y: T, z: T) -> Self {
         Self(Quaternion::new(w, x, y, z))
