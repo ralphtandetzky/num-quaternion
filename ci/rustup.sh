@@ -18,7 +18,7 @@ rustup component add rustfmt
 cargo fmt --check
 
 ci=$(dirname $0)
-rustup update "1.63.0"
-rustup run "1.63.0" "$ci/test_full.sh"
+rustup update "1.66.0"
+rustup run "1.66.0" "$ci/test_full.sh"
 rustup update "stable"
 rustup run "stable" "$ci/test_full.sh --run_tests"

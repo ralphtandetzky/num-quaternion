@@ -1,5 +1,6 @@
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{criterion_group, criterion_main, Criterion};
 use num_quaternion::{Q32, Q64};
+use std::hint::black_box;
 
 pub fn bench_norm(c: &mut Criterion) {
     {
