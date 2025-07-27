@@ -2601,10 +2601,10 @@ mod tests {
             sum += q;
         }
 
-        let sum_stddev = (num_iters as f64).sqrt();
+        let sum_std_dev = (num_iters as f64).sqrt();
         // The statistical probability of failure is 1.973e-9, unless there is
         // a bug.
-        assert!(sum.norm() < 6.0 * sum_stddev);
+        assert!(sum.norm() < 6.0 * sum_std_dev);
     }
 
     #[cfg(all(feature = "rand", any(feature = "std", feature = "libm")))]

@@ -1,4 +1,5 @@
 # Norm calculation
+
 ## Measurements
 
 ### Run-time Measurements
