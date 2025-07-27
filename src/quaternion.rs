@@ -585,7 +585,7 @@ where
     }
 }
 
-impl<'a, T> From<&'a T> for Quaternion<T>
+impl<T> From<&T> for Quaternion<T>
 where
     T: Clone + Zero,
 {
