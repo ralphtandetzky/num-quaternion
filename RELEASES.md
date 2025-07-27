@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+## Release 1.0.5 (2025-07-27)
+
 - Updated versions of dependencies in C++ benchmarks.
 - Updated `criterion` to version `0.7`.
 - Updated minimum supported Rust version to 1.66.0.

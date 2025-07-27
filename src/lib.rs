@@ -24,7 +24,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! num-quaternion = { version = "1.0.4", default-features = false, features = ["libm"] }
+//! num-quaternion = { version = "1.0.5", default-features = false, features = ["libm"] }
 //! ```
 //!
 //! Then, include it in your crate:
