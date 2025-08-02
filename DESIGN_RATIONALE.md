@@ -9,7 +9,6 @@ The `num-quaternion` crate is created with the following design goals in mind:
 3. **Correctness for all inputs**: The crate guarantees intuitive and correct behavior in edge cases. The implementation generally checks for edge cases with a minimal number of conditions and branches, always optimizing the general case. With reasonable branch prediction, the checking overhead should generally be negligible.
 4. **Intuitive interface**: The crate provides an interface that is easy to understand and use. Quaternions can be used just like built-in floating point numbers or the complex numbers from the [`num-complex` crate](https://github.com/rust-num/num-complex).
 
-
 ## Error Handling & IEEE-754 Floating Point Values
 
 **TLDR:** Use `is_finite()` to check for the success of floating point operations in `num-quaternion` functions. Don't use signaling `NaN`s.

@@ -10,12 +10,14 @@ you get started.
 the [repository page](https://github.com/ralphtandetzky/num-quaternion).
 
 2. **Clone Your Fork**: Clone your forked repository to your local machine.
+
     ```sh
     git clone https://github.com/your-username/num-quaternion.git
     cd num-quaternion
     ```
 
 3. **Create a Branch**: Create a new branch for your work.
+
     ```sh
     git checkout -b my-feature-branch
     ```
@@ -26,12 +28,14 @@ the [repository page](https://github.com/ralphtandetzky/num-quaternion).
     Ensure your code is clean and well-documented. Testing: Add tests for any
     new features or bug fixes. Run all tests to make sure your changes do not
     break anything.
+
     ```sh
     cargo test
     ```
 
 2. **Commit Messages**: Write clear and concise commit messages. A good commit
     message should describe what changed and why.
+
     ```sh
     git commit -m "Add feature X to improve Y"
     ```
@@ -39,6 +43,7 @@ the [repository page](https://github.com/ralphtandetzky/num-quaternion).
 ## Submitting a Pull Request
 
 1. **Push to Your Fork**: Push your changes to your forked repository.
+
     ```sh
     git push origin my-feature-branch
     ```
