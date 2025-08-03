@@ -30,6 +30,10 @@ required-features = ["std", "rand"]
 name = "pose_animation"
 required-features = ["std"]
 
+[[example]]
+name = "chebyshev_approximation"
+required-features = ["std"]
+
 [dependencies.num-traits]
 version = "0.2"
 default-features = false
