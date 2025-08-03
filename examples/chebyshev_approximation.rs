@@ -221,48 +221,60 @@ fn factorial(n: usize) -> f64 {
 }
 
 fn main() {
-    // Example: Approximate f(x) = sinc(sqrt(x)) on [0, (pi/2)^2]
-    // We use the Taylor series of sinc(x) up to degree 50 as our input polynomial.
-    // sinc(x) = sin(x)/x = 1 - x^2/6 + x^4/120 - x^6/5040 + x^8/362880 + ...
-    // sinc(sqrt(x)) = 1 - x/6 + x^2/120 - x^3/5040 + x^4/362880 + ...
+    let a = 0.0;
+    let b = (std::f64::consts::PI / 2.0).powi(2);
+    let epsilon = 5.0 * f32::EPSILON as f64;
+
     let sinc_sqrt_poly = Poly::new(
         (0..=50)
             .map(|n| if n % 2 == 0 { 1.0 } else { -1.0 } / factorial(2 * n + 1))
             .collect(),
     );
 
-    let a = 0.0;
-    let b = (std::f64::consts::PI / 2.0).powi(2);
-    let epsilon = 5.0 * f32::EPSILON as f64;
-
-    println!(
-        "Approximating a polynomial of degree {}",
-        sinc_sqrt_poly.degree()
+    run_chebyshev_approximation(
+        "sinc(sqrt(x))",
+        &sinc_sqrt_poly,
+        a,
+        b,
+        epsilon,
     );
 
-    match chebyshev_l2_approximation(&sinc_sqrt_poly, a, b, epsilon) {
+    let cos_sqrt_poly = Poly::new(
+        (0..=50)
+            .map(|n| if n % 2 == 0 { 1.0 } else { -1.0 } / factorial(2 * n))
+            .collect(),
+    );
+
+    run_chebyshev_approximation("cos(sqrt(x))", &cos_sqrt_poly, a, b, epsilon);
+}
+
+fn run_chebyshev_approximation(
+    func_name: &str,
+    power_series: &Poly,
+    a: f64,
+    b: f64,
+    epsilon: f64,
+) {
+    println!("Approximating the function {}.", func_name);
+
+    match chebyshev_l2_approximation(power_series, a, b, epsilon) {
         Ok(approx_coeffs) => {
             println!("Approximation successful!");
-            println!("Original degree: {}", sinc_sqrt_poly.degree());
+            println!("Original degree: {}", power_series.degree());
             println!("Minimized degree: {}", approx_coeffs.degree());
             println!("Resulting coefficients: {:?}", approx_coeffs);
 
             // Verify the error at a few points
-            println!("\nError verification at sample points:");
             let mut max_error = 0.0f64;
             for i in ((a * 100.0) as i32)..=((b * 100.0) as i32) {
                 let x = i as f64 / 100.0;
-                let original_val = sinc_sqrt_poly.eval(x);
+                let original_val = power_series.eval(x);
                 let approx_val = approx_coeffs.eval(x);
                 let error =
                     (original_val - approx_val).abs() / f32::EPSILON as f64;
                 max_error = max_error.max(error);
-                println!(
-                    "x={:>6.2}  f(x)={:>12.7}  p(x)={:>12.7}  err={:>10.2}eps",
-                    x, original_val, approx_val, error
-                );
             }
-            println!("Maximum error: {:.7} eps", max_error);
+            println!("Maximum error at sample points: {:.7} eps", max_error);
         }
         Err(e) => {
             eprintln!("Error: {}", e);
