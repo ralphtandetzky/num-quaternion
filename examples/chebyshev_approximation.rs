@@ -285,7 +285,14 @@ fn run_chebyshev_approximation(
             println!("Approximation successful!");
             println!("Original degree: {}", power_series.degree());
             println!("Minimized degree: {}", approx_coeffs.degree());
-            println!("Resulting coefficients: {:?}", approx_coeffs);
+            println!(
+                "Resulting coefficients: {:?}",
+                approx_coeffs
+                    .0
+                    .iter()
+                    .map(|c| *c as f32)
+                    .collect::<Vec<_>>()
+            );
 
             // Verify the error at a few points
             let mut max_error_f64 = 0.0f64;
