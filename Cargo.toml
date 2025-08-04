@@ -57,7 +57,7 @@ version = "2.1"
 features = ["quaternion", "vector"]
 
 [dev-dependencies.nalgebra]
-version = "0.33"
+version = "0.34"
 
 [dev-dependencies.quaternion]
 version = "2.0"
