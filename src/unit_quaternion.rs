@@ -247,10 +247,85 @@ where
     /// ```
     pub fn from_rotation_vector(v: &[T; 3]) -> Self {
         let sqr_norm = v[0] * v[0] + v[1] * v[1] + v[2] * v[2];
+        let pi = core::f64::consts::PI;
+        let pi_square = T::from(pi * pi).unwrap();
+        if T::epsilon() >= T::from(f32::EPSILON).unwrap()
+            && sqr_norm <= pi_square
+        {
+            Self::from_rotation_vector_f32_polynomial(v, sqr_norm)
+        } else {
+            Self::from_rotation_vector_generic(v, sqr_norm)
+        }
+    }
+
+    /// Computes the unit quaternion corresponding to a rotation vector using a
+    /// Chebyshev polynomial optimized for f32 precision and angles less than π.
+    ///
+    /// This method is used internally for rotation vectors whose norm is less
+    /// than or equal to π and when the floating-point type `T` has an epsilon
+    /// greater than or equal to `f32::EPSILON`. It provides a fast and accurate
+    /// approximation for the given rotation angles by evaluating a polynomial
+    /// with precomputed coefficients for the sinc and cosine functions.
+    /// Absolute errors are less than `2.0 * f32::EPSILON`.
+    ///
+    /// The polynomial coefficients were generated using Chebyshev approximation,
+    /// as documented in `examples/chebyshev_approximation.rs`.
+    ///
+    /// # Parameters
+    ///
+    /// - `v`: The rotation vector, whose direction is the rotation axis and
+    ///   whose norm is the rotation angle.
+    /// - `sqr_norm`: The squared norm of the rotation vector. It is expected to
+    ///   be less than or equal to π².
+    ///
+    /// # Returns
+    ///
+    /// A unit quaternion representing the rotation described by the input vector.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the conversion between `T` and `f32` fails. This never happens
+    /// for built-in floating-point types (`f32`, `f64`), but may occur for
+    /// custom types.
+    fn from_rotation_vector_f32_polynomial(v: &[T; 3], sqr_norm: T) -> Self {
+        let x = sqr_norm.to_f32().unwrap();
+        // The magic numbers below are calculated in
+        // `examples/chebyshev_approximation.rs`.
+        let half_sinc_half_norm = (((2.6051662e-6f32 / 512.0f32 * x
+            - 0.00019809046f32 / 128.0f32)
+            * x
+            + 0.008333051f32 / 32.0f32)
+            * x
+            - 0.16666658f32 / 8.0f32)
+            * x
+            + 1.0f32 / 2.0f32;
+        let cos_half_norm = (((2.3153174e-5f32 / 256.0f32 * x
+            - 0.0013853667f32 / 64.0f32)
+            * x
+            + 0.04166358f32 / 16.0f32)
+            * x
+            - 0.49999905f32 / 4.0f32)
+            * x
+            + 0.99999994f32;
+        let sinc_half_norm = T::from(half_sinc_half_norm).unwrap();
+        let cos_half_norm = T::from(cos_half_norm).unwrap();
+        Self(Quaternion::new(
+            cos_half_norm,
+            v[0] * sinc_half_norm,
+            v[1] * sinc_half_norm,
+            v[2] * sinc_half_norm,
+        ))
+    }
+
+    /// A generic implementation of `from_rotation_vector()`.
+    ///
+    /// This method is used to implement `from_rotation_vector()` for floating
+    /// point types `T` whose epsilon is less than `f32::EPSILON` or when the
+    /// norm of the rotation vector is greater than π.
+    fn from_rotation_vector_generic(v: &[T; 3], sqr_norm: T) -> Self {
         let two = T::one() + T::one();
         match sqr_norm.classify() {
             FpCategory::Normal => {
-                // TODO: Optimize this further for norms that are not above pi.
                 let norm = sqr_norm.sqrt();
                 let (sine, cosine) = (norm / two).sin_cos();
                 let f = sine / norm;
