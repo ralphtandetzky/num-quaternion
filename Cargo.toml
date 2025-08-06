@@ -22,6 +22,10 @@ rustdoc-args = ["--html-in-header", "katex.html"]
 name = "norm_runtime"
 harness = false
 
+[[bench]]
+name = "from_rotation_vector_runtime"
+harness = false
+
 [[example]]
 name = "benchmark_norm_accuracy"
 required-features = ["std", "rand"]

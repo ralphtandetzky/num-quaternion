@@ -258,7 +258,8 @@ where
         }
     }
 
-    /// Computes the unit quaternion corresponding to a rotation vector using a
+    /// This function is public for internal benchmarking purposes only. It
+    /// computes the unit quaternion corresponding to a rotation vector using a
     /// Chebyshev polynomial optimized for f32 precision and angles less than π.
     ///
     /// This method is used internally for rotation vectors whose norm is less
@@ -287,7 +288,10 @@ where
     /// Panics if the conversion between `T` and `f32` fails. This never happens
     /// for built-in floating-point types (`f32`, `f64`), but may occur for
     /// custom types.
-    fn from_rotation_vector_f32_polynomial(v: &[T; 3], sqr_norm: T) -> Self {
+    pub fn from_rotation_vector_f32_polynomial(
+        v: &[T; 3],
+        sqr_norm: T,
+    ) -> Self {
         let x = sqr_norm.to_f32().unwrap();
         // The magic numbers below are calculated in
         // `examples/chebyshev_approximation.rs`.
@@ -317,12 +321,13 @@ where
         ))
     }
 
-    /// A generic implementation of `from_rotation_vector()`.
+    /// This function is public for internal benchmarking purposes only. It is
+    /// a generic implementation of `from_rotation_vector()`.
     ///
     /// This method is used to implement `from_rotation_vector()` for floating
     /// point types `T` whose epsilon is less than `f32::EPSILON` or when the
     /// norm of the rotation vector is greater than π.
-    fn from_rotation_vector_generic(v: &[T; 3], sqr_norm: T) -> Self {
+    pub fn from_rotation_vector_generic(v: &[T; 3], sqr_norm: T) -> Self {
         let two = T::one() + T::one();
         match sqr_norm.classify() {
             FpCategory::Normal => {
