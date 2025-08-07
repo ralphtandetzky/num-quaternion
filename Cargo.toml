@@ -24,6 +24,7 @@ harness = false
 
 [[bench]]
 name = "from_rotation_vector_runtime"
+required-features = ["std", "rand"]
 harness = false
 
 [[example]]
