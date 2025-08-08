@@ -1,5 +1,5 @@
 use criterion::{criterion_group, criterion_main, Criterion, Throughput};
-use num_quaternion::{UQ32, UQ64};
+use num_quaternion::UQ32;
 use rand::Rng;
 use rand::SeedableRng;
 use std::f32::consts::PI;
@@ -28,13 +28,15 @@ fn generate_random_vectors(count: usize) -> Vec<[f32; 3]> {
 
 pub fn bench_from_rotation_vector(c: &mut Criterion) {
     {
-        // We'll process a batch of vectors in each iteration to measure throughput accurately.
+        // We'll process a batch of vectors in each iteration to measure
+        // throughput accurately.
         const BATCH_SIZE: usize = 2_000;
 
         // Pre-generate the random input data.
         let inputs = generate_random_vectors(BATCH_SIZE);
 
-        // Create a buffer for the results to ensure the compiler can't optimize away the work.
+        // Create a buffer for the results to ensure the compiler can't optimize
+        // away the work.
         let mut outputs = vec![UQ32::default(); BATCH_SIZE];
 
         let mut group = c.benchmark_group("batch_conversion");
@@ -42,26 +44,28 @@ pub fn bench_from_rotation_vector(c: &mut Criterion) {
         // Set the measurement to be based on the number of elements processed.
         group.throughput(Throughput::Elements(BATCH_SIZE as u64));
 
-        // Define the benchmark. `b.iter` runs the provided closure multiple times.
         group.bench_function("UQ32::from_rotation_vector", |b| {
             b.iter(|| {
                 // The code inside this closure is what's measured.
                 for i in 0..BATCH_SIZE {
-                    // Use `black_box` on the input to prevent the compiler from making assumptions.
+                    // Use `black_box` on the input to prevent the compiler from
+                    // making assumptions.
                     let input_vec = black_box(&inputs[i]);
                     outputs[i] = UQ32::from_rotation_vector(input_vec);
                 }
-                // Use `black_box` on the output to ensure the write to the vector is not optimized away.
+                // Use `black_box` on the output to ensure the write to the
+                // vector is not optimized away.
                 black_box(&mut outputs);
             })
         });
         group.bench_function(
-            "UQ32::from_rotation_vector_f32_polynomial",
+            "UQ32::from_rotation_vector_f32_polynomial (internal implementation)",
             |b| {
                 b.iter(|| {
                     // The code inside this closure is what's measured.
                     for i in 0..BATCH_SIZE {
-                        // Use `black_box` on the input to prevent the compiler from making assumptions.
+                        // Use `black_box` on the input to prevent the compiler
+                        // from making assumptions.
                         let input_vec = black_box(&inputs[i]);
                         let sqr_norm = input_vec[0] * input_vec[0]
                             + input_vec[1] * input_vec[1]
@@ -70,24 +74,115 @@ pub fn bench_from_rotation_vector(c: &mut Criterion) {
                             input_vec, sqr_norm,
                         );
                     }
-                    // Use `black_box` on the output to ensure the write to the vector is not optimized away.
+                    // Use `black_box` on the output to ensure the write to the
+                    // vector is not optimized away.
                     black_box(&mut outputs);
                 })
             },
         );
-        group.bench_function("UQ32::from_rotation_vector_generic", |b| {
+        group.bench_function(
+            "UQ32::from_rotation_vector_generic (internal implementation)",
+            |b| {
+                b.iter(|| {
+                    // The code inside this closure is what's measured.
+                    for i in 0..BATCH_SIZE {
+                        // Use `black_box` on the input to prevent the compiler
+                        // from making assumptions.
+                        let input_vec = black_box(&inputs[i]);
+                        let sqr_norm = input_vec[0] * input_vec[0]
+                            + input_vec[1] * input_vec[1]
+                            + input_vec[2] * input_vec[2];
+                        outputs[i] = UQ32::from_rotation_vector_generic(
+                            input_vec, sqr_norm,
+                        );
+                    }
+                    // Use `black_box` on the output to ensure the write to the
+                    // vector is not optimized away.
+                    black_box(&mut outputs);
+                })
+            },
+        );
+
+        let axis_angles = inputs
+            .iter()
+            .map(|v| {
+                let norm = (v[0] * v[0] + v[1] * v[1] + v[2] * v[2]).sqrt();
+                if norm != 0.0 {
+                    [v[0] / norm, v[1] / norm, v[2] / norm, norm]
+                } else {
+                    [1.0, 0.0, 0.0, 0.0]
+                }
+            })
+            .collect::<Vec<_>>();
+        let mut outputs = vec![Default::default(); BATCH_SIZE];
+        group.bench_function("quaternion::axis_angle", |b| {
             b.iter(|| {
                 // The code inside this closure is what's measured.
                 for i in 0..BATCH_SIZE {
-                    // Use `black_box` on the input to prevent the compiler from making assumptions.
-                    let input_vec = black_box(&inputs[i]);
-                    let sqr_norm = input_vec[0] * input_vec[0]
-                        + input_vec[1] * input_vec[1]
-                        + input_vec[2] * input_vec[2];
-                    outputs[i] =
-                        UQ32::from_rotation_vector_generic(input_vec, sqr_norm);
+                    // The interfaces of the `quaternion` crate expects a vector
+                    // of unit length for the axis and a scalar for the angle.
+                    // To make the comparison fair, we compute these values
+                    // before the benchmark starts and feed them in here.
+                    let input_vec = black_box(&axis_angles[i]);
+                    outputs[i] = quaternion::axis_angle(
+                        [input_vec[0], input_vec[1], input_vec[2]],
+                        input_vec[3],
+                    );
                 }
-                // Use `black_box` on the output to ensure the write to the vector is not optimized away.
+                black_box(&mut outputs);
+            })
+        });
+
+        let mut outputs = vec![Default::default(); BATCH_SIZE];
+        group.bench_function("quaternion_core::from_rotation_vector", |b| {
+            b.iter(|| {
+                // The code inside this closure is what's measured.
+                for i in 0..BATCH_SIZE {
+                    let input_vec = black_box(inputs[i]);
+                    outputs[i] =
+                        quaternion_core::from_rotation_vector(input_vec);
+                }
+                black_box(&mut outputs);
+            })
+        });
+
+        let mut outputs = vec![Default::default(); BATCH_SIZE];
+        group.bench_function("nalgebra::geometry::Quaternion::from_polar_decomposition", |b| {
+            b.iter(|| {
+                // The code inside this closure is what's measured.
+                for i in 0..BATCH_SIZE {
+                    let input_vec = black_box(axis_angles[i]);
+                    // The interfaces of the `nalgebra` crate expects a vector
+                    // of unit length for the axis, a scalar for the angle and
+                    // a scalar for the norm. To make the comparison fair, we
+                    // compute these values before the benchmark starts and feed
+                    // them in here.
+                    outputs[i] = nalgebra::geometry::Quaternion::from_polar_decomposition(
+                        1.0, input_vec[3], nalgebra::Unit::new_unchecked(
+                            nalgebra::Vector3::new(input_vec[0], input_vec[1], input_vec[2])),
+                    );
+                }
+                black_box(&mut outputs);
+            })
+        });
+
+        let mut outputs = vec![Default::default(); BATCH_SIZE];
+        group.bench_function("micromath::Quaternion::axis_angle", |b| {
+            b.iter(|| {
+                // The code inside this closure is what's measured.
+                for i in 0..BATCH_SIZE {
+                    let input_vec = black_box(axis_angles[i]);
+                    // Similarly to the `quaternion` crate we precompute the
+                    // axis and angle values to make the comparison fair.
+                    outputs[i] = micromath::Quaternion::axis_angle(
+                        micromath::vector::Vector3d {
+                            x: input_vec[0],
+                            y: input_vec[1],
+                            z: input_vec[2],
+                        },
+                        input_vec[3],
+                    );
+                }
                 black_box(&mut outputs);
             })
         });
