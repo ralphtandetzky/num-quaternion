@@ -48,13 +48,9 @@ pub fn bench_from_rotation_vector(c: &mut Criterion) {
             b.iter(|| {
                 // The code inside this closure is what's measured.
                 for i in 0..BATCH_SIZE {
-                    // Use `black_box` on the input to prevent the compiler from
-                    // making assumptions.
                     let input_vec = black_box(&inputs[i]);
                     outputs[i] = UQ32::from_rotation_vector(input_vec);
                 }
-                // Use `black_box` on the output to ensure the write to the
-                // vector is not optimized away.
                 black_box(&mut outputs);
             })
         });
@@ -64,8 +60,6 @@ pub fn bench_from_rotation_vector(c: &mut Criterion) {
                 b.iter(|| {
                     // The code inside this closure is what's measured.
                     for i in 0..BATCH_SIZE {
-                        // Use `black_box` on the input to prevent the compiler
-                        // from making assumptions.
                         let input_vec = black_box(&inputs[i]);
                         let sqr_norm = input_vec[0] * input_vec[0]
                             + input_vec[1] * input_vec[1]
@@ -74,8 +68,6 @@ pub fn bench_from_rotation_vector(c: &mut Criterion) {
                             input_vec, sqr_norm,
                         );
                     }
-                    // Use `black_box` on the output to ensure the write to the
-                    // vector is not optimized away.
                     black_box(&mut outputs);
                 })
             },
@@ -86,8 +78,6 @@ pub fn bench_from_rotation_vector(c: &mut Criterion) {
                 b.iter(|| {
                     // The code inside this closure is what's measured.
                     for i in 0..BATCH_SIZE {
-                        // Use `black_box` on the input to prevent the compiler
-                        // from making assumptions.
                         let input_vec = black_box(&inputs[i]);
                         let sqr_norm = input_vec[0] * input_vec[0]
                             + input_vec[1] * input_vec[1]
@@ -96,8 +86,6 @@ pub fn bench_from_rotation_vector(c: &mut Criterion) {
                             input_vec, sqr_norm,
                         );
                     }
-                    // Use `black_box` on the output to ensure the write to the
-                    // vector is not optimized away.
                     black_box(&mut outputs);
                 })
             },
