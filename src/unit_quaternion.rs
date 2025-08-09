@@ -247,8 +247,9 @@ where
     /// ```
     pub fn from_rotation_vector(v: &[T; 3]) -> Self {
         let sqr_norm = v[0] * v[0] + v[1] * v[1] + v[2] * v[2];
-        let pi = core::f64::consts::PI;
-        let pi_square = T::from(pi * pi).unwrap();
+        const PI_SQUARED_F64: f64 =
+            core::f64::consts::PI * core::f64::consts::PI;
+        let pi_square = T::from(PI_SQUARED_F64).unwrap();
         if T::epsilon() >= T::from(f32::EPSILON).unwrap()
             && sqr_norm <= pi_square
         {
