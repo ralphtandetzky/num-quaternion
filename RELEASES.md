@@ -4,6 +4,11 @@
 
 ## [Unreleased]
 
+- Optimized `UnitQuaternion::from_rotation_vector` for small vectors of length
+  less than pi. Speedups of 3x are observed.
+- Added benchmarks for `UnitQuaternion::from_rotation_vector`.
+- Updated `nalgebra` dependency to version `0.34`.
+
 ## Release 1.0.5 (2025-07-27)
 
 - Updated versions of dependencies in C++ benchmarks.
