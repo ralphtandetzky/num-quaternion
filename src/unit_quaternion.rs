@@ -288,6 +288,7 @@ where
     /// Panics if the conversion between `T` and `f32` fails. This never happens
     /// for built-in floating-point types (`f32`, `f64`), but may occur for
     /// custom types.
+    #[inline]
     pub fn from_rotation_vector_f32_polynomial(
         v: &[T; 3],
         sqr_norm: T,
@@ -327,6 +328,7 @@ where
     /// This method is used to implement `from_rotation_vector()` for floating
     /// point types `T` whose epsilon is less than `f32::EPSILON` or when the
     /// norm of the rotation vector is greater than π.
+    #[inline]
     pub fn from_rotation_vector_generic(v: &[T; 3], sqr_norm: T) -> Self {
         let two = T::one() + T::one();
         match sqr_norm.classify() {
