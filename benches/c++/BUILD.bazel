@@ -1,6 +1,16 @@
 load("@rules_cc//cc:defs.bzl", "cc_binary")
 
 cc_binary(
+    name = "from_rotation_vector_runtime",
+    srcs = ["from_rotation_vector_runtime.cpp"],
+    deps = [
+        "@boost.qvm//:boost.qvm",
+        "@eigen//:eigen",
+        "@google_benchmark//:benchmark",
+    ],
+)
+
+cc_binary(
     name = "norm_accuracy",
     srcs = ["norm_accuracy.cpp"],
     deps = [
