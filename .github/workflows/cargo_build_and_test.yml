@@ -97,7 +97,8 @@ jobs:
     needs: [
       build_and_test,
       bazel_build,
-      check_formatting,
+      check_rust_formatting,
+      check_cpp_formatting,
       static_analysis,
       semver_checks_all_stable,
       semver_checks_default_features
