@@ -99,9 +99,9 @@ int main()
             const double rms_error_in_eps =
                 rms_error / std::numeric_limits<float>::epsilon();
             using namespace std::literals::string_view_literals;
-            const auto color_code = (rms_error_in_eps < 0.3)   ? "92" sv
-                                    : (rms_error_in_eps < 1.0) ? "93" sv
-                                                               : "91" sv;
+            const auto color_code = (rms_error_in_eps < 0.3)   ? "92"sv
+                                    : (rms_error_in_eps < 1.0) ? "93"sv
+                                                               : "91"sv;
             std::cout << " | \x1b[" << color_code << "m" << std::setw(col_width)
                       << rms_error_in_eps << "\x1b[0m" << std::flush;
         }
