@@ -8,6 +8,7 @@
   less than pi. Speedups of 3x are observed.
 - Added benchmarks for `UnitQuaternion::from_rotation_vector`.
 - Updated `nalgebra` dependency to version `0.34`.
+- Improved CI by checking C++ code formatting.
 
 ## Release 1.0.5 (2025-07-27)
 
