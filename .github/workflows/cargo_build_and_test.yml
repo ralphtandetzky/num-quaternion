@@ -1,3 +1,6 @@
+permissions:
+  contents: read
+
 name: Cargo Build & Test
 
 on:
@@ -45,7 +48,7 @@ jobs:
     - name: Build
       run: ./ci/bazel_build.bash
 
-  check_formatting:
+  check_rust_formatting:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
@@ -53,6 +56,15 @@ jobs:
       with:
         components: rustfmt
     - run: cargo fmt --check
+
+  check_cpp_formatting:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: DoozyX/clang-format-lint-action@v0.20
+      with:
+        source: benches/c++
+        clangFormatVersion: 14
 
   static_analysis:
     runs-on: ubuntu-latest
@@ -88,7 +100,8 @@ jobs:
     needs: [
       build_and_test,
       bazel_build,
-      check_formatting,
+      check_rust_formatting,
+      check_cpp_formatting,
       static_analysis,
       semver_checks_all_stable,
       semver_checks_default_features
