@@ -22,7 +22,7 @@ jobs:
           stable,
         ]
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - uses: actions/cache@v4
       if: startsWith(matrix.rust, '1')
       with:
@@ -39,7 +39,7 @@ jobs:
   bazel_build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - name: Mount bazel cache
       uses: actions/cache@v4
       with:
@@ -51,7 +51,7 @@ jobs:
   check_rust_formatting:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - uses: dtolnay/rust-toolchain@stable
       with:
         components: rustfmt
@@ -69,7 +69,7 @@ jobs:
   static_analysis:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - uses: dtolnay/rust-toolchain@stable
     - name: install clippy
       run: rustup component add clippy
@@ -79,14 +79,14 @@ jobs:
   semver_checks_all_stable:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - name: Check semver violations
       uses: obi1kenobi/cargo-semver-checks-action@v2
 
   semver_checks_default_features:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - name: Check semver violations for all default features
       uses: obi1kenobi/cargo-semver-checks-action@v2
       with:
