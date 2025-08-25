@@ -35,10 +35,15 @@ float norm_eigen(float w, float x, float y, float z)
 
 using NormFunc = float (*)(float, float, float, float);
 
-size_t utf8_length(const std::string_view str)
+int utf8_length(const std::string_view str)
 {
-    return std::ranges::count_if(
-        str, [](const char c) { return (c & 0xC0) != 0x80; });
+    // NOLINTBEGIN(*-magic-numbers): We mask the upper two bits of the
+    // character and check if the most significant bit is not set (thus an
+    // ASCII character in the range [0, 127]) or the second most significant
+    // bit is set (thus the first byte of a multi-byte character).
+    return static_cast<int>(std::ranges::count_if(
+        str, [](const char c) { return (c & 0xC0) != 0x80; }));
+    // NOLINTEND(*-magic-numbers)
 }
 
 int main()
@@ -49,12 +54,15 @@ int main()
                          { norm_manual_fast, "sqrt(a² + b² + c² + d²)" },
                          { norm_eigen, "Eigen::Quaternionf::norm" } } };
 
-    const size_t func_space = std::ranges::max(
-        std::ranges::views::transform(norm_funcs, [](const auto & pair) {
-            return utf8_length(pair.second.data());
-        }));
+    const int func_space = [&]() {
+        int max_len = 0;
+        for (const auto & [func, name] : norm_funcs) {
+            max_len = std::max(max_len, utf8_length(name));
+        }
+        return max_len;
+    }();
 
-    size_t col_width = 13;
+    constexpr int col_width = 13;
 
     std::cout << "Benchmarking the relative accuracy of quaternion norm "
                  "implementations for different scales of the\n";
@@ -71,16 +79,17 @@ int main()
               << "=|=" << std::string(col_width, '=')
               << "=|=" << std::string(col_width, '=') << "\n";
 
-    const float scales[] = {
-        1.0f, std::sqrt(FLT_MIN), FLT_MIN, FLT_MAX / 2.0f
+    const std::array<float, 4> scales = {
+        { 1.0f, std::sqrt(FLT_MIN), FLT_MIN, FLT_MAX / 2.0f }
     };
 
     for (const auto & [norm_func, func_name] : norm_funcs) {
-        std::cout << std::setw(func_space + func_name.length() -
+        std::cout << std::setw(func_space +
+                               static_cast<int>(func_name.length()) -
                                utf8_length(func_name))
                   << func_name;
         for (const float scale : scales) {
-            std::mt19937 rng(0x7F0829AE4D31C6B5);
+            std::mt19937 rng;
             std::uniform_real_distribution<float> dist(-scale, scale);
             double sum_sqr_error = 0.0;
             for (size_t j = 0; j < NUM_SAMPLES; ++j) {

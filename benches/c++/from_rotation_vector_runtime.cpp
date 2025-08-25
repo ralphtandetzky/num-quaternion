@@ -9,10 +9,12 @@
 #include <ranges>
 #include <vector>
 
+constexpr size_t batch_size = 2000;
+
 // Generates random Rodriguez vectors with norm < PI
 std::vector<std::array<float, 3>> generate_random_vectors(size_t count)
 {
-    std::mt19937 rng(0x7F0829AE4D31C6B5);
+    std::mt19937 rng;
     std::uniform_real_distribution<float> dist(-M_PI, M_PI);
 
     std::vector<std::array<float, 3>> vectors;
@@ -47,7 +49,7 @@ std::vector<float> compute_norms(
 
 // Computes the normalized vectors from the given vectors
 std::vector<std::array<float, 3>> compute_normalized_vectors(
-    std::vector<std::array<float, 3>> vectors)
+    std::vector<std::array<float, 3>> && vectors)
 {
     for (auto & v : vectors) {
         float norm = std::sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
@@ -64,19 +66,26 @@ std::vector<std::array<float, 3>> compute_normalized_vectors(
 // using Boost QVM
 static void BM_QuaternionFromRotationVectorBoostQVM(benchmark::State & state)
 {
-    const auto inputs = generate_random_vectors(2000);
+    const auto inputs = generate_random_vectors(batch_size);
     const auto angles = compute_norms(inputs);
-    for (auto _ : state) {
+    for (const auto & _ : state) {
+        std::ignore = _;
         for (size_t i = 0; i < inputs.size(); ++i) {
             const auto & axis = inputs[i];
             float angle = angles[i];
             boost::qvm::vec<float, 3> axis_c = { axis[0], axis[1], axis[2] };
+            // NOLINTBEGIN(cppcoreguidelines-pro-type-member-init): We don't
+            // initialize `q` here, because `set_rot` will overwrite it and
+            // initializing it does slow things down, which is not acceptable
+            // for such a benchmark.
             boost::qvm::quat<float> q;
+            // NOLINTEND(cppcoreguidelines-pro-type-member-init)
             boost::qvm::set_rot(q, axis_c, angle);
             benchmark::DoNotOptimize(q);
         }
     }
-    state.SetItemsProcessed(state.iterations() * inputs.size());
+    state.SetItemsProcessed(
+        static_cast<int64_t>(state.iterations() * inputs.size()));
 }
 
 BENCHMARK(BM_QuaternionFromRotationVectorBoostQVM);
@@ -85,10 +94,11 @@ BENCHMARK(BM_QuaternionFromRotationVectorBoostQVM);
 // using Eigen
 static void BM_QuaternionFromRotationVectorEigen(benchmark::State & state)
 {
-    auto inputs = generate_random_vectors(2000);
+    auto inputs = generate_random_vectors(batch_size);
     const auto angles = compute_norms(inputs);
     inputs = compute_normalized_vectors(std::move(inputs));
-    for (auto _ : state) {
+    for (const auto & _ : state) {
+        std::ignore = _;
         for (size_t i = 0; i < inputs.size(); ++i) {
             const auto & v = inputs[i];
             float angle = angles[i];
@@ -97,7 +107,8 @@ static void BM_QuaternionFromRotationVectorEigen(benchmark::State & state)
             benchmark::DoNotOptimize(q);
         }
     }
-    state.SetItemsProcessed(state.iterations() * inputs.size());
+    state.SetItemsProcessed(
+        static_cast<int64_t>(state.iterations() * inputs.size()));
 }
 
 BENCHMARK(BM_QuaternionFromRotationVectorEigen);
@@ -106,24 +117,16 @@ template <typename T>
 class Quaternion
 {
 public:
-    Quaternion(T w, T x, T y, T z)
-        : w(w)
-        , x(x)
-        , y(y)
-        , z(z)
-    {
-    }
-
     static Quaternion from_rotation_vector(const std::array<T, 3> & v)
     {
         T norm = std::sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
         T half_angle = norm / 2;
         T sin_half_angle = std::sin(half_angle);
         T imag_factor = sin_half_angle / norm;
-        return Quaternion(std::cos(half_angle),
-                          imag_factor * v[0],
-                          imag_factor * v[1],
-                          imag_factor * v[2]);
+        return Quaternion{ std::cos(half_angle),
+                           imag_factor * v[0],
+                           imag_factor * v[1],
+                           imag_factor * v[2] };
     }
 
     T w, x, y, z;
@@ -133,14 +136,16 @@ public:
 // norm = angle) using a manual implementation
 static void BM_QuaternionFromRotationVectorManualImpl(benchmark::State & state)
 {
-    auto inputs = generate_random_vectors(2000);
-    for (auto _ : state) {
+    auto inputs = generate_random_vectors(batch_size);
+    for (const auto & _ : state) {
+        std::ignore = _;
         for (const auto & v : inputs) {
             Quaternion<float> q = Quaternion<float>::from_rotation_vector(v);
             benchmark::DoNotOptimize(q);
         }
     }
-    state.SetItemsProcessed(state.iterations() * inputs.size());
+    state.SetItemsProcessed(
+        static_cast<int64_t>(state.iterations() * inputs.size()));
 }
 
 BENCHMARK(BM_QuaternionFromRotationVectorManualImpl);
