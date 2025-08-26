@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+## Release 1.0.6 (2025-08-26)
+
 - Optimized `UnitQuaternion::from_rotation_vector` for small vectors of length
   less than pi. Speedups of 3x are observed.
 - Added benchmarks for `UnitQuaternion::from_rotation_vector`.
