@@ -1,0 +1,18 @@
+---
+Language: Cpp
+BasedOnStyle: Mozilla
+AccessModifierOffset: -4
+AlwaysBreakAfterDefinitionReturnType: None
+AlwaysBreakAfterReturnType: None
+ConstructorInitializerIndentWidth: 4
+ContinuationIndentWidth: 4
+FixNamespaceComments: true
+IndentWidth: 4
+PointerAlignment: Middle
+ReferenceAlignment: Pointer
+SpaceAfterTemplateKeyword: true
+SpacesBeforeTrailingComments: 2
+SpacesInContainerLiterals: false
+Standard: Latest
+TabWidth: 4
+...
