@@ -12,6 +12,7 @@
 - Updated `nalgebra` dependency to version `0.34`.
 - Improved CI by checking C++ code formatting and run clang-tidy.
 - Fixed all warnings reported by clang-tidy in C++ benchmarks.
+- Added instructions for AI agents to contribute to the project.
 
 ## Release 1.0.5 (2025-07-27)
 
