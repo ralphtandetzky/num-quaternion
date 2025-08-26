@@ -9,7 +9,7 @@
 - Ask questions to get clarifications - especially if I ask for something that
   is questionable from design or engineering perspective before you implement
   something.
-- After you made changes, check for problems using the build task.
+- After making changes, check for problems using the build task.
 - In order to avoid inconsistencies and bugs, be on the lookout for code and
   configuration that can be reused, or refactored to be made reusable, and then
   do it. But do maintain architectural boundaries.
