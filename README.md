@@ -115,7 +115,7 @@ Comprehensive documentation with examples can be found on
 [docs.rs](https://docs.rs/num-quaternion/latest/num-quaternion/).
 
 For detailed design principles and the error handling strategy see the
-[Design Rationale](DESIGN_RATIONALE.md).
+[Design Rationale](docs/DESIGN_RATIONALE.md).
 
 Detailed release notes are provided in [RELEASES.md](RELEASES.md).
 

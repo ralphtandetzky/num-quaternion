@@ -25,7 +25,8 @@
 ## Release 1.0.4 (2025-04-23)
 
 - Added `PureQuaternion` type.
-- Added missing arithmetic operations, such as `MutAssign` and `DivAssign` traits for `UnitQuaternion`.
+- Added missing arithmetic operations, such as `MutAssign` and `DivAssign`
+  traits for `UnitQuaternion`.
 - Fixed numerical inaccuracy in the `ln` method of `Quaternion` in edge cases.
 - Updated pull request template.
 - Updated dependency `serde` to version `1.0.218`.
@@ -78,7 +79,8 @@ have not been any breaking changes since version 0.2.0, in fact.)
 
 ## Release 0.2.28 (2024-09-07)
 
-- Split `lib.rs` into new modules `quaternion`, `unit_quaternion`, and `arithmetics`.
+- Split `lib.rs` into new modules `quaternion`, `unit_quaternion`, and
+  `arithmetics`.
 
 **Contributors**: @ralphtandetzky
 
@@ -130,8 +132,8 @@ have not been any breaking changes since version 0.2.0, in fact.)
 ## Release 0.2.21 (2024-08-01)
 
 - Updated minimum required Rust compiler version to 1.63.
-- Added [Design Rationale](DESIGN_RATIONALE.md) laying out the design goals and
-  the error handling strategy.
+- Added [Design Rationale](docs/DESIGN_RATIONALE.md) laying out the design goals
+  and the error handling strategy.
 - Adjusted formatting of the code.
 
 **Contributors**: @ralphtandetzky
@@ -146,7 +148,8 @@ have not been any breaking changes since version 0.2.0, in fact.)
 
 ## Release 0.2.19 (2024-07-27)
 
-- Changed orientation of some `UnitQuaternion` functions to conform to common conventions.
+- Changed orientation of some `UnitQuaternion` functions to conform to common
+  conventions.
 
 **Contributors**: @ralphtandetzky
 
@@ -164,8 +167,10 @@ have not been any breaking changes since version 0.2.0, in fact.)
 
 ## Release 0.2.16 (2024-07-16)
 
-- Fixed inaccuracy in `Quaternion::norm` for very large and very small results. (<https://github.com/ralphtandetzky/num-quaternion/issues/51>)
-- Added new function `Quaternion::fast_norm` for branchless fast (but possibly inaccurate) norm calculation.
+- Fixed inaccuracy in `Quaternion::norm` for very large and very small results.
+  (<https://github.com/ralphtandetzky/num-quaternion/issues/51>)
+- Added new function `Quaternion::fast_norm` for branchless fast (but possibly
+  inaccurate) norm calculation.
 
 **Contributors**: @ralphtandetzky
 
