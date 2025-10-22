@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+- Fixed broken Links in Rustdoc documentation.
+
 ## Release 1.0.6 (2025-08-26)
 
 - Optimized `UnitQuaternion::from_rotation_vector` for small vectors of length

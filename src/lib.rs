@@ -140,7 +140,7 @@
 //! # Design Rationale and Error Handling
 //!
 //! For detailed design principles and the error handling strategy see the
-//! [Design Rationale](DESIGN_RATIONALE.md).
+//! [Design Rationale](https://github.com/ralphtandetzky/num-quaternion/blob/master/docs/DESIGN_RATIONALE.md).
 //!
 //! # Contributing
 //!
@@ -152,7 +152,8 @@
 //! If you have any questions or need help, feel free to open an
 //! [issue on GitHub](https://github.com/ralphtandetzky/num-quaternion/issues).
 //!
-//! Further instructions can be found in the [CONTRIBUTING.md](CONTRIBUTING.md)
+//! Further instructions can be found in the
+//! [CONTRIBUTING.md](https://github.com/ralphtandetzky/num-quaternion/blob/master/CONTRIBUTING.md)
 //! guidelines.
 //!
 //! # Acknowledgements
