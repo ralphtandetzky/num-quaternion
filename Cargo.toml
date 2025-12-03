@@ -4,7 +4,13 @@ description = "Quaternion numbers implementation for Rust"
 documentation = "https://docs.rs/num-quaternion"
 homepage = "https://github.com/ralphtandetzky/num-quaternion"
 keywords = ["quaternion", "math", "algebra", "3d", "rotation"]
-categories = ["algorithms", "data-structures", "science", "no-std", "mathematics"]
+categories = [
+    "algorithms",
+    "data-structures",
+    "science",
+    "no-std",
+    "mathematics",
+]
 license = "MIT OR Apache-2.0"
 name = "num-quaternion"
 repository = "https://github.com/ralphtandetzky/num-quaternion"
@@ -49,14 +55,16 @@ default-features = false
 
 [dependencies.serde]
 optional = true
-version = "1.0.218"
+version = "1.0.228"
 default-features = false
 
 [dependencies.rand]
 optional = true
 version = "0.9"
 default-features = false
-features = ["small_rng"]  # Needed only for testing. TODO: Move tests outside lib.rs and make this a development dependency
+features = [
+    "small_rng",
+] # Needed only for testing. TODO: Move tests outside lib.rs and make this a development dependency
 
 [dev-dependencies.criterion]
 version = "0.8"
@@ -66,7 +74,7 @@ version = "2.1"
 features = ["quaternion", "vector"]
 
 [dev-dependencies.nalgebra]
-version = "0.34"
+version = "0.34.1"
 
 [dev-dependencies.quaternion]
 version = "2.0"
@@ -80,7 +88,7 @@ version = ">=0.5.1"
 default-features = false
 
 [dev-dependencies.serde_json]
-version = "1.0.139"
+version = "1.0.145"
 
 [features]
 default = ["std"]
