@@ -4,13 +4,17 @@
 
 ## [Unreleased]
 
+## Release 1.0.7 (2025-12-09)
+
 - Fixed broken Links in Rustdoc documentation.
 - Updated dependencies:
-  - serde
-  - criterion
-  - nalgebra
-  - serde_json
-  - quaternion-core
+  - `serde`
+  - `criterion`
+  - `nalgebra`
+  - `serde_json`
+  - `quaternion-core`
+
+**Contributors**: @ralphtandetzky
 
 ## Release 1.0.6 (2025-08-26)
 
@@ -22,11 +26,15 @@
 - Fixed all warnings reported by clang-tidy in C++ benchmarks.
 - Added instructions for AI agents to contribute to the project.
 
+**Contributors**: @ralphtandetzky
+
 ## Release 1.0.5 (2025-07-27)
 
 - Updated versions of dependencies in C++ benchmarks.
 - Updated `criterion` to version `0.7`.
 - Updated minimum supported Rust version to 1.66.0.
+
+**Contributors**: @ralphtandetzky
 
 ## Release 1.0.4 (2025-04-23)
 
@@ -37,6 +45,8 @@
 - Updated pull request template.
 - Updated dependency `serde` to version `1.0.218`.
 - Updated dependency `serde_json` to version `1.0.139`.
+
+**Contributors**: @ralphtandetzky
 
 ## Release 1.0.3 (2025-02-21)
 
