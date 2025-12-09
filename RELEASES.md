@@ -4,13 +4,15 @@
 
 ## [Unreleased]
 
+## Release 1.0.7 (2025-12-09)
+
 - Fixed broken Links in Rustdoc documentation.
 - Updated dependencies:
-  - serde
-  - criterion
-  - nalgebra
-  - serde_json
-  - quaternion-core
+  - `serde`
+  - `criterion`
+  - `nalgebra`
+  - `serde_json`
+  - `quaternion-core`
 
 ## Release 1.0.6 (2025-08-26)
 
