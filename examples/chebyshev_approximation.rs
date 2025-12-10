@@ -223,8 +223,23 @@ fn chebyshev_l2_approximation(
     Ok(approx_poly)
 }
 
-fn factorial(n: usize) -> f64 {
-    (1..=n).fold(1.0, |acc, x| acc * x as f64)
+fn sinc_sqrt<F>(x: F) -> F
+where
+    F: num_traits::Float,
+{
+    if x == num_traits::zero() {
+        num_traits::one()
+    } else {
+        let s = x.sqrt();
+        s.sin() / s
+    }
+}
+
+fn cos_sqrt<F>(x: F) -> F
+where
+    F: num_traits::Float,
+{
+    x.sqrt().cos()
 }
 
 fn main() {
@@ -233,39 +248,20 @@ fn main() {
     let max_degree = 50;
     let epsilon = 2.0 * f32::EPSILON as f64;
 
-    let sinc_sqrt_poly = Poly::new(
-        (0..=max_degree)
-            .map(|n| if n % 2 == 0 { 1.0 } else { -1.0 } / factorial(2 * n + 1))
-            .collect(),
-    );
-
     run_chebyshev_approximation(
         "sinc(sqrt(x))",
-        |x| sinc_sqrt_poly.eval(x),
-        |x| {
-            if x == 0.0 {
-                1.0
-            } else {
-                let s = x.sqrt();
-                s.sin() / s
-            }
-        },
+        sinc_sqrt,
+        sinc_sqrt,
         a,
         b,
         max_degree,
         epsilon,
     );
 
-    let cos_sqrt_poly = Poly::new(
-        (0..=max_degree)
-            .map(|n| if n % 2 == 0 { 1.0 } else { -1.0 } / factorial(2 * n))
-            .collect(),
-    );
-
     run_chebyshev_approximation(
         "cos(sqrt(x))",
-        |x| cos_sqrt_poly.eval(x),
-        |x| x.sqrt().cos(),
+        cos_sqrt,
+        cos_sqrt,
         a,
         b,
         max_degree,
