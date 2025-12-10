@@ -139,20 +139,22 @@ fn chebyshev_poly(k: usize) -> Poly {
     }
 }
 
-/// Computes the L2 Chebyshev approximation for a function given as a polynomial.
+/// Computes the L2 Chebyshev approximation for a function.
 ///
 /// # Arguments
-/// * `f_coeffs` - The coefficients of the input polynomial `f(x)`.
+/// * `f` - The function to approximate.
 /// * `a`, `b` - The start and end points of the interval `[a, b]`.
+/// * `max_degree` - The maximum degree of the approximating polynomial.
 /// * `epsilon` - The desired upper bound maximum error on the interval `[a, b]`.
 ///
 /// # Returns
 /// A `Result` containing the coefficients of the approximating polynomial,
 /// or an error string if the inputs are invalid.
 fn chebyshev_l2_approximation(
-    f_coeffs: &Poly,
+    f: impl Fn(f64) -> f64,
     a: f64,
     b: f64,
+    max_degree: usize,
     epsilon: f64,
 ) -> Result<Poly, String> {
     if a >= b {
@@ -161,16 +163,14 @@ fn chebyshev_l2_approximation(
     if epsilon <= 0.0 {
         return Err("Epsilon must be positive.".to_string());
     }
-
-    let degree = f_coeffs.degree();
-    if degree == 0 {
-        return Ok(f_coeffs.clone()); // Function is a constant
+    if max_degree == 0 {
+        return Err("max_degree must be at least 1.".to_string());
     }
 
     // 1. Compute Chebyshev Coefficients using Clenshaw-Curtis Quadrature
-    // The number of nodes N should be > 2*degree for accuracy.
-    let n_nodes = 2 * degree + 2;
-    let mut chebyshev_coeffs = vec![0.0; degree + 1];
+    // The number of nodes N should be > 2*max_degree for accuracy.
+    let n_nodes = 2 * max_degree + 2;
+    let mut chebyshev_coeffs = vec![0.0; max_degree + 1];
 
     for (k, coeff) in chebyshev_coeffs.iter_mut().enumerate() {
         let mut sum = 0.0;
@@ -179,7 +179,7 @@ fn chebyshev_l2_approximation(
             let y_j = (j as f64 * PI / n_nodes as f64).cos();
             let x_j = 0.5 * (a + b) + 0.5 * (b - a) * y_j;
 
-            let f_val = f_coeffs.eval(x_j);
+            let f_val = f(x_j);
             let term =
                 f_val * (k as f64 * j as f64 * PI / n_nodes as f64).cos();
 
@@ -198,8 +198,8 @@ fn chebyshev_l2_approximation(
 
     // 2. Find the minimal degree `n` that satisfies the error bound.
     let mut tail_sum = 0.0;
-    let mut n = degree;
-    for k in (1..=degree).rev() {
+    let mut n = max_degree;
+    for k in (1..=max_degree).rev() {
         let new_tail_sum = tail_sum + chebyshev_coeffs[k].abs();
         if new_tail_sum > epsilon {
             n = k;
@@ -230,17 +230,18 @@ fn factorial(n: usize) -> f64 {
 fn main() {
     let a = 0.0;
     let b = (std::f64::consts::PI / 2.0).powi(2);
+    let max_degree = 50;
     let epsilon = 2.0 * f32::EPSILON as f64;
 
     let sinc_sqrt_poly = Poly::new(
-        (0..=50)
+        (0..=max_degree)
             .map(|n| if n % 2 == 0 { 1.0 } else { -1.0 } / factorial(2 * n + 1))
             .collect(),
     );
 
     run_chebyshev_approximation(
         "sinc(sqrt(x))",
-        &sinc_sqrt_poly,
+        |x| sinc_sqrt_poly.eval(x),
         |x| {
             if x == 0.0 {
                 1.0
@@ -251,39 +252,42 @@ fn main() {
         },
         a,
         b,
+        max_degree,
         epsilon,
     );
 
     let cos_sqrt_poly = Poly::new(
-        (0..=50)
+        (0..=max_degree)
             .map(|n| if n % 2 == 0 { 1.0 } else { -1.0 } / factorial(2 * n))
             .collect(),
     );
 
     run_chebyshev_approximation(
         "cos(sqrt(x))",
-        &cos_sqrt_poly,
+        |x| cos_sqrt_poly.eval(x),
         |x| x.sqrt().cos(),
         a,
         b,
+        max_degree,
         epsilon,
     );
 }
 
 fn run_chebyshev_approximation(
     func_name: &str,
-    power_series: &Poly,
+    ground_truth: impl Fn(f64) -> f64,
     naive_f32_impl: impl Fn(f32) -> f32,
     a: f64,
     b: f64,
+    max_degree: usize,
     epsilon: f64,
 ) {
     println!("Approximating the function {}.", func_name);
 
-    match chebyshev_l2_approximation(power_series, a, b, epsilon) {
+    match chebyshev_l2_approximation(&ground_truth, a, b, max_degree, epsilon) {
         Ok(approx_coeffs) => {
             println!("Approximation successful!");
-            println!("Original degree: {}", power_series.degree());
+            println!("Maximum degree: {}", max_degree);
             println!("Minimized degree: {}", approx_coeffs.degree());
             println!(
                 "Resulting coefficients: {:?}",
@@ -301,7 +305,7 @@ fn run_chebyshev_approximation(
             for i in ((a * 100.0) as i32)..=((b * 100.0) as i32) {
                 // Compute error when using highest precision (f64)
                 let x = i as f64 / 100.0;
-                let original_val = power_series.eval(x);
+                let original_val = ground_truth(x);
                 let approx_val = approx_coeffs.eval(x);
                 let error =
                     (original_val - approx_val).abs() / f32::EPSILON as f64;
@@ -309,17 +313,18 @@ fn run_chebyshev_approximation(
 
                 // Compute error when using f32 precision
                 let x_f32 = x as f32;
-                let ground_truth = power_series.eval(x_f32 as f64);
+                let ground_truth_val = ground_truth(x_f32 as f64);
                 let approx_val_f32 = approx_coeffs.eval_f32(x_f32);
-                let error_f32 = (ground_truth - approx_val_f32 as f64).abs()
+                let error_f32 = (ground_truth_val - approx_val_f32 as f64)
+                    .abs()
                     / f32::EPSILON as f64;
                 max_error_f32 = max_error_f32.max(error_f32);
 
                 // Naive f32 implementation error
                 let naive_val = naive_f32_impl(x_f32) as f64;
-                let ground_truth = power_series.eval(x_f32 as f64);
+                let ground_truth_val = ground_truth(x_f32 as f64);
                 let naive_error =
-                    (ground_truth - naive_val).abs() / f32::EPSILON as f64;
+                    (ground_truth_val - naive_val).abs() / f32::EPSILON as f64;
                 max_naive_error = max_naive_error.max(naive_error);
             }
             println!(
