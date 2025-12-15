@@ -242,6 +242,19 @@ where
     x.sqrt().cos()
 }
 
+fn correction_factor_to_argument_pos<F>(x: F) -> F
+where
+    F: num_traits::Float,
+{
+    if x == F::one() {
+        return F::one() + F::one();
+    }
+    let y = (F::one() - x * x).sqrt();
+    let phi = x.acos();
+    let quot = phi / y;
+    quot + quot
+}
+
 fn main() {
     let a = 0.0;
     let b = (std::f64::consts::PI / 2.0).powi(2);
@@ -267,6 +280,16 @@ fn main() {
         max_degree,
         epsilon,
     );
+
+    run_chebyshev_approximation(
+        "correction_factor_to_argument_pos(x)",
+        correction_factor_to_argument_pos,
+        correction_factor_to_argument_pos,
+        0.0,
+        1.0,
+        50,
+        3.14159 * epsilon,
+    );
 }
 
 fn run_chebyshev_approximation(
@@ -278,7 +301,10 @@ fn run_chebyshev_approximation(
     max_degree: usize,
     epsilon: f64,
 ) {
-    println!("Approximating the function {}.", func_name);
+    println!(
+        "Approximating the function {} on the interval [{}, {}].",
+        func_name, a, b
+    );
 
     match chebyshev_l2_approximation(&ground_truth, a, b, max_degree, epsilon) {
         Ok(approx_coeffs) => {
