@@ -378,12 +378,14 @@ where
         }
     }
 
-    /// Generic implementation of `to_rotation_vector` for high-precision types.
+    /// This function is public for internal benchmarking purposes only. It is
+    /// a generic implementation of `to_rotation_vector()` for high-precision
+    /// floating point types.
     ///
-    /// This method is used when `T::epsilon()` is smaller than `f32::EPSILON`,
-    /// indicating a type requiring higher precision than f32.
+    /// This method is used to implement `to_rotation_vector()` for floating
+    /// point types `T` whose epsilon is less than `f32::EPSILON`.
     #[inline]
-    fn to_rotation_vector_impl_generic(&self) -> [T; 3] {
+    pub fn to_rotation_vector_impl_generic(&self) -> [T; 3] {
         let q = self.as_quaternion();
         let one = T::one();
         let two = one + one;
@@ -436,16 +438,20 @@ where
         [x * angle, y * angle, z * angle]
     }
 
-    /// Optimized implementation of `to_rotation_vector` for f32-precision types.
+    /// This function is public for internal benchmarking purposes only. It
+    /// computes the rotation vector using a Chebyshev polynomial optimized for
+    /// f32 precision.
     ///
-    /// This method uses a Chebyshev polynomial approximation to compute the
-    /// rotation vector efficiently for types with epsilon >= f32::EPSILON.
-    /// The polynomial approximates f(w) = arccos(w) / sqrt(1 - w*w).
+    /// This method is used internally when the floating-point type `T` has an
+    /// epsilon greater than or equal to `f32::EPSILON`. It provides a fast and
+    /// accurate approximation by evaluating a polynomial with precomputed
+    /// coefficients. The polynomial approximates
+    /// `f(w) = 2 * arccos(w) / sqrt(1 - w*w)`.
     ///
     /// The polynomial coefficients were generated using Chebyshev approximation,
     /// as documented in `examples/chebyshev_approximation.rs`.
     #[inline]
-    fn to_rotation_vector_impl_f32eps(&self) -> [T; 3] {
+    pub fn to_rotation_vector_impl_f32eps(&self) -> [T; 3] {
         let q = self.as_quaternion();
         let two = T::one() + T::one();
 
