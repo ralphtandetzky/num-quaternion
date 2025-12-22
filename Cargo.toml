@@ -43,6 +43,10 @@ name = "benchmark_norm_accuracy"
 required-features = ["std", "rand"]
 
 [[example]]
+name = "benchmark_rotation_vector_accuracy"
+required-features = ["std", "rand"]
+
+[[example]]
 name = "pose_animation"
 required-features = ["std"]
 
