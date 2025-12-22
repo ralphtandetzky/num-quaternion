@@ -223,23 +223,23 @@ fn chebyshev_l2_approximation(
     Ok(approx_poly)
 }
 
-fn sinc_sqrt<F>(x: F) -> F
+fn half_sinc_half_sqrt<F>(x: F) -> F
 where
     F: num_traits::Float,
 {
-    if x == num_traits::zero() {
-        num_traits::one()
+    if x == F::zero() {
+        F::one() / F::from(2.0).unwrap()
     } else {
         let s = x.sqrt();
-        s.sin() / s
+        (s / F::from(2.0).unwrap()).sin() / s
     }
 }
 
-fn cos_sqrt<F>(x: F) -> F
+fn cos_half_sqrt<F>(x: F) -> F
 where
     F: num_traits::Float,
 {
-    x.sqrt().cos()
+    (x.sqrt() / F::from(2.0).unwrap()).cos()
 }
 
 fn correction_factor_to_argument_pos<F>(x: F) -> F
@@ -257,14 +257,14 @@ where
 
 fn main() {
     let a = 0.0;
-    let b = (std::f64::consts::PI / 2.0).powi(2);
+    let b = std::f64::consts::PI.powi(2);
     let max_degree = 50;
     let epsilon = 2.0 * f32::EPSILON as f64;
 
     run_chebyshev_approximation(
-        "sinc(sqrt(x))",
-        sinc_sqrt,
-        sinc_sqrt,
+        "sinc(sqrt(x)/2)/2",
+        half_sinc_half_sqrt,
+        half_sinc_half_sqrt,
         a,
         b,
         max_degree,
@@ -272,9 +272,9 @@ fn main() {
     );
 
     run_chebyshev_approximation(
-        "cos(sqrt(x))",
-        cos_sqrt,
-        cos_sqrt,
+        "cos(sqrt(x)/2)",
+        cos_half_sqrt,
+        cos_half_sqrt,
         a,
         b,
         max_degree,

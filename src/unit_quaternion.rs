@@ -297,20 +297,16 @@ where
         let x = sqr_norm.to_f32().unwrap();
         // The magic numbers below are calculated in
         // `examples/chebyshev_approximation.rs`.
-        let half_sinc_half_norm = (((2.6051662e-6f32 / 512.0f32 * x
-            - 0.00019809046f32 / 128.0f32)
+        let half_sinc_half_norm =
+            (((5.088215e-9f32 * x - 1.5475817e-6f32) * x + 0.00026040783f32)
+                * x
+                - 0.020833323f32)
+                * x
+                + 0.5f32;
+        let cos_half_norm = (((9.0442086e-8f32 * x - 2.1646354e-5f32) * x
+            + 0.0026039737f32)
             * x
-            + 0.008333051f32 / 32.0f32)
-            * x
-            - 0.16666658f32 / 8.0f32)
-            * x
-            + 1.0f32 / 2.0f32;
-        let cos_half_norm = (((2.3153174e-5f32 / 256.0f32 * x
-            - 0.0013853667f32 / 64.0f32)
-            * x
-            + 0.04166358f32 / 16.0f32)
-            * x
-            - 0.49999905f32 / 4.0f32)
+            - 0.12499976f32)
             * x
             + 0.99999994f32;
         let sinc_half_norm = T::from(half_sinc_half_norm).unwrap();
