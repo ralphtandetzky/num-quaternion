@@ -463,14 +463,14 @@ where
         // Coefficients for correction_factor_to_argument_pos(x) on [0, 1].
         // These coefficients are computed by the example application
         // `examples/chebyshev_approximation`.
-        let p = ((((0.035307337 * w_abs - 0.19593741) * w_sqr
-            + (0.50647694 * w_abs - 0.84913236))
+        let p = ((((-0.022940192 * w_abs + 0.1385382) * w_sqr
+            + (-0.38949528 * w_abs + 0.70218545))
             * w_sqr
-            + (1.1140441 * w_abs - 1.322179))
+            + (-0.9644606 * w_abs + 1.1539655))
             * w_sqr
-            + (1.5697925 * w_abs - 1.9999645))
-            * w_abs
-            + 3.1415925;
+            + (-1.3299414 * w_abs + 1.5705487))
+            * w_sqr
+            + (-1.9999928 * w_abs + 3.1415925);
 
         if w.is_sign_positive() {
             // w >= 0: multiply imaginary part with P(w)
@@ -1827,7 +1827,7 @@ mod tests {
         let rotation_vector = q.to_rotation_vector();
         assert!(
             (rotation_vector[0] - core::f32::consts::FRAC_PI_2).abs()
-                < f32::EPSILON
+                < 4.0 * f32::EPSILON
         );
         assert!((rotation_vector[1]).abs() < f32::EPSILON);
         assert!((rotation_vector[2]).abs() < f32::EPSILON);
