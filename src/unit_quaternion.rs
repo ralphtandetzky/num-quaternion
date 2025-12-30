@@ -356,7 +356,7 @@ where
     /// Returns a rotation vector which is parallel to the rotation
     /// axis and whose norm is the rotation angle.
     ///
-    /// The norm of the result is at most pi (if rouding errors are not taken
+    /// The norm of the result is at most pi (if rounding errors are not taken
     /// into account).
     ///
     /// This function is the inverse of
