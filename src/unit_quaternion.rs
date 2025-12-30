@@ -356,7 +356,7 @@ where
     /// Returns a rotation vector which is parallel to the rotation
     /// axis and whose norm is the rotation angle.
     ///
-    /// The norm of the result is at most pi (if rouding errors are not taken
+    /// The norm of the result is at most pi (if rounding errors are not taken
     /// into account).
     ///
     /// This function is the inverse of
@@ -468,7 +468,7 @@ where
             + (-1.9999928 * w_abs + 3.1415925);
 
         // Multiply imaginary part with P(|w|) or -P(|w|) depending on the sign
-        // of w, wehere P(w) approximates arccos(w) / sqrt(1 - w*w). Using
+        // of w, where P(w) approximates arccos(w) / sqrt(1 - w*w). Using
         // copysign makes the whole algorithm branchfree and improves throughput
         // in benchmarks by approximately 50%.
         let factor = T::from(p.copysign(w)).unwrap();
