@@ -356,8 +356,13 @@ where
     /// Returns a rotation vector which is parallel to the rotation
     /// axis and whose norm is the rotation angle.
     ///
+    /// The norm of the result is at most pi (if rouding errors are not taken
+    /// into account).
+    ///
     /// This function is the inverse of
-    /// [`from_rotation_vector`](UnitQuaternion::from_rotation_vector).
+    /// [`from_rotation_vector`](UnitQuaternion::from_rotation_vector) for
+    /// rotation vectors whose norm is smaller than pi and for quaternions with
+    /// non-negative real parts.
     ///
     /// # Example
     ///
@@ -403,27 +408,19 @@ where
         };
 
         // Compute the angle
-        let angle = two
+        let pm_two = two.copysign(q.w);
+        let pm_angle = pm_two
             * if small_abs_real_part {
-                q.w.acos()
-            } else if q.w.is_sign_positive() {
+                q.w.abs().acos()
+            } else {
                 // The angle is less than 180 degrees.
                 if sin_half_angle < epsilon.sqrt() {
                     // The angle is very close to zero. In this case we can
                     // avoid division by zero and make the computation cheap
                     // at the same time by returning the following immediately.
-                    return [two * q.x, two * q.y, two * q.z];
+                    return [pm_two * q.x, pm_two * q.y, pm_two * q.z];
                 }
                 sin_half_angle.asin()
-            } else {
-                // The angle is more than 180 degrees.
-                if sin_half_angle.is_zero() {
-                    // The angle is exactly 360 degrees. To avoid division by zero we
-                    // return the following immediately.
-                    return [two * T::PI(), T::zero(), T::zero()];
-                }
-                let pi_minus_half_angle = sin_half_angle.asin();
-                T::PI() - pi_minus_half_angle
             };
 
         // Compute the normalized rotation vector components
@@ -431,7 +428,7 @@ where
         let y = q.y / sin_half_angle;
         let z = q.z / sin_half_angle;
 
-        [x * angle, y * angle, z * angle]
+        [x * pm_angle, y * pm_angle, z * pm_angle]
     }
 
     /// This function is public for internal benchmarking purposes only. It
@@ -449,16 +446,18 @@ where
     #[inline]
     pub fn to_rotation_vector_impl_f32eps(&self) -> [T; 3] {
         let q = self.as_quaternion();
-        let two = T::one() + T::one();
-
         let w = q.w.to_f32().unwrap();
         let w_abs = w.abs();
         let w_sqr = w * w;
 
         // Evaluate polynomial using Horner's method unconditionally
-        // Coefficients for correction_factor_to_argument_pos(x) on [0, 1].
+        // Coefficients for `f(w) = 2 * arccos(w) / sqrt(1 - w*w)` on [0, 1].
         // These coefficients are computed by the example application
-        // `examples/chebyshev_approximation`.
+        // `examples/chebyshev_approximation`. We deviate slightly from
+        // Horner's scheme to evaluate the polynomial. The purpose is to let the
+        // processor perform 5 multiplications and 5 additions in parallel using
+        // out-of-order execution. This makes the computation somewhat faster
+        // (latency is reduced) while there is a minimal accuracy hit.
         let p = ((((-0.022940192 * w_abs + 0.1385382) * w_sqr
             + (-0.38949528 * w_abs + 0.70218545))
             * w_sqr
@@ -468,44 +467,12 @@ where
             * w_sqr
             + (-1.9999928 * w_abs + 3.1415925);
 
-        if w.is_sign_positive() {
-            // w >= 0: multiply imaginary part with P(w)
-            // P(w) approximates arccos(w) / sqrt(1 - w*w)
-            let factor = T::from(p).unwrap();
-            [q.x * factor, q.y * factor, q.z * factor]
-        } else {
-            // w < 0: multiply imaginary part with (2π / hypot(x, y, z) - P(-w))
-            let hypot_sqr = q.x * q.x + q.y * q.y + q.z * q.z;
-            let min_pos_val = T::min_positive_value();
-
-            if hypot_sqr >= min_pos_val * two {
-                // normal floating point value
-                let hypot = hypot_sqr.sqrt();
-                let factor = two * T::PI() / hypot - T::from(p).unwrap();
-                [q.x * factor, q.y * factor, q.z * factor]
-            } else if q.x.is_zero() && q.y.is_zero() && q.z.is_zero() {
-                // The angle is exactly 360 degrees (2π). To avoid division by zero,
-                // we return an arbitrary rotation vector with angle 2π.
-                [two * T::PI(), T::zero(), T::zero()]
-            } else {
-                // scale up, so intermediate values are in the normal
-                // floating point range, then scale down again.
-                let scale = T::one() / min_pos_val;
-                let x_scaled = q.x * scale;
-                let y_scaled = q.y * scale;
-                let z_scaled = q.z * scale;
-                let hypot_scaled = (x_scaled * x_scaled
-                    + y_scaled * y_scaled
-                    + z_scaled * z_scaled)
-                    .sqrt();
-                let factor = two * T::PI() / hypot_scaled;
-                [
-                    q.x * scale * factor,
-                    q.y * scale * factor,
-                    q.z * scale * factor,
-                ]
-            }
-        }
+        // Multiply imaginary part with P(|w|) or -P(|w|) depending on the sign
+        // of w, wehere P(w) approximates arccos(w) / sqrt(1 - w*w). Using
+        // copysign makes the whole algorithm branchfree and improves throughput
+        // in benchmarks by approximately 50%.
+        let factor = T::from(p.copysign(w)).unwrap();
+        [q.x * factor, q.y * factor, q.z * factor]
     }
 }
 
@@ -1846,7 +1813,7 @@ mod tests {
     #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_to_rotation_vector_180_degree_rotation_y_axis_f32() {
-        // Quaternion representing a 180-degree rotation around the x-axis
+        // Quaternion representing a 180-degree rotation around the y-axis
         let q = UQ32::J;
         let rotation_vector = q.to_rotation_vector();
         assert!((rotation_vector[0]).abs() < f32::EPSILON);
@@ -1860,7 +1827,7 @@ mod tests {
     #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
     fn test_to_rotation_vector_180_degree_rotation_y_axis_f64() {
-        // Quaternion representing a 180-degree rotation around the x-axis
+        // Quaternion representing a 180-degree rotation around the y-axis
         let q = UQ64::J;
         let rotation_vector = q.to_rotation_vector();
         assert!((rotation_vector[0]).abs() < f64::EPSILON);
@@ -1895,8 +1862,8 @@ mod tests {
         assert!((rotation_vector[0]).abs() < f32::EPSILON);
         assert!((rotation_vector[1]).abs() < f32::EPSILON);
         assert!(
-            (rotation_vector[2] - (3.0 * core::f32::consts::FRAC_PI_2)).abs()
-                < f32::EPSILON
+            (rotation_vector[2] + core::f32::consts::FRAC_PI_2).abs()
+                < 4.0 * f32::EPSILON
         );
     }
 
@@ -1909,7 +1876,7 @@ mod tests {
         assert!((rotation_vector[0]).abs() < f64::EPSILON);
         assert!((rotation_vector[1]).abs() < f64::EPSILON);
         assert!(
-            (rotation_vector[2] - (3.0 * core::f64::consts::FRAC_PI_2)).abs()
+            (rotation_vector[2] + core::f64::consts::FRAC_PI_2).abs()
                 < 5.0 * f64::EPSILON
         );
     }
@@ -1958,7 +1925,10 @@ mod tests {
         {
             let rot = q.to_rotation_vector();
             let p = UQ64::from_rotation_vector(&rot);
-            assert!((p - q).norm() <= 6.0 * f64::EPSILON);
+            assert!(
+                (p - q).norm() <= 6.0 * f64::EPSILON
+                    || (p + q).norm() <= 6.0 * f64::EPSILON
+            );
         }
     }
 
@@ -1998,7 +1968,10 @@ mod tests {
         {
             let rot = q.to_rotation_vector();
             let p = UQ32::from_rotation_vector(&rot);
-            assert!((p - q).norm() <= 6.0 * f32::EPSILON);
+            assert!(
+                (p - q).norm() <= 6.0 * f32::EPSILON
+                    || (p + q).norm() <= 6.0 * f32::EPSILON
+            );
         }
     }
 
