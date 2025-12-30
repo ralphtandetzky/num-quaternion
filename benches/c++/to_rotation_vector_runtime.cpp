@@ -54,7 +54,7 @@ static void BM_QuaternionToRotationVectorBoostQVM(benchmark::State & state)
             boost::qvm::quat<float> q{
                 q_array[0], q_array[1], q_array[2], q_array[3]
             };
-            boost::qvm::vec<float, 3> axis;
+            boost::qvm::vec<float, 3> axis{};
             float angle = boost::qvm::axis_angle(q, axis);
             boost::qvm::vec<float, 3> rotation_vector = { axis.a[0] * angle,
                                                           axis.a[1] * angle,
@@ -104,7 +104,7 @@ public:
         // Compute sin(half_angle) to recover the axis
         T sin_half_angle = std::sin(half_angle);
 
-        if (std::abs(sin_half_angle) < 1e-6f) {
+        if (std::abs(sin_half_angle) < std::numeric_limits<T>::epsilon()) {
             // For very small angles, return zero vector
             return { 0, 0, 0 };
         }
