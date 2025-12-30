@@ -152,6 +152,7 @@ fn main() {
         for _ in 0..NUM_SAMPLES {
             // Generate random unit quaternion
             let q = rng.random::<UQ32>();
+            // Comment the following line, if you want to test both hemispheres.
             let q = if q.as_quaternion().w >= 0.0 { q } else { -q };
 
             let (abs_error, rel_error) =
