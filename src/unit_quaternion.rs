@@ -297,20 +297,16 @@ where
         let x = sqr_norm.to_f32().unwrap();
         // The magic numbers below are calculated in
         // `examples/chebyshev_approximation.rs`.
-        let half_sinc_half_norm = (((2.6051662e-6f32 / 512.0f32 * x
-            - 0.00019809046f32 / 128.0f32)
+        let half_sinc_half_norm =
+            (((5.088215e-9f32 * x - 1.5475817e-6f32) * x + 0.00026040783f32)
+                * x
+                - 0.020833323f32)
+                * x
+                + 0.5f32;
+        let cos_half_norm = (((9.0442086e-8f32 * x - 2.1646354e-5f32) * x
+            + 0.0026039737f32)
             * x
-            + 0.008333051f32 / 32.0f32)
-            * x
-            - 0.16666658f32 / 8.0f32)
-            * x
-            + 1.0f32 / 2.0f32;
-        let cos_half_norm = (((2.3153174e-5f32 / 256.0f32 * x
-            - 0.0013853667f32 / 64.0f32)
-            * x
-            + 0.04166358f32 / 16.0f32)
-            * x
-            - 0.49999905f32 / 4.0f32)
+            - 0.12499976f32)
             * x
             + 0.99999994f32;
         let sinc_half_norm = T::from(half_sinc_half_norm).unwrap();
@@ -360,8 +356,13 @@ where
     /// Returns a rotation vector which is parallel to the rotation
     /// axis and whose norm is the rotation angle.
     ///
+    /// The norm of the result is at most pi (if rounding errors are not taken
+    /// into account).
+    ///
     /// This function is the inverse of
-    /// [`from_rotation_vector`](UnitQuaternion::from_rotation_vector).
+    /// [`from_rotation_vector`](UnitQuaternion::from_rotation_vector) for
+    /// rotation vectors whose norm is smaller than pi and for quaternions with
+    /// non-negative real parts.
     ///
     /// # Example
     ///
@@ -371,6 +372,21 @@ where
     /// let v = uq.to_rotation_vector();
     /// ```
     pub fn to_rotation_vector(&self) -> [T; 3] {
+        if T::epsilon() < T::from(f32::EPSILON).unwrap() {
+            self.to_rotation_vector_impl_generic()
+        } else {
+            self.to_rotation_vector_impl_f32eps()
+        }
+    }
+
+    /// This function is public for internal benchmarking purposes only. It is
+    /// a generic implementation of `to_rotation_vector()` for high-precision
+    /// floating point types.
+    ///
+    /// This method is used to implement `to_rotation_vector()` for floating
+    /// point types `T` whose epsilon is less than `f32::EPSILON`.
+    #[inline]
+    pub fn to_rotation_vector_impl_generic(&self) -> [T; 3] {
         let q = self.as_quaternion();
         let one = T::one();
         let two = one + one;
@@ -392,27 +408,19 @@ where
         };
 
         // Compute the angle
-        let angle = two
+        let pm_two = two.copysign(q.w);
+        let pm_angle = pm_two
             * if small_abs_real_part {
-                q.w.acos()
-            } else if q.w.is_sign_positive() {
+                q.w.abs().acos()
+            } else {
                 // The angle is less than 180 degrees.
                 if sin_half_angle < epsilon.sqrt() {
                     // The angle is very close to zero. In this case we can
                     // avoid division by zero and make the computation cheap
                     // at the same time by returning the following immediately.
-                    return [two * q.x, two * q.y, two * q.z];
+                    return [pm_two * q.x, pm_two * q.y, pm_two * q.z];
                 }
                 sin_half_angle.asin()
-            } else {
-                // The angle is more than 180 degrees.
-                if sin_half_angle.is_zero() {
-                    // The angle is exactly 360 degrees. To avoid division by zero we
-                    // return the following immediately.
-                    return [two * T::PI(), T::zero(), T::zero()];
-                }
-                let pi_minus_half_angle = sin_half_angle.asin();
-                T::PI() - pi_minus_half_angle
             };
 
         // Compute the normalized rotation vector components
@@ -420,7 +428,51 @@ where
         let y = q.y / sin_half_angle;
         let z = q.z / sin_half_angle;
 
-        [x * angle, y * angle, z * angle]
+        [x * pm_angle, y * pm_angle, z * pm_angle]
+    }
+
+    /// This function is public for internal benchmarking purposes only. It
+    /// computes the rotation vector using a Chebyshev polynomial optimized for
+    /// f32 precision.
+    ///
+    /// This method is used internally when the floating-point type `T` has an
+    /// epsilon greater than or equal to `f32::EPSILON`. It provides a fast and
+    /// accurate approximation by evaluating a polynomial with precomputed
+    /// coefficients. The polynomial approximates
+    /// `f(w) = 2 * arccos(w) / sqrt(1 - w*w)`.
+    ///
+    /// The polynomial coefficients were generated using Chebyshev approximation,
+    /// as documented in `examples/chebyshev_approximation.rs`.
+    #[inline]
+    pub fn to_rotation_vector_impl_f32eps(&self) -> [T; 3] {
+        let q = self.as_quaternion();
+        let w = q.w.to_f32().unwrap();
+        let w_abs = w.abs();
+        let w_sqr = w * w;
+
+        // Evaluate polynomial using Horner's method unconditionally
+        // Coefficients for `f(w) = 2 * arccos(w) / sqrt(1 - w*w)` on [0, 1].
+        // These coefficients are computed by the example application
+        // `examples/chebyshev_approximation`. We deviate slightly from
+        // Horner's scheme to evaluate the polynomial. The purpose is to let the
+        // processor perform 5 multiplications and 5 additions in parallel using
+        // out-of-order execution. This makes the computation somewhat faster
+        // (latency is reduced) while there is a minimal accuracy hit.
+        let p = ((((-0.022940192 * w_abs + 0.1385382) * w_sqr
+            + (-0.38949528 * w_abs + 0.70218545))
+            * w_sqr
+            + (-0.9644606 * w_abs + 1.1539655))
+            * w_sqr
+            + (-1.3299414 * w_abs + 1.5705487))
+            * w_sqr
+            + (-1.9999928 * w_abs + 3.1415925);
+
+        // Multiply imaginary part with P(|w|) or -P(|w|) depending on the sign
+        // of w, where P(w) approximates arccos(w) / sqrt(1 - w*w). Using
+        // copysign makes the whole algorithm branchfree and improves throughput
+        // in benchmarks by approximately 50%.
+        let factor = T::from(p.copysign(w)).unwrap();
+        [q.x * factor, q.y * factor, q.z * factor]
     }
 }
 
@@ -1732,13 +1784,13 @@ mod tests {
 
     #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
-    fn test_to_rotation_vector_90_degree_rotation_x_axis() {
+    fn test_to_rotation_vector_90_degree_rotation_x_axis_f32() {
         // Quaternion representing a 90-degree rotation around the x-axis
         let q = Q32::new(1.0, 1.0, 0.0, 0.0).normalize().unwrap();
         let rotation_vector = q.to_rotation_vector();
         assert!(
             (rotation_vector[0] - core::f32::consts::FRAC_PI_2).abs()
-                < f32::EPSILON
+                < 4.0 * f32::EPSILON
         );
         assert!((rotation_vector[1]).abs() < f32::EPSILON);
         assert!((rotation_vector[2]).abs() < f32::EPSILON);
@@ -1746,8 +1798,36 @@ mod tests {
 
     #[cfg(any(feature = "std", feature = "libm"))]
     #[test]
-    fn test_to_rotation_vector_180_degree_rotation_y_axis() {
-        // Quaternion representing a 180-degree rotation around the x-axis
+    fn test_to_rotation_vector_90_degree_rotation_x_axis_f64() {
+        // Quaternion representing a 90-degree rotation around the x-axis
+        let q = Q64::new(1.0, 1.0, 0.0, 0.0).normalize().unwrap();
+        let rotation_vector = q.to_rotation_vector();
+        assert!(
+            (rotation_vector[0] - core::f64::consts::FRAC_PI_2).abs()
+                < f64::EPSILON
+        );
+        assert!((rotation_vector[1]).abs() < f64::EPSILON);
+        assert!((rotation_vector[2]).abs() < f64::EPSILON);
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_to_rotation_vector_180_degree_rotation_y_axis_f32() {
+        // Quaternion representing a 180-degree rotation around the y-axis
+        let q = UQ32::J;
+        let rotation_vector = q.to_rotation_vector();
+        assert!((rotation_vector[0]).abs() < f32::EPSILON);
+        assert!(
+            (rotation_vector[1] - core::f32::consts::PI).abs()
+                < 3.0 * f32::EPSILON
+        );
+        assert!((rotation_vector[2]).abs() < f32::EPSILON);
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_to_rotation_vector_180_degree_rotation_y_axis_f64() {
+        // Quaternion representing a 180-degree rotation around the y-axis
         let q = UQ64::J;
         let rotation_vector = q.to_rotation_vector();
         assert!((rotation_vector[0]).abs() < f64::EPSILON);
@@ -1771,6 +1851,34 @@ mod tests {
         assert!((rotation_vector[0] - expected[0]).abs() < 4.0 * f32::EPSILON);
         assert!((rotation_vector[1] - expected[1]).abs() < 4.0 * f32::EPSILON);
         assert!((rotation_vector[2] - expected[2]).abs() < 4.0 * f32::EPSILON);
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_to_rotation_vector_270_degree_rotation_z_axis_f32() {
+        // Quaternion representing a 270-degree rotation around the z-axis
+        let q = Q32::new(-1.0, 0.0, 0.0, 1.0).normalize().unwrap();
+        let rotation_vector = q.to_rotation_vector();
+        assert!((rotation_vector[0]).abs() < f32::EPSILON);
+        assert!((rotation_vector[1]).abs() < f32::EPSILON);
+        assert!(
+            (rotation_vector[2] + core::f32::consts::FRAC_PI_2).abs()
+                < 4.0 * f32::EPSILON
+        );
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_to_rotation_vector_270_degree_rotation_z_axis_f64() {
+        // Quaternion representing a 270-degree rotation around the z-axis
+        let q = Q64::new(-1.0, 0.0, 0.0, 1.0).normalize().unwrap();
+        let rotation_vector = q.to_rotation_vector();
+        assert!((rotation_vector[0]).abs() < f64::EPSILON);
+        assert!((rotation_vector[1]).abs() < f64::EPSILON);
+        assert!(
+            (rotation_vector[2] + core::f64::consts::FRAC_PI_2).abs()
+                < 5.0 * f64::EPSILON
+        );
     }
 
     #[cfg(any(feature = "std", feature = "libm"))]
@@ -1808,6 +1916,7 @@ mod tests {
             [1.0, f64::EPSILON, 0.0, 0.0],
             [1.0, 0.0, 0.0, min_pos],
             [-1.0, 3.0 * min_pos, 2.0 * min_pos, min_pos],
+            [-1.0, min_pos.sqrt(), 0.0, 0.0],
             [1.0, 0.1, 0.0, 0.0],
             [-1.0, 0.0, 0.1, 0.0],
         ]
@@ -1816,7 +1925,53 @@ mod tests {
         {
             let rot = q.to_rotation_vector();
             let p = UQ64::from_rotation_vector(&rot);
-            assert!((p - q).norm() <= 6.0 * f64::EPSILON);
+            assert!(
+                (p - q).norm() <= 6.0 * f64::EPSILON
+                    || (p + q).norm() <= 6.0 * f64::EPSILON
+            );
+        }
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_to_rotation_vector_f32_case() {
+        // Quaternion representing a general rotation
+        // Here we first compute the rotation vector and then
+        // check if `from_rotation_vector` restores the original
+        // quaternion appropriately.
+        let min_pos = f32::MIN_POSITIVE;
+        for q in [
+            [1.0, 0.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0, 1.0],
+            [1.0, 1.0, 0.0, 0.0],
+            [1.0, 1.0, 1.0, 0.0],
+            [1.0, 1.0, 1.0, 1.0],
+            [0.0, 1.0, 1.0, -1.0],
+            [1.0, 0.0, 2.0, 5.0],
+            [1.0, 0.0, 1.0e-10, 2.0e-10],
+            [-1.0, 0.0, 0.0, 0.0],
+            [1.0, f32::EPSILON, 0.0, 0.0],
+            [1.0, 0.0, 0.0, min_pos],
+            [-1.0, 3.0 * min_pos, 2.0 * min_pos, min_pos],
+            [-1.0, min_pos.sqrt(), 0.0, 0.0],
+            [
+                -1.0,
+                min_pos.sqrt(),
+                13.0 * min_pos.sqrt() * f32::EPSILON,
+                0.0,
+            ],
+            [1.0, 0.1, 0.0, 0.0],
+            [-1.0, 0.0, 0.1, 0.0],
+        ]
+        .into_iter()
+        .map(|[w, x, y, z]| Q32::new(w, x, y, z).normalize().unwrap())
+        {
+            let rot = q.to_rotation_vector();
+            let p = UQ32::from_rotation_vector(&rot);
+            assert!(
+                (p - q).norm() <= 6.0 * f32::EPSILON
+                    || (p + q).norm() <= 6.0 * f32::EPSILON
+            );
         }
     }
 

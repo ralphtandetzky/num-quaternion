@@ -33,8 +33,17 @@ name = "from_rotation_vector_runtime"
 required-features = ["std", "rand"]
 harness = false
 
+[[bench]]
+name = "to_rotation_vector_runtime"
+required-features = ["std", "rand"]
+harness = false
+
 [[example]]
 name = "benchmark_norm_accuracy"
+required-features = ["std", "rand"]
+
+[[example]]
+name = "benchmark_rotation_vector_accuracy"
 required-features = ["std", "rand"]
 
 [[example]]
