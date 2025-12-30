@@ -64,7 +64,7 @@ Close unnecessary applications
 Even with all precautions, results can vary. Run benchmarks multiple times.
 
 **Note:** There are more things that you can do to get better or more consistent
-performance according to different website. The above methods have been most
+performance according to different websites. The above methods have been most
 effective to the author of the crate.
 
 ## Comparing Benchmark Results
