@@ -8,22 +8,11 @@
 
 set -ex
 
-# Save the current working directory
-original_dir=$(pwd)
-
-# Function to restore the original working directory
-restore_dir() {
-    cd "$original_dir"
-}
-
-# Set trap to restore the original directory on exit
-trap restore_dir EXIT
-
 # Navigate to the workspace directory
 cd "$(git -C "$(dirname "$0")" rev-parse --show-toplevel)/benches/c++" || exit
 
 # Build all Bazel targets
-USE_BAZEL_VERSION=8.3.1 bazel build //...
+USE_BAZEL_VERSION=8.5.0 bazel build //...
 
 # Run clang-tidy using Bazel
-USE_BAZEL_VERSION=8.3.1 bazel build //... --config=clang-tidy
+USE_BAZEL_VERSION=8.5.0 bazel build //... --config=clang-tidy
