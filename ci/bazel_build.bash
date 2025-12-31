@@ -8,17 +8,6 @@
 
 set -ex
 
-# Save the current working directory
-original_dir=$(pwd)
-
-# Function to restore the original working directory
-restore_dir() {
-    cd "$original_dir"
-}
-
-# Set trap to restore the original directory on exit
-trap restore_dir EXIT
-
 # Navigate to the workspace directory
 cd "$(git -C "$(dirname "$0")" rev-parse --show-toplevel)/benches/c++" || exit
 
