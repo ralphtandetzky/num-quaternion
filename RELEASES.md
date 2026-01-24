@@ -15,6 +15,8 @@
   from a quaternion and back with `f32` precision. All crates have similar root
   mean square errors of this round trip which are all below a `f32` epsilon and
   above half an epsilon.
+- Updated Bazel version to 8.5.0.
+- Updates all Bazel modules to their latest versions.
 
 ## Release 1.0.7 (2025-12-09)
 
@@ -30,8 +32,7 @@
 
 ## Release 1.0.6 (2025-08-26)
 
-- Optimized `UnitQuaternion::from_rotation_vector` for small vectors of length
-  less than pi. Speedups of 3x are observed.
+- Optimized `UnitQuaternion::from_rotation_vector` for small vectors of length less than pi. Speedups of 3x are observed.
 - Added benchmarks for `UnitQuaternion::from_rotation_vector`.
 - Updated `nalgebra` dependency to version `0.34`.
 - Improved CI by checking C++ code formatting and run clang-tidy.
