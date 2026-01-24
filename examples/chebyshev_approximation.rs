@@ -223,6 +223,7 @@ fn chebyshev_l2_approximation(
     Ok(approx_poly)
 }
 
+/// Computes sinc(sqrt(x)/2)/2
 fn half_sinc_half_sqrt<F>(x: F) -> F
 where
     F: num_traits::Float,
@@ -235,6 +236,7 @@ where
     }
 }
 
+/// Computes cos(sqrt(x)/2)
 fn cos_half_sqrt<F>(x: F) -> F
 where
     F: num_traits::Float,
@@ -242,6 +244,16 @@ where
     (x.sqrt() / F::from(2.0).unwrap()).cos()
 }
 
+/// Computes the correction factor to argument for positive x:
+///
+/// ```text
+/// f(x) = 2 * arccos(x) / sqrt(1 - x^2)
+/// ```
+///
+/// This function is used in the Chebyshev approximation of the rotation vector
+/// conversion.  The branch for `x == 1` returns the finite limit of this
+/// expression as  `x → 1⁻` instead of evaluating the formula directly, which
+/// would result  in a division by zero.
 fn correction_factor_to_argument_pos<F>(x: F) -> F
 where
     F: num_traits::Float,
