@@ -5,7 +5,7 @@ cc_binary(
     srcs = ["from_rotation_vector_runtime.cpp"],
     deps = [
         "@boost.qvm//:boost.qvm",
-        "@eigen//:eigen",
+        "@eigen",
         "@google_benchmark//:benchmark",
     ],
 )
@@ -15,7 +15,7 @@ cc_binary(
     srcs = ["norm_accuracy.cpp"],
     deps = [
         "@boost.qvm//:boost.qvm",
-        "@eigen//:eigen",
+        "@eigen",
     ],
 )
 
@@ -24,7 +24,17 @@ cc_binary(
     srcs = ["norm_runtime.cpp"],
     deps = [
         "@boost.qvm//:boost.qvm",
-        "@eigen//:eigen",
+        "@eigen",
+        "@google_benchmark//:benchmark",
+    ],
+)
+
+cc_binary(
+    name = "to_rotation_vector_runtime",
+    srcs = ["to_rotation_vector_runtime.cpp"],
+    deps = [
+        "@boost.qvm//:boost.qvm",
+        "@eigen",
         "@google_benchmark//:benchmark",
     ],
 )
