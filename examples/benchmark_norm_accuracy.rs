@@ -1,4 +1,3 @@
-use rand::Rng;
 use rand::SeedableRng;
 use std::io::{self, Write};
 
@@ -87,6 +86,7 @@ fn main() {
                 rand::rngs::SmallRng::seed_from_u64(0x7F0829AE4D31C6B5);
             let mut sum_sqr_error = 0.0;
             for _ in 0..NUM_SAMPLES {
+                use rand::RngExt;
                 let w = rng.random_range(-scale..scale);
                 let x = rng.random_range(-scale..scale);
                 let y = rng.random_range(-scale..scale);

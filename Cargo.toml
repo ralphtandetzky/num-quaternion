@@ -62,9 +62,7 @@ default-features = false
 optional = true
 version = "0.10"
 default-features = false
-features = [
-    "small_rng",
-] # Needed only for testing. TODO: Move tests outside lib.rs and make this a development dependency
+features = []
 
 [dev-dependencies.criterion]
 version = "0.8"
@@ -84,7 +82,7 @@ version = "0.6"
 
 [dependencies.rand_distr]
 optional = true
-version = ">=0.5.1"
+version = ">=0.6.0"
 default-features = false
 
 [dev-dependencies.serde_json]
