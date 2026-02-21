@@ -1,5 +1,5 @@
 use num_quaternion::{Q32, UQ32};
-use rand::Rng;
+use rand::RngExt;
 use rand::SeedableRng;
 use std::io::{self, Write};
 
