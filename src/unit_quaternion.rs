@@ -1218,26 +1218,21 @@ where
         // better than most textbook formulas.
         let q = self.into_quaternion();
         let [vx, vy, vz] = vector;
-        let u_cross_v = [
-            q.y.clone() * vz.clone() - q.z.clone() * vy.clone(),
-            q.z.clone() * vx.clone() - q.x.clone() * vz.clone(),
-            q.x.clone() * vy.clone() - q.y.clone() * vx.clone(),
-        ];
-        let two_u_cross_v = [
-            u_cross_v[0].clone() + u_cross_v[0].clone(),
-            u_cross_v[1].clone() + u_cross_v[1].clone(),
-            u_cross_v[2].clone() + u_cross_v[2].clone(),
-        ];
+        let u_cross_v0 = q.y.clone() * vz.clone() - q.z.clone() * vy.clone();
+        let u_cross_v1 = q.z.clone() * vx.clone() - q.x.clone() * vz.clone();
+        let u_cross_v2 = q.x.clone() * vy.clone() - q.y.clone() * vx.clone();
+        let two_u_cross_v0 = u_cross_v0.clone() + u_cross_v0;
+        let two_u_cross_v1 = u_cross_v1.clone() + u_cross_v1;
+        let two_u_cross_v2 = u_cross_v2.clone() + u_cross_v2;
         return [
-            vx + q.w.clone() * two_u_cross_v[0].clone()
-                + q.y.clone() * two_u_cross_v[2].clone()
-                - q.z.clone() * two_u_cross_v[1].clone(),
-            vy + q.w.clone() * two_u_cross_v[1].clone()
-                + q.z.clone() * two_u_cross_v[0].clone()
-                - q.x.clone() * two_u_cross_v[2].clone(),
-            vz + q.w.clone() * two_u_cross_v[2].clone()
-                + q.x.clone() * two_u_cross_v[1].clone()
-                - q.y.clone() * two_u_cross_v[0].clone(),
+            vx + q.w.clone() * two_u_cross_v0.clone()
+                + q.y.clone() * two_u_cross_v2.clone()
+                - q.z.clone() * two_u_cross_v1.clone(),
+            vy + q.w.clone() * two_u_cross_v1.clone()
+                + q.z * two_u_cross_v0.clone()
+                - q.x.clone() * two_u_cross_v2.clone(),
+            vz + q.w * two_u_cross_v2 + q.x * two_u_cross_v1
+                - q.y * two_u_cross_v0,
         ];
     }
 }
