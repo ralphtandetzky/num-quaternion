@@ -19,6 +19,7 @@
 - Updated Bazel version to 8.5.0.
 - Updates all Bazel modules to their latest versions.
 - Update to `rand` version 0.10.0 and `rand_distr` version 0.6.0
+- Update minimum required Rust version to 1.85.0
 
 ## Release 1.0.7 (2025-12-09)
 
