@@ -93,7 +93,7 @@ version = "0.6"
 
 [dependencies.rand_distr]
 optional = true
-version = ">=0.5.1"
+version = "0.5.1"
 default-features = false
 
 [dev-dependencies.serde_json]

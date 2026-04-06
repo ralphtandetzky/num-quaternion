@@ -4,6 +4,7 @@
 
 ## [Unreleased]
 
+- Optimized `UnitQuaternion::rotate_vector` to use fewer flops.
 - Optimized `UnitQuaternion::to_rotation_vector` for the `f32` type. Benchmarks
   show that the speed-up is more than 2x while accuracy is approximately the
   same. Compared to `quaternion_core` the speed-up is roughly 10x and compared
