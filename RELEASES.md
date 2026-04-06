@@ -46,7 +46,7 @@
 
 - Updated versions of dependencies in C++ benchmarks.
 - Updated `criterion` to version `0.7`.
-- Updated minimum supported Rust version to 1.66.0.
+- Updated minimum supported Rust version to 1.85.0.
 
 **Contributors**: @ralphtandetzky
 

@@ -18,7 +18,7 @@ jobs:
     strategy:
       matrix:
         rust: [
-          1.66.0, # Minimum version determined by cargo-msrv
+          1.85.0, # Minimum version determined by cargo-msrv
           stable,
         ]
     steps:
