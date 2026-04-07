@@ -2179,9 +2179,9 @@ mod tests {
     fn test_to_rotation_from_rotation() {
         // Test the conversion from a unit quaternion to a 3x3 matrix and back
         // in a randomized way.
-        use rand::Rng;
         let mut rng = make_seeded_rng();
         for _ in 0..100000 {
+            use rand::RngExt;
             let q = rng.random::<UQ32>();
             let mat = q.to_rotation_matrix3x3();
             let restored_q = UQ32::from_rotation_matrix3x3(&mat);
@@ -2240,7 +2240,7 @@ mod tests {
     fn test_opposite_vectors_randomized() {
         // Test `from_two_vectors` for the case where the vectors are opposite
         // in a randomized way.
-        use rand::Rng;
+        use rand::RngExt;
         let mut rng = make_seeded_rng();
         let mut gen_coord = move || rng.random::<f32>() * 2.0 - 1.0;
         for _ in 0..10000 {
@@ -2323,7 +2323,7 @@ mod tests {
     #[test]
     fn test_from_to_vectors_randomized() {
         // Test `from_two_vectors` in a randomized way.
-        use rand::Rng;
+        use rand::RngExt;
         let mut rng = make_seeded_rng();
         let mut gen_coord = move || rng.random::<f32>() * 2.0 - 1.0;
         for _ in 0..100000 {
@@ -2860,7 +2860,7 @@ mod tests {
         // Test that the sample distribution of unit quaternions is uniform
         use rand::{
             distr::{Distribution, StandardUniform},
-            Rng,
+            RngExt,
         };
         let num_iters = 1_000_000;
         let mut rng = make_seeded_rng();

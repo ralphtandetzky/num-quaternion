@@ -18,7 +18,7 @@ version = "1.0.7"
 readme = "README.md"
 exclude = ["/.github/*"]
 edition = "2021"
-rust-version = "1.66.0"
+rust-version = "1.85.0"
 
 [package.metadata.docs.rs]
 features = ["std", "libm", "serde", "unstable"]
@@ -69,11 +69,9 @@ default-features = false
 
 [dependencies.rand]
 optional = true
-version = "0.9"
+version = "0.10"
 default-features = false
-features = [
-    "small_rng",
-] # Needed only for testing. TODO: Move tests outside lib.rs and make this a development dependency
+features = []
 
 [dev-dependencies.criterion]
 version = "0.8"
@@ -93,7 +91,7 @@ version = "0.6"
 
 [dependencies.rand_distr]
 optional = true
-version = "0.5.1"
+version = "0.6.0"
 default-features = false
 
 [dev-dependencies.serde_json]
