@@ -138,4 +138,6 @@ static void BM_QuaternionToRotationVectorManualImpl(benchmark::State & state)
 
 BENCHMARK(BM_QuaternionToRotationVectorManualImpl);
 
+// NOLINTBEGIN(cppcoreguidelines-avoid-c-arrays,cppcoreguidelines-pro-type-reinterpret-cast)
 BENCHMARK_MAIN();
+// NOLINTEND(cppcoreguidelines-avoid-c-arrays,cppcoreguidelines-pro-type-reinterpret-cast)

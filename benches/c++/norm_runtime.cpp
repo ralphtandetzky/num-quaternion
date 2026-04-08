@@ -126,4 +126,6 @@ static void BM_QuaternionF64NormManualHypotImpl(benchmark::State & state)
 
 BENCHMARK(BM_QuaternionF64NormManualHypotImpl);
 
+// NOLINTBEGIN(cppcoreguidelines-avoid-c-arrays,cppcoreguidelines-pro-type-reinterpret-cast)
 BENCHMARK_MAIN();
+// NOLINTEND(cppcoreguidelines-avoid-c-arrays,cppcoreguidelines-pro-type-reinterpret-cast)
