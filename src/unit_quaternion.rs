@@ -1184,10 +1184,22 @@ where
     /// ```
     #[inline]
     pub fn adjust_norm(self) -> Self {
-        // TODO: Optimize for norms which are close to 1.
-        self.0
-            .normalize()
-            .expect("Unit quaternion value too inaccurate. Cannot renormalize.")
+        // For norms close to 1, avoid the expensive sqrt in normalize().
+        // If norm_sqr = 1 + ε, then 1/sqrt(norm_sqr) ≈ (3 - norm_sqr) / 2
+        // with a residual norm² error of O(ε²). When |ε| < sqrt(machine_eps),
+        // the resulting norm is accurate to machine epsilon.
+        let norm_sqr = self.0.norm_sqr();
+        let one = T::one();
+        let two = one + one;
+        let deviation = norm_sqr - one;
+        if deviation.abs() < T::epsilon().sqrt() {
+            let scale = (two + one - norm_sqr) / two;
+            Self(self.0 * scale)
+        } else {
+            self.0
+                .normalize()
+                .expect("Unit quaternion value too inaccurate. Cannot renormalize.")
+        }
     }
 }
 
