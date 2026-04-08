@@ -1192,6 +1192,9 @@ where
         let one = T::one();
         let two = one + one;
         let deviation = norm_sqr - one;
+        // Note: `T::epsilon().sqrt()` is a call to the `Float` trait, not a
+        // compile-time constant. However, after monomorphization for `f32` or
+        // `f64`, LLVM constant-folds this to a literal in optimized builds.
         if deviation.abs() < T::epsilon().sqrt() {
             let scale = (two + one - norm_sqr) / two;
             Self(self.0 * scale)
