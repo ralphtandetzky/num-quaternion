@@ -5,6 +5,8 @@
 ## [Unreleased]
 
 - Updated `nalgebra` to version 0.34.2.
+- Updated C++ benchmark dependencies to their latest versions (`boost.qvm`,
+  `eigen`, `google_benchmark`, `rules_cc`, `bazel_clang_tidy`).
 
 ## Release 1.0.8 (2026-04-08)
 
