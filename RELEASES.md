@@ -2,7 +2,7 @@
 
 # Version 1.x
 
-## Release 1.0.8 (2026-04-07)
+## Release 1.0.8 (2026-04-08)
 
 - Optimized `UnitQuaternion::rotate_vector` to use fewer flops.
 - Optimized `UnitQuaternion::to_rotation_vector` for the `f32` type. Benchmarks
