@@ -1196,6 +1196,8 @@ where
         // compile-time constant. However, after monomorphization for `f32` or
         // `f64`, LLVM constant-folds this to a literal in optimized builds.
         if deviation.abs() < T::epsilon().sqrt() {
+            // The division by $2$ will be optimized by the compiler in release
+            // mode for primitive types as a multiplication by `0.5`.
             let scale = (two + one - norm_sqr) / two;
             Self(self.0 * scale)
         } else {
