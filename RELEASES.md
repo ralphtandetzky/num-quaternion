@@ -2,6 +2,10 @@
 
 # Version 1.x
 
+## [Unreleased]
+
+- Updated `nalgebra` to version 0.34.2.
+
 ## Release 1.0.8 (2026-04-08)
 
 - Optimized `UnitQuaternion::rotate_vector` to use fewer flops.
