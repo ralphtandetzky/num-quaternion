@@ -2,7 +2,7 @@
 
 # Version 1.x
 
-## [Unreleased]
+## Release 1.0.8 (2026-04-08)
 
 - Optimized `UnitQuaternion::rotate_vector` to use fewer flops.
 - Optimized `UnitQuaternion::to_rotation_vector` for the `f32` type. Benchmarks
@@ -17,9 +17,11 @@
   mean square errors of this round trip which are all below a `f32` epsilon and
   above half an epsilon.
 - Updated Bazel version to 8.5.0.
-- Updates all Bazel modules to their latest versions.
-- Update to `rand` version 0.10.0 and `rand_distr` version 0.6.0
-- Update minimum required Rust version to 1.85.0
+- Updated all Bazel modules to their latest versions.
+- Updated `rand` to version 0.10.0 and `rand_distr` to version 0.6.0.
+- Updated minimum required Rust version to 1.85.0.
+
+**Contributors**: @ralphtandetzky
 
 ## Release 1.0.7 (2025-12-09)
 
