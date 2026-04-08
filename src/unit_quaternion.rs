@@ -1196,9 +1196,9 @@ where
             let scale = (two + one - norm_sqr) / two;
             Self(self.0 * scale)
         } else {
-            self.0
-                .normalize()
-                .expect("Unit quaternion value too inaccurate. Cannot renormalize.")
+            self.0.normalize().expect(
+                "Unit quaternion value too inaccurate. Cannot renormalize.",
+            )
         }
     }
 }
