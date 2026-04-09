@@ -1,4 +1,4 @@
-use criterion::{criterion_group, criterion_main, Criterion, Throughput};
+use criterion::{Criterion, Throughput, criterion_group, criterion_main};
 use num_quaternion::UQ32;
 use rand::Rng;
 use rand::SeedableRng;

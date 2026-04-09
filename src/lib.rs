@@ -175,9 +175,9 @@ mod quaternion;
 mod unit_quaternion;
 
 pub use {
-    quaternion::{Quaternion, Q32, Q64},
-    unit_quaternion::{EulerAngles, ReadMat3x3, UnitQuaternion, UQ32, UQ64},
+    quaternion::{Q32, Q64, Quaternion},
+    unit_quaternion::{EulerAngles, ReadMat3x3, UQ32, UQ64, UnitQuaternion},
 };
 
 #[cfg(feature = "unstable")]
-pub use pure_quaternion::{PureQuaternion, PQ32, PQ64};
+pub use pure_quaternion::{PQ32, PQ64, PureQuaternion};
