@@ -1184,10 +1184,35 @@ where
     /// ```
     #[inline]
     pub fn adjust_norm(self) -> Self {
-        // TODO: Optimize for norms which are close to 1.
-        self.0
-            .normalize()
-            .expect("Unit quaternion value too inaccurate. Cannot renormalize.")
+        // For norms close to 1, avoid the expensive sqrt in normalize().
+        // If norm_sqr = 1 + ε, then 1/sqrt(norm_sqr) ≈ (3 - norm_sqr) / 2
+        // with a residual norm² error of O(ε²). When |ε| < sqrt(machine_eps),
+        // the resulting norm is accurate to machine epsilon.
+        let norm_sqr = self.0.norm_sqr();
+        let one = T::one();
+        let two = one + one;
+        let deviation = norm_sqr - one;
+        // Note: `T::epsilon().sqrt()` is a call to the `Float` trait, not a
+        // compile-time constant. However, after monomorphization for `f32` or
+        // `f64`, LLVM constant-folds this to a literal in optimized builds.
+        if deviation.abs() < T::epsilon().sqrt() {
+            // The division by 2 will be optimized by the compiler in release
+            // mode for primitive types as a multiplication by `0.5`.
+            let scale = (two + one - norm_sqr) / two;
+            Self(self.0 * scale)
+        } else {
+            self.0.normalize().expect(
+                "Unit quaternion value too inaccurate. Cannot renormalize.",
+            )
+        }
+    }
+
+    /// Creates a `UnitQuaternion` from a quaternion without normalizing.
+    ///
+    /// Only for use in tests to construct slightly mis-normalized values.
+    #[cfg(test)]
+    pub(crate) fn from_quaternion_unchecked(q: Quaternion<T>) -> Self {
+        Self(q)
     }
 }
 
@@ -2538,6 +2563,31 @@ mod tests {
         assert!(
             (q.adjust_norm().into_quaternion().norm() - 1.0).abs()
                 <= 2.0 * f32::EPSILON
+        );
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_unit_quaternion_adjust_norm_near_unit_fast_path() {
+        // Test that adjust_norm handles the near-unit fast path correctly.
+        // We construct a slightly mis-normalized UnitQuaternion whose norm_sqr
+        // differs from 1 by less than sqrt(f32::EPSILON) ≈ 3.45e-4, which
+        // triggers the fast-path approximation instead of calling normalize().
+        let base = UQ32::from_euler_angles(1.0, 0.5, 1.5);
+        // Scale by 1 + 1e-4 so that norm_sqr ≈ 1 + 2e-4 < sqrt(f32::EPSILON).
+        let scale = 1.0_f32 + 1e-4_f32;
+        let slightly_off = UnitQuaternion::from_quaternion_unchecked(
+            base.into_quaternion() * scale,
+        );
+        // Confirm the deviation is small enough to trigger the fast path.
+        let norm_sqr = slightly_off.into_quaternion().norm_sqr();
+        assert!((norm_sqr - 1.0_f32).abs() < f32::EPSILON.sqrt());
+        // After adjust_norm, the norm should be within machine epsilon of 1.
+        let adjusted_norm = slightly_off.adjust_norm().into_quaternion().norm();
+        assert!(
+            (adjusted_norm - 1.0_f32).abs() <= 2.0 * f32::EPSILON,
+            "adjusted norm deviated by {}",
+            (adjusted_norm - 1.0_f32).abs()
         );
     }
 

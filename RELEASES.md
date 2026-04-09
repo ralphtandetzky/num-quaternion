@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+- Optimized `UnitQuaternion::adjust_norm` for norms close to 1, avoiding an
+  expensive `sqrt` and division in the common case.
 - Updated `nalgebra` to version 0.34.2.
 - Updated C++ benchmark dependencies to their latest versions (`boost.qvm`,
   `eigen`, `google_benchmark`, `rules_cc`, `bazel_clang_tidy`).
