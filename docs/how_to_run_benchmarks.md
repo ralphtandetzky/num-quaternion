@@ -16,6 +16,11 @@ cargo bench --bench from_rotation_vector_runtime --features std,rand
 cargo bench --bench to_rotation_vector_runtime --features std,rand
 cargo bench --bench norm_runtime
 
+# Run accuracy examples
+cargo run --example benchmark_norm_accuracy --features std,rand --release
+cargo run --example benchmark_rotation_vector_accuracy --features std,rand --release
+cargo run --example benchmark_to_rotation_vector_accuracy --features std,rand --release
+
 # Run with additional optimizations
 RUSTFLAGS="-C target-cpu=native" cargo bench --all-features
 ```
