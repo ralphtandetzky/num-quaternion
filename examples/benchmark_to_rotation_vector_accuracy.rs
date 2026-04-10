@@ -181,11 +181,7 @@ fn main() {
     println!();
     print_table(&implementations, col_width, |rng| {
         let q = rng.random::<UQ32>();
-        if q.as_quaternion().w >= 0.0 {
-            q
-        } else {
-            -q
-        }
+        if q.as_quaternion().w >= 0.0 { q } else { -q }
     });
 
     // -----------------------------------------------------------------------
