@@ -47,8 +47,9 @@ fn backward_error(q: UQ32, r_approx: [f32; 3]) -> f64 {
     ];
 
     // Rotation angle θ from the exact rotation vector.
-    let theta_sq =
-        r_exact[0] * r_exact[0] + r_exact[1] * r_exact[1] + r_exact[2] * r_exact[2];
+    let theta_sq = r_exact[0] * r_exact[0]
+        + r_exact[1] * r_exact[1]
+        + r_exact[2] * r_exact[2];
     let theta = theta_sq.sqrt();
 
     if theta < 1e-300 {
@@ -149,24 +150,18 @@ fn main() {
                 [rv64[0] as f32, rv64[1] as f32, rv64[2] as f32]
             },
         ),
-        (
-            "nalgebra",
-            |q| {
-                let q = q.as_quaternion();
-                let na_q = nalgebra::UnitQuaternion::from_quaternion(
-                    nalgebra::Quaternion::new(q.w, q.x, q.y, q.z),
-                );
-                let ax = na_q.scaled_axis();
-                [ax.x, ax.y, ax.z]
-            },
-        ),
-        (
-            "quaternion_core",
-            |q| {
-                let q = q.as_quaternion();
-                quaternion_core::to_rotation_vector((q.w, [q.x, q.y, q.z]))
-            },
-        ),
+        ("nalgebra", |q| {
+            let q = q.as_quaternion();
+            let na_q = nalgebra::UnitQuaternion::from_quaternion(
+                nalgebra::Quaternion::new(q.w, q.x, q.y, q.z),
+            );
+            let ax = na_q.scaled_axis();
+            [ax.x, ax.y, ax.z]
+        }),
+        ("quaternion_core", |q| {
+            let q = q.as_quaternion();
+            quaternion_core::to_rotation_vector((q.w, [q.x, q.y, q.z]))
+        }),
     ];
 
     // -----------------------------------------------------------------------
@@ -186,7 +181,11 @@ fn main() {
     println!();
     print_table(&implementations, col_width, |rng| {
         let q = rng.random::<UQ32>();
-        if q.as_quaternion().w >= 0.0 { q } else { -q }
+        if q.as_quaternion().w >= 0.0 {
+            q
+        } else {
+            -q
+        }
     });
 
     // -----------------------------------------------------------------------
@@ -201,7 +200,10 @@ fn main() {
         gen_small_angle_q(rng, max_small_angle)
     });
 
-    println!("\nAll errors are expressed as multiples of f32::EPSILON ({:.3e}).", f32::EPSILON);
+    println!(
+        "\nAll errors are expressed as multiples of f32::EPSILON ({:.3e}).",
+        f32::EPSILON
+    );
     println!(
         "Values ≤ 1 (green) indicate the implementation is as accurate as \
          the f32 input allows."
