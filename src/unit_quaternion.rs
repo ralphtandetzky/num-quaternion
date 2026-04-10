@@ -1591,7 +1591,7 @@ where
 #[cfg(test)]
 mod tests {
     use {
-        crate::{Quaternion, UnitQuaternion, Q32, UQ32, UQ64},
+        crate::{Q32, Quaternion, UQ32, UQ64, UnitQuaternion},
         core::borrow::Borrow,
         num_traits::{ConstOne, One},
     };
@@ -1787,12 +1787,16 @@ mod tests {
     fn test_from_rotation_vector_infinite() {
         // Test `from_rotation_vector` for a vector with infinite components.
         let inf = f32::INFINITY;
-        assert!(UQ32::from_rotation_vector(&[inf, 0.0, 0.0])
-            .into_inner()
-            .is_all_nan());
-        assert!(UQ32::from_rotation_vector(&[inf, inf, inf])
-            .into_inner()
-            .is_all_nan());
+        assert!(
+            UQ32::from_rotation_vector(&[inf, 0.0, 0.0])
+                .into_inner()
+                .is_all_nan()
+        );
+        assert!(
+            UQ32::from_rotation_vector(&[inf, inf, inf])
+                .into_inner()
+                .is_all_nan()
+        );
     }
 
     #[cfg(any(feature = "std", feature = "libm"))]
@@ -1800,12 +1804,16 @@ mod tests {
     fn test_from_rotation_vector_nan_input() {
         // Test `from_rotation_vector` for a vector with infinite components.
         let nan = f64::NAN;
-        assert!(UQ64::from_rotation_vector(&[nan, 0.0, 0.0])
-            .into_inner()
-            .is_all_nan());
-        assert!(UQ64::from_rotation_vector(&[nan, nan, nan])
-            .into_inner()
-            .is_all_nan());
+        assert!(
+            UQ64::from_rotation_vector(&[nan, 0.0, 0.0])
+                .into_inner()
+                .is_all_nan()
+        );
+        assert!(
+            UQ64::from_rotation_vector(&[nan, nan, nan])
+                .into_inner()
+                .is_all_nan()
+        );
     }
 
     #[cfg(any(feature = "std", feature = "libm"))]
@@ -2909,8 +2917,8 @@ mod tests {
     fn test_unit_quaternion_sample_half_planes() {
         // Test that the sample distribution of unit quaternions is uniform
         use rand::{
-            distr::{Distribution, StandardUniform},
             RngExt,
+            distr::{Distribution, StandardUniform},
         };
         let num_iters = 1_000_000;
         let mut rng = make_seeded_rng();

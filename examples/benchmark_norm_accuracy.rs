@@ -121,11 +121,23 @@ fn main() {
             io::stdout().flush().unwrap();
         }
     }
-    println!("\n\nThe columns of the table determine the scale of the input quaternion.");
-    println!("The rows of the table determine the implementation of the quaternion norm.");
-    println!("The values in the table are the relative RMS error of the quaternion norm.");
-    println!("\nThe column `1.0` is for quaternions with all components uniformly sampled from the range [-1.0, 1.0].");
-    println!("The column `sqrt(MIN_POS)` is for quaternions with all components in the range [sqrt(MIN_POS), sqrt(MIN_POS)],");
-    println!("where `MIN_POS` is the minimal positive normal 32-bit IEEE-754 floating point value. Similarly for `MIN_POS`");
+    println!(
+        "\n\nThe columns of the table determine the scale of the input quaternion."
+    );
+    println!(
+        "The rows of the table determine the implementation of the quaternion norm."
+    );
+    println!(
+        "The values in the table are the relative RMS error of the quaternion norm."
+    );
+    println!(
+        "\nThe column `1.0` is for quaternions with all components uniformly sampled from the range [-1.0, 1.0]."
+    );
+    println!(
+        "The column `sqrt(MIN_POS)` is for quaternions with all components in the range [sqrt(MIN_POS), sqrt(MIN_POS)],"
+    );
+    println!(
+        "where `MIN_POS` is the minimal positive normal 32-bit IEEE-754 floating point value. Similarly for `MIN_POS`"
+    );
     println!("and `MAX / 2`, where `MAX` is the maximal finite `f32` value.");
 }
