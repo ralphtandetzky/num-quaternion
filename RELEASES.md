@@ -4,6 +4,7 @@
 
 ## [Unreleased]
 
+- Updated to Rust edition 2024.
 - Optimized `UnitQuaternion::adjust_norm` for norms close to 1, avoiding an
   expensive `sqrt` and division in the common case.
 - Updated `nalgebra` to version 0.34.2.

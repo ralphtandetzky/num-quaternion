@@ -1,5 +1,5 @@
 use {
-    crate::{Quaternion, UnitQuaternion, Q32, Q64, UQ32, UQ64},
+    crate::{Q32, Q64, Quaternion, UQ32, UQ64, UnitQuaternion},
     core::ops::{
         Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign,
     },
@@ -7,7 +7,7 @@ use {
 };
 
 #[cfg(feature = "unstable")]
-use crate::{PureQuaternion, PQ32, PQ64};
+use crate::{PQ32, PQ64, PureQuaternion};
 
 impl<T> Add<Quaternion<T>> for Quaternion<T>
 where
@@ -1075,9 +1075,9 @@ impl_bin_op_assign!(impl DivAssign::div_assign as Div::div for PureQuaternion);
 #[cfg(test)]
 mod tests {
 
-    use crate::{Quaternion, Q32, Q64, UQ32, UQ64};
     #[cfg(feature = "unstable")]
     use crate::{PQ32, PQ64};
+    use crate::{Q32, Q64, Quaternion, UQ32, UQ64};
 
     #[test]
     fn test_add_quaternion() {

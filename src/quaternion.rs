@@ -794,11 +794,7 @@ where
                 let map = |a: T| {
                     // Map zero to zero with same sign and everything else to
                     // infinity with same sign as the input.
-                    if a.is_zero() {
-                        a
-                    } else {
-                        inf.copysign(a)
-                    }
+                    if a.is_zero() { a } else { inf.copysign(a) }
                 };
                 let sqr_angle =
                     self.x * self.x + self.y * self.y + self.z * self.z;
@@ -1378,11 +1374,7 @@ where
                     || self.z.is_infinite()
                 {
                     let f = |a: T| {
-                        if a.is_infinite() {
-                            a
-                        } else {
-                            zero.copysign(a)
-                        }
+                        if a.is_infinite() { a } else { zero.copysign(a) }
                     };
                     Self::new(inf, f(self.x), f(self.y), f(self.z))
                 } else if self.w == -inf {
@@ -1445,7 +1437,7 @@ where
 mod tests {
 
     use {
-        crate::{Quaternion, Q32, Q64, UQ32, UQ64},
+        crate::{Q32, Q64, Quaternion, UQ32, UQ64},
         num_traits::{ConstOne, ConstZero, Inv, One, Zero},
     };
 
@@ -2193,18 +2185,26 @@ mod tests {
     fn test_expf_neg_infinite_real_component_with_t_between_0_and_1() {
         // Test the expf power function for a negative infinite real base with
         // an exponent between 0 and 1
-        assert!(!Q32::new(f32::NEG_INFINITY, 0.0, 0.0, 0.0)
-            .expf(0.5)
-            .is_finite());
-        assert!(!Q32::new(f32::NEG_INFINITY, 0.0, 0.0, 0.0)
-            .expf(0.5)
-            .has_nan());
-        assert!(!Q32::new(f32::NEG_INFINITY, 1.0, 2.0, 3.0)
-            .expf(0.75)
-            .is_finite());
-        assert!(!Q32::new(f32::NEG_INFINITY, 1.0, 2.0, 3.0)
-            .expf(0.75)
-            .has_nan());
+        assert!(
+            !Q32::new(f32::NEG_INFINITY, 0.0, 0.0, 0.0)
+                .expf(0.5)
+                .is_finite()
+        );
+        assert!(
+            !Q32::new(f32::NEG_INFINITY, 0.0, 0.0, 0.0)
+                .expf(0.5)
+                .has_nan()
+        );
+        assert!(
+            !Q32::new(f32::NEG_INFINITY, 1.0, 2.0, 3.0)
+                .expf(0.75)
+                .is_finite()
+        );
+        assert!(
+            !Q32::new(f32::NEG_INFINITY, 1.0, 2.0, 3.0)
+                .expf(0.75)
+                .has_nan()
+        );
     }
 
     #[cfg(any(feature = "std", feature = "libm"))]

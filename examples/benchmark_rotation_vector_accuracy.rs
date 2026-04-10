@@ -44,8 +44,12 @@ fn measure_round_trip_error(
 }
 
 fn main() {
-    println!("Benchmarking the absolute accuracy of rotation vector round-trip conversions");
-    println!("(to_rotation_vector followed by from_rotation_vector) for different rotation angles.\n");
+    println!(
+        "Benchmarking the absolute accuracy of rotation vector round-trip conversions"
+    );
+    println!(
+        "(to_rotation_vector followed by from_rotation_vector) for different rotation angles.\n"
+    );
 
     let col_width = 15;
 
