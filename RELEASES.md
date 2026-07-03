@@ -7,7 +7,7 @@
 - Updated to Rust edition 2024.
 - Optimized `UnitQuaternion::adjust_norm` for norms close to 1, avoiding an
   expensive `sqrt` and division in the common case.
-- Updated `nalgebra` to version 0.34.2.
+- Updated `nalgebra` to version 0.35.0 and `serde_json` to 1.0.150.
 - Updated C++ benchmark dependencies to their latest versions (`boost.qvm`,
   `eigen`, `google_benchmark`, `rules_cc`, `bazel_clang_tidy`).
 
