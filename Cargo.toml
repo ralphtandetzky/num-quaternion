@@ -95,7 +95,7 @@ version = "0.6.0"
 default-features = false
 
 [dev-dependencies.serde_json]
-version = "1.0.145"
+version = "1.0.150"
 
 [features]
 default = ["std"]
