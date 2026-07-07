@@ -1,7 +1,11 @@
 build --cxxopt='-std=c++20'
 build --cxxopt='-O3'
 build --cxxopt='-fdiagnostics-color=always'
+# The hermetic LLVM toolchain passes -stdlib=libc++ which is unused during
+# compilation (it only affects linking), triggering a spurious warning.
+build --cxxopt='-Wno-unused-command-line-argument'
 
 # Required for bazel_clang_tidy to operate as expected
 build:clang-tidy --aspects @bazel_clang_tidy//clang_tidy:clang_tidy.bzl%clang_tidy_aspect
 build:clang-tidy --output_groups=report
+build:clang-tidy --@bazel_clang_tidy//:clang_tidy_executable=@llvm_toolchain_llvm//:clang-tidy
