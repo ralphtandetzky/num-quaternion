@@ -59,7 +59,7 @@ version = "0.2"
 default-features = false
 
 [dependencies.num-integer]
-version = "0.1.46"
+version = "0.1.47"
 default-features = false
 
 [dependencies.serde]

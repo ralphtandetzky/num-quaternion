@@ -9,6 +9,7 @@
   expensive `sqrt` and division in the common case.
 - Updated `nalgebra` to version 0.35.0.
 - Updated `serde_json` to 1.0.150.
+- Updated `num-integer` to 0.1.47.
 - Updated C++ benchmark dependencies to their latest versions (`boost.qvm`,
   `eigen`, `google_benchmark`, `rules_cc`, `bazel_clang_tidy`).
 - Made the Bazel C++ benchmark toolchain hermetic by pinning Bazelisk via
