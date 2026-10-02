@@ -69,7 +69,7 @@ default-features = false
 
 [dependencies.rand]
 optional = true
-version = "0.10"
+version = "0.10.3"
 default-features = false
 features = []
 
