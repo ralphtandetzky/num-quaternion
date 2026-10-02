@@ -64,7 +64,7 @@ jobs:
     - uses: DoozyX/clang-format-lint-action@v0.20
       with:
         source: benches/c++
-        clangFormatVersion: 14
+        clangFormatVersion: 20
 
   static_analysis:
     runs-on: ubuntu-latest
