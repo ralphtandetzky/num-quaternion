@@ -22,7 +22,7 @@ jobs:
           stable,
         ]
     steps:
-    - uses: actions/checkout@v7
+    - uses: actions/checkout@v7.0.1
     - uses: actions/cache@v6
       if: startsWith(matrix.rust, '1')
       with:
@@ -39,7 +39,7 @@ jobs:
   bazel_build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v7
+    - uses: actions/checkout@v7.0.1
     - name: Mount bazel cache
       uses: actions/cache@v6
       with:
@@ -51,7 +51,7 @@ jobs:
   check_rust_formatting:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v7
+    - uses: actions/checkout@v7.0.1
     - uses: dtolnay/rust-toolchain@stable
       with:
         components: rustfmt
@@ -60,7 +60,7 @@ jobs:
   check_cpp_formatting:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v7
+    - uses: actions/checkout@v7.0.1
     - uses: DoozyX/clang-format-lint-action@v0.20
       with:
         source: benches/c++
@@ -69,7 +69,7 @@ jobs:
   static_analysis:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v7
+    - uses: actions/checkout@v7.0.1
     - uses: dtolnay/rust-toolchain@stable
     - name: install clippy
       run: rustup component add clippy

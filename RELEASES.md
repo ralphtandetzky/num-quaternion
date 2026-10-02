@@ -14,6 +14,8 @@
 - Updated `rand` to 0.10.3.
 - Updated `quaternion-core` to 0.6.2.
 - Updated `serde_json` to 1.0.151.
+- Updated Bazel to 8.8.1.
+- Updated GitHub Actions checkout to 7.0.1.
 - Updated C++ benchmark dependencies to their latest versions (`boost.qvm`,
   `eigen`, `google_benchmark`, `rules_cc`, `bazel_clang_tidy`).
 - Made the Bazel C++ benchmark toolchain hermetic by pinning Bazelisk via
