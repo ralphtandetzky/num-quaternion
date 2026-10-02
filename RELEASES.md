@@ -21,6 +21,7 @@
 - Updated the C++ formatting tool to clang-format 20.
 - Updated the Eigen Bazel module to 5.0.1.bcr.2.
 - Updated the rules_cc Bazel module to 0.2.25.
+- Updated the toolchains_llvm Bazel module to 1.11.0.
 - Updated C++ benchmark dependencies to their latest versions (`boost.qvm`,
   `eigen`, `google_benchmark`, `rules_cc`, `bazel_clang_tidy`).
 - Made the Bazel C++ benchmark toolchain hermetic by pinning Bazelisk via
