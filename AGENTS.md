@@ -10,7 +10,7 @@ use quaternion arithmetic and operations.
 - Write tests based on documented properties.
 - Seek 100% test coverage for all new code.
 - Update release notes for relevant changes.
-- Handle edge cases like zero values, NaN, and infinity, subnormals and very
+- Handle edge cases like zero values, NaN, infinity, subnormals, and very
   large floating point values accurately.
 - Provide the fastest possible implementation without sacrificing correctness
   for `f32` and `f64` types.
