@@ -4,7 +4,7 @@
 
 # Prerequisites:
 # 1. Git must be installed and available in the system's PATH.
-# 2. Bazel must be installed and available in the system's PATH.
+# 2. Bazelisk must be installed and available as "bazel" in the system's PATH.
 
 set -ex
 
@@ -12,7 +12,7 @@ set -ex
 cd "$(git -C "$(dirname "$0")" rev-parse --show-toplevel)/benches/c++" || exit
 
 # Build all Bazel targets
-USE_BAZEL_VERSION=8.5.0 bazel build //...
+bazel build //...
 
 # Run clang-tidy using Bazel
-USE_BAZEL_VERSION=8.5.0 bazel build //... --config=clang-tidy
+bazel build //... --config=clang-tidy
