@@ -1249,7 +1249,7 @@ where
         let two_u_cross_v0 = u_cross_v0.clone() + u_cross_v0;
         let two_u_cross_v1 = u_cross_v1.clone() + u_cross_v1;
         let two_u_cross_v2 = u_cross_v2.clone() + u_cross_v2;
-        return [
+        [
             vx + q.w.clone() * two_u_cross_v0.clone()
                 + q.y.clone() * two_u_cross_v2.clone()
                 - q.z.clone() * two_u_cross_v1.clone(),
@@ -1258,7 +1258,7 @@ where
                 - q.x.clone() * two_u_cross_v2.clone(),
             vz + q.w * two_u_cross_v2 + q.x * two_u_cross_v1
                 - q.y * two_u_cross_v0,
-        ];
+        ]
     }
 }
 
