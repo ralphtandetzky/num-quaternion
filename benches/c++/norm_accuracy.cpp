@@ -67,11 +67,11 @@ int main()
     std::cout << "Benchmarking the relative accuracy of quaternion norm "
                  "implementations for different scales of the\n";
     std::cout << "input quaternion.\n\n";
-    std::cout << std::setw(func_space) << "Implementation \\ Scale"
-              << " | " << std::setw(col_width) << "1.0"
-              << " | " << std::setw(col_width) << "sqrt(MIN_POS)"
-              << " | " << std::setw(col_width) << "MIN_POS"
-              << " | " << std::setw(col_width) << "MAX / 2"
+    std::cout << std::setw(func_space) << "Implementation \\ Scale"  //
+              << " | " << std::setw(col_width) << "1.0"              //
+              << " | " << std::setw(col_width) << "sqrt(MIN_POS)"    //
+              << " | " << std::setw(col_width) << "MIN_POS"          //
+              << " | " << std::setw(col_width) << "MAX / 2"          //
               << "\n";
     std::cout << std::string(func_space, '=')
               << "=|=" << std::string(col_width, '=')
