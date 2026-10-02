@@ -18,7 +18,7 @@ version = "1.0.8"
 readme = "README.md"
 exclude = ["/.github/*"]
 edition = "2024"
-rust-version = "1.85.0"
+rust-version = "1.89.0"
 
 [package.metadata.docs.rs]
 features = ["std", "libm", "serde", "unstable"]

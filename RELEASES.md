@@ -14,6 +14,7 @@
 - Updated `rand` to 0.10.3.
 - Updated `quaternion-core` to 0.6.2.
 - Updated `serde_json` to 1.0.151.
+- Updated the minimum required Rust version to 1.89.0.
 - Updated Bazel to 8.8.1.
 - Updated GitHub Actions checkout to 7.0.1.
 - Updated GitHub Actions cache to 6.1.0.
