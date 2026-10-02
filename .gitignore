@@ -5,7 +5,6 @@ bazel-c++
 bazel-out
 bazel-testlogs
 Cargo.lock
-MODULE.bazel.lock
 *.profdata
 *.profraw
 /target

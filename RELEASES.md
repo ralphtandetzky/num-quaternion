@@ -11,6 +11,9 @@
 - Updated `serde_json` to 1.0.150.
 - Updated C++ benchmark dependencies to their latest versions (`boost.qvm`,
   `eigen`, `google_benchmark`, `rules_cc`, `bazel_clang_tidy`).
+- Made the Bazel C++ benchmark toolchain hermetic by pinning Bazelisk via
+  `.bazelversion`, registering a reproducible LLVM toolchain, and wiring
+  `clang-tidy` to the bundled LLVM binary instead of the host environment.
 
 ## Release 1.0.8 (2026-04-08)
 
