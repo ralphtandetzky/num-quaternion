@@ -17,6 +17,7 @@
 - Updated Bazel to 8.8.1.
 - Updated GitHub Actions checkout to 7.0.1.
 - Updated GitHub Actions cache to 6.1.0.
+- Updated the cargo-semver-checks action to 2.9.
 - Updated C++ benchmark dependencies to their latest versions (`boost.qvm`,
   `eigen`, `google_benchmark`, `rules_cc`, `bazel_clang_tidy`).
 - Made the Bazel C++ benchmark toolchain hermetic by pinning Bazelisk via
