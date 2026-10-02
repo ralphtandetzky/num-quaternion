@@ -23,7 +23,7 @@ cargo test
 ```
 You may add arguments to select specific tests or features.
 
-To statically check the rust code, you may run
+To statically check the Rust code, you may run
 ```bash
 cargo fmt --check
 cargo clippy --all-features
