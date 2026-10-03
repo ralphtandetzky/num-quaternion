@@ -9,6 +9,21 @@
   expensive `sqrt` and division in the common case.
 - Updated `nalgebra` to version 0.35.0.
 - Updated `serde_json` to 1.0.150.
+- Updated `num-integer` to 0.1.47.
+- Updated `serde` to 1.0.229.
+- Updated `rand` to 0.10.3.
+- Updated `quaternion-core` to 0.6.2.
+- Updated `serde_json` to 1.0.151.
+- Updated the minimum required Rust version to 1.89.0.
+- Updated Bazel to 8.8.1.
+- Updated GitHub Actions checkout to 7.0.1.
+- Updated GitHub Actions cache to 6.1.0.
+- Updated the cargo-semver-checks action to 2.9.
+- Updated the C++ formatting tool to clang-format 20.
+- Updated the Eigen Bazel module to 5.0.1.bcr.2.
+- Updated the rules_cc Bazel module to 0.2.25.
+- Updated the toolchains_llvm Bazel module to 1.11.0.
+- Updated the LLVM toolchain to 20.1.8.
 - Updated C++ benchmark dependencies to their latest versions (`boost.qvm`,
   `eigen`, `google_benchmark`, `rules_cc`, `bazel_clang_tidy`).
 - Made the Bazel C++ benchmark toolchain hermetic by pinning Bazelisk via

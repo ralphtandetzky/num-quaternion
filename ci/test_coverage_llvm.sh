@@ -13,7 +13,7 @@
 #
 # It requires the following tools to be installed:
 #
-# - llvm-14
+# - llvm-20
 # - rustup
 # - coreutils, findutils, less which are usually installed by default on Linux.
 
@@ -23,23 +23,23 @@ set -e
 cargo clean
 
 # Run the tests with coverage instrumentation
-RUSTFLAGS="-C instrument-coverage" rustup run 1.85.0 cargo t --all-features
+RUSTFLAGS="-C instrument-coverage" rustup run 1.89.0 cargo t --all-features
 
 # Merge the coverage data
-llvm-profdata-14 merge default.profraw -o num-quaternion.profdata
+llvm-profdata-20 merge default.profraw -o num-quaternion.profdata
 
 # Find the newest file matching the pattern
 newest_file=$(find target/debug/deps -name 'num_quaternion-*' -type f | grep -E 'num_quaternion-[0-9a-f]+$' | sort -r | head -n 1)
 
 if [[ "$1" == "--filter" ]]; then
     # Show only the uncovered lines
-    llvm-cov-14 show -Xdemangler=rustfilt -instr-profile=num-quaternion.profdata --use-color \
+    llvm-cov-20 show -Xdemangler=rustfilt -instr-profile=num-quaternion.profdata --use-color \
                      --object "$newest_file" --ignore-filename-regex=/.cargo/registry \
                      | GREP_COLORS='mt=00' grep --color=always -P "(/.*\.rs:$|^ *\d+?\| *0\|)" \
                      | less -R
 elif [[ "$1" == "--check" ]]; then
     # Check that the number of uncovered lines is equal to 5
-    line_count=$(llvm-cov-14 show -Xdemangler=rustfilt -instr-profile=num-quaternion.profdata --use-color \
+    line_count=$(llvm-cov-20 show -Xdemangler=rustfilt -instr-profile=num-quaternion.profdata --use-color \
                                   --object "$newest_file" --ignore-filename-regex=/.cargo/registry \
                                   | grep -P "^ *\d+?\| *0\|" | wc -l)
     if [[ "$line_count" -ne 5 ]]; then
@@ -48,7 +48,7 @@ elif [[ "$1" == "--check" ]]; then
     fi
 else
     # Show the complete coverage report
-    llvm-cov-14 show -Xdemangler=rustfilt -instr-profile=num-quaternion.profdata --use-color \
+    llvm-cov-20 show -Xdemangler=rustfilt -instr-profile=num-quaternion.profdata --use-color \
                      --object "$newest_file" --ignore-filename-regex=/.cargo/registry \
                      | less -R
 fi
