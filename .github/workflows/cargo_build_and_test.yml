@@ -79,14 +79,14 @@ jobs:
   semver_checks_all_stable:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v7
+    - uses: actions/checkout@v7.0.1
     - name: Check semver violations
       uses: obi1kenobi/cargo-semver-checks-action@v2.9
 
   semver_checks_default_features:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v7
+    - uses: actions/checkout@v7.0.1
     - name: Check semver violations for all default features
       uses: obi1kenobi/cargo-semver-checks-action@v2.9
       with:
