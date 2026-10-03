@@ -2,7 +2,7 @@
 
 # Version 1.x
 
-## [Unreleased]
+## Release 1.0.9 (2026-10-03)
 
 - Updated to Rust edition 2024.
 - Optimized `UnitQuaternion::adjust_norm` for norms close to 1, avoiding an
@@ -29,6 +29,8 @@
 - Made the Bazel C++ benchmark toolchain hermetic by pinning Bazelisk via
   `.bazelversion`, registering a reproducible LLVM toolchain, and wiring
   `clang-tidy` to the bundled LLVM binary instead of the host environment.
+
+**Contributors**: @ralphtandetzky
 
 ## Release 1.0.8 (2026-04-08)
 
