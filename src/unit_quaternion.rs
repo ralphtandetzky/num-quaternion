@@ -286,31 +286,29 @@ where
     ///
     /// # Panics
     ///
-    /// Panics if the conversion between `T` and `f32` fails. This never happens
-    /// for built-in floating-point types (`f32`, `f64`), but may occur for
-    /// custom types.
+    /// Panics if a polynomial coefficient cannot be converted to `T`. This
+    /// never happens for built-in floating-point types (`f32`, `f64`), but may
+    /// occur for custom types.
     #[inline]
     pub fn from_rotation_vector_f32_polynomial(
         v: &[T; 3],
         sqr_norm: T,
     ) -> Self {
-        let x = sqr_norm.to_f32().unwrap();
+        let x = sqr_norm;
         // The magic numbers below are calculated in
         // `examples/chebyshev_approximation.rs`.
-        let half_sinc_half_norm =
-            (((5.088215e-9f32 * x - 1.5475817e-6f32) * x + 0.00026040783f32)
-                * x
-                - 0.020833323f32)
-                * x
-                + 0.5f32;
-        let cos_half_norm = (((9.0442086e-8f32 * x - 2.1646354e-5f32) * x
-            + 0.0026039737f32)
-            * x
-            - 0.12499976f32)
-            * x
-            + 0.99999994f32;
-        let sinc_half_norm = T::from(half_sinc_half_norm).unwrap();
-        let cos_half_norm = T::from(cos_half_norm).unwrap();
+        let c0 = T::from(5.088215e-9_f32).unwrap();
+        let c1 = T::from(-1.5475817e-6_f32).unwrap();
+        let c2 = T::from(0.00026040783_f32).unwrap();
+        let c3 = T::from(-0.020833323_f32).unwrap();
+        let c4 = T::from(0.5_f32).unwrap();
+        let c5 = T::from(9.0442086e-8_f32).unwrap();
+        let c6 = T::from(-2.1646354e-5_f32).unwrap();
+        let c7 = T::from(0.0026039737_f32).unwrap();
+        let c8 = T::from(-0.12499976_f32).unwrap();
+        let c9 = T::from(0.99999994_f32).unwrap();
+        let sinc_half_norm = (((c0 * x + c1) * x + c2) * x + c3) * x + c4;
+        let cos_half_norm = (((c5 * x + c6) * x + c7) * x + c8) * x + c9;
         Self(Quaternion::new(
             cos_half_norm,
             v[0] * sinc_half_norm,
@@ -446,9 +444,20 @@ where
     #[inline]
     pub fn to_rotation_vector_impl_f32eps(&self) -> [T; 3] {
         let q = self.as_quaternion();
-        let w = q.w.to_f32().unwrap();
+        let w = q.w;
         let w_abs = w.abs();
         let w_sqr = w * w;
+
+        let c0 = T::from(-0.022940192_f32).unwrap();
+        let c1 = T::from(0.1385382_f32).unwrap();
+        let c2 = T::from(-0.38949528_f32).unwrap();
+        let c3 = T::from(0.70218545_f32).unwrap();
+        let c4 = T::from(-0.9644606_f32).unwrap();
+        let c5 = T::from(1.1539655_f32).unwrap();
+        let c6 = T::from(-1.3299414_f32).unwrap();
+        let c7 = T::from(1.5705487_f32).unwrap();
+        let c8 = T::from(-1.9999928_f32).unwrap();
+        let c9 = T::from(3.1415925_f32).unwrap();
 
         // Evaluate polynomial using Horner's method unconditionally
         // Coefficients for `f(w) = 2 * arccos(w) / sqrt(1 - w*w)` on [0, 1].
@@ -458,20 +467,18 @@ where
         // processor perform 5 multiplications and 5 additions in parallel using
         // out-of-order execution. This makes the computation somewhat faster
         // (latency is reduced) while there is a minimal accuracy hit.
-        let p = ((((-0.022940192 * w_abs + 0.1385382) * w_sqr
-            + (-0.38949528 * w_abs + 0.70218545))
+        let p = ((((c0 * w_abs + c1) * w_sqr + (c2 * w_abs + c3)) * w_sqr
+            + (c4 * w_abs + c5))
             * w_sqr
-            + (-0.9644606 * w_abs + 1.1539655))
+            + (c6 * w_abs + c7))
             * w_sqr
-            + (-1.3299414 * w_abs + 1.5705487))
-            * w_sqr
-            + (-1.9999928 * w_abs + 3.1415925);
+            + (c8 * w_abs + c9);
 
         // Multiply imaginary part with P(|w|) or -P(|w|) depending on the sign
         // of w, where P(w) approximates arccos(w) / sqrt(1 - w*w). Using
         // copysign makes the whole algorithm branchfree and improves throughput
         // in benchmarks by approximately 50%.
-        let factor = T::from(p.copysign(w)).unwrap();
+        let factor = p.copysign(w);
         [q.x * factor, q.y * factor, q.z * factor]
     }
 }
