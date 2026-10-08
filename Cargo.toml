@@ -26,6 +26,7 @@ rustdoc-args = ["--html-in-header", "katex.html"]
 
 [[bench]]
 name = "norm_runtime"
+required-features = ["std", "rand"]
 harness = false
 
 [[bench]]
@@ -75,6 +76,11 @@ features = []
 
 [dev-dependencies.criterion]
 version = "0.8"
+
+[dev-dependencies.algebraic]
+git = "https://github.com/ralphtandetzky/algebraic"
+rev = "d233a77654443e1130ee15b412feae9bf85cb51e"
+features = ["num"]
 
 [dev-dependencies.micromath]
 version = "2.1"
