@@ -441,6 +441,12 @@ where
     ///
     /// The polynomial coefficients were generated using Chebyshev approximation,
     /// as documented in `examples/chebyshev_approximation.rs`.
+    ///
+    /// # Panics
+    ///
+    /// Panics if a polynomial coefficient cannot be converted to `T`. This
+    /// never happens for built-in floating-point types (`f32`, `f64`), but may
+    /// occur for custom types.
     #[inline]
     pub fn to_rotation_vector_impl_f32eps(&self) -> [T; 3] {
         let q = self.as_quaternion();
@@ -2021,6 +2027,23 @@ mod tests {
                 (p - q).norm() <= 6.0 * f32::EPSILON
                     || (p + q).norm() <= 6.0 * f32::EPSILON
             );
+        }
+    }
+
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_to_rotation_vector_f32eps_polynomial_f64() {
+        for w in [-1.0, -0.9, -0.5, 0.0, 0.5, 0.9, 1.0] {
+            let q = Q64::new(w, (1.0 - w * w).sqrt(), 0.0, 0.0)
+                .normalize()
+                .unwrap();
+            let actual = q.to_rotation_vector_impl_f32eps();
+            let expected = q.to_rotation_vector_impl_generic();
+            let error = ((actual[0] - expected[0]).powi(2)
+                + (actual[1] - expected[1]).powi(2)
+                + (actual[2] - expected[2]).powi(2))
+            .sqrt();
+            assert!(error <= 2.0 * f32::EPSILON as f64);
         }
     }
 
