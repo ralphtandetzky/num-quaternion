@@ -2030,6 +2030,23 @@ mod tests {
         }
     }
 
+    #[cfg(any(feature = "std", feature = "libm"))]
+    #[test]
+    fn test_to_rotation_vector_f32eps_polynomial_f64() {
+        for w in [-1.0, -0.9, -0.5, 0.0, 0.5, 0.9, 1.0] {
+            let q = Q64::new(w, (1.0 - w * w).sqrt(), 0.0, 0.0)
+                .normalize()
+                .unwrap();
+            let actual = q.to_rotation_vector_impl_f32eps();
+            let expected = q.to_rotation_vector_impl_generic();
+            let error = ((actual[0] - expected[0]).powi(2)
+                + (actual[1] - expected[1]).powi(2)
+                + (actual[2] - expected[2]).powi(2))
+            .sqrt();
+            assert!(error <= 2.0 * f32::EPSILON as f64);
+        }
+    }
+
     #[test]
     fn test_rotation_matrix_identity() {
         // Test the rotation matrix of the identity quaternion
