@@ -4,9 +4,12 @@
 
 ## Unreleased
 
-- Updated the f32-optimized rotation-vector conversion paths to evaluate their
-  polynomials in `T` instead of converting intermediate values to and from
-  `f32`.
+- Updated rotation-vector conversion approximations to evaluate directly in the
+  scalar type instead of converting intermediate values through `f32`, enabling
+  use with types such as `f16` and `Algebraic<f32>`.
+- Reworked quaternion norm runtime benchmarks to use pre-generated random
+  inputs for correct measurements and added `Algebraic<f32>`
+  comparisons.
 
 ## Release 1.0.9 (2026-10-03)
 
