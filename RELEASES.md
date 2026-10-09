@@ -2,6 +2,12 @@
 
 # Version 1.x
 
+## Unreleased
+
+- Updated the f32-optimized rotation-vector conversion paths to evaluate their
+  polynomials in `T` instead of converting intermediate values to and from
+  `f32`.
+
 ## Release 1.0.9 (2026-10-03)
 
 - Updated to Rust edition 2024.
