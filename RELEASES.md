@@ -2,6 +2,15 @@
 
 # Version 1.x
 
+## Unreleased
+
+- Updated rotation-vector conversion approximations to evaluate directly in the
+  scalar type instead of converting intermediate values through `f32`, enabling
+  use with types such as `f16` and `Algebraic<f32>`.
+- Reworked quaternion norm runtime benchmarks to use pre-generated random
+  inputs for correct measurements and added `Algebraic<f32>`
+  comparisons.
+
 ## Release 1.0.9 (2026-10-03)
 
 - Updated to Rust edition 2024.
