@@ -441,6 +441,12 @@ where
     ///
     /// The polynomial coefficients were generated using Chebyshev approximation,
     /// as documented in `examples/chebyshev_approximation.rs`.
+    ///
+    /// # Panics
+    ///
+    /// Panics if a polynomial coefficient cannot be converted to `T`. This
+    /// never happens for built-in floating-point types (`f32`, `f64`), but may
+    /// occur for custom types.
     #[inline]
     pub fn to_rotation_vector_impl_f32eps(&self) -> [T; 3] {
         let q = self.as_quaternion();
